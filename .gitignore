@@ -1,5 +1,6 @@
-*.out 
-obj/*.o 
+#Ignore compiled binary
+*.out
 
-
+#Ignore object files
+*.o
 
