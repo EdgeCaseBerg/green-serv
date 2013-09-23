@@ -4,3 +4,10 @@
 #Ignore object files
 *.o
 
+#ignore apache logs
+access.log
+error.log
+
+#Ignore configuration files
+headers/config.h
+config.sql
