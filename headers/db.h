@@ -6,6 +6,7 @@
 	#include <stdio.h>
 	#include <stdlib.h>
 
-
+	/*Returns a connection to the mySQL database.*/
+	MYSQL * getMySQLConnection();
 
 #endif

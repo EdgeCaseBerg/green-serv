@@ -129,3 +129,11 @@ SQL to create database structure:
 		CONSTRAINT FOREIGN KEY (`scope_id`) REFERENCES `scope` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 	) ENGINE InnoDB;
 
+
+Example Compilation and Verification:
+------------------------------------------------------------------------
+
+	make
+	md5sum a.out
+	valgrind --tool=memcheck --leak-check=yes --show-reachable=yes --num-callers=20 --track-fds=yes ./a.out
+
