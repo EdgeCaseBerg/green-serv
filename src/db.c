@@ -1,13 +1,14 @@
 #include "db.h"
+#include "config.h"
 
 int main() {
    MYSQL *conn;
    MYSQL_RES *res;
    MYSQL_ROW row;
-   char *server = "localhost";
-   char *user = "root";
-   char *password = ""; /* set me first */
-   char *database = "mysql";
+   char *server = HOST;
+   char *user = USERNAME;
+   char *password = PASSWORD; /* set me first */
+   char *database = DATABASE;
    conn = mysql_init(NULL);
    /* Connect to database */
    if (!mysql_real_connect(conn, server,

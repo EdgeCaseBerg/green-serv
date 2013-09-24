@@ -35,10 +35,10 @@ Place the configuration file into the headers directory before building.
 		#define __CONFIG_H__
 	
 		#define PORT 10110
-		#define HOST green.xenonapps.dev
-		#define DATABASE green_xenon
-		#define PASSWORD pylons
-		#define USERNAME tassadar
+		#define HOST "green.xenonapps.dev"
+		#define DATABASE "green_xenon"
+		#define PASSWORD "pylons"
+		#define USERNAME "tassadar"
 	
 	#endif
 
