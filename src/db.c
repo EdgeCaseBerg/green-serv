@@ -11,11 +11,13 @@ int main() {
    char *database = DATABASE;
    conn = mysql_init(NULL);
    /* Connect to database */
-   if (!mysql_real_connect(conn, server,
-         user, password, database, 0, NULL, 0)) {
+   
+   if (!mysql_real_connect(conn, server, user, password, database, 0, NULL, 0)) {
       fprintf(stderr, "%s\n", mysql_error(conn));
       exit(1);
    }
+
+ 
    /* send SQL query */
    if (mysql_query(conn, "show tables")) {
       fprintf(stderr, "%s\n", mysql_error(conn));
@@ -29,5 +31,6 @@ int main() {
    /* close connection */
    mysql_free_result(res);
    mysql_close(conn);
+   mysql_library_end();
    return 0;
 }
