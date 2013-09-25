@@ -72,7 +72,8 @@ SQL to create database structure:
     	content VARCHAR(140) NOT NULL,
     	scope_id INT(12) NOT NULL, -- this is an ancestor style query
     	created_time DATETIME NOT NULL,
-    	INDEX(`id`)
+    	INDEX(`id`),
+        CONSTRAINT FOREIGN KEY (`scope_id`) REFERENCES `scope` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
     ) ENGINE Memory;
     
     
@@ -92,7 +93,10 @@ SQL to create database structure:
     	scope_id INT(12), -- this is an ancestor style query
     	created_time DATETIME NOT NULL,
     	latitude DECIMAL(10, 8) NOT NULL,
-    	longitude DECIMAL(11, 8) NOT NULL
+    	longitude DECIMAL(11, 8) NOT NULL,
+        INDEX (`id`),
+        CONSTRAINT FOREIGN KEY (`id`) REFERENCES `comments` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+        CONSTRAINT FOREIGN KEY (`scope_id`) REFERENCES `scope` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
     ) ENGINE Memory;
     
     
