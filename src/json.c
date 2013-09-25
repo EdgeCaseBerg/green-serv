@@ -6,6 +6,13 @@
 #include <stdio.h>
 #include <string.h>
 
+/*This function assumes that the output is large enough to handle
+ *whatever input is being escaped. For safety, you should allocate
+ *about 4 times as much space if you want to be completely safe.
+ *you could calculate how much additional space you need by noting 
+ *how many of each escaped character you have, but hey, whose gonna 
+ *do that? (write a function for it maybe?)
+*/
 int _escapeJSON(char * input, int inputlen, char * output){
     int i,j;
     for(i=j=0; input[i] != '\0' && i < inputlen; ++i,++j ){
