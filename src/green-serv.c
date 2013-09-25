@@ -1,33 +1,22 @@
-
 #include "db.h"
+#include "scope.h"
+#include "json.h"
+#include <string.h>
 
 int main() {
-   MYSQL *conn;
-   MYSQL_RES *res;
-   MYSQL_ROW row;
+   struct gs_scope campaign;
+   char json[100];
+   bzero(json,100);
 
-   conn = getMySQLConnection();
+   campaign.id = 5;
+   bzero(campaign.description,9);
    
-   if (!conn) {
-      fprintf(stderr, "%s\n", mysql_error(conn));
-      exit(1);
-   }
+   strncpy(campaign.description,"\b\t\n\\\f\r/greeen",8);
 
-   /* send SQL query */
-   if (mysql_query(conn, "show tables")) {
-      fprintf(stderr, "%s\n", mysql_error(conn));
-      exit(1);
-   }
-   res = mysql_use_result(conn);
-   /* output table name */
-   printf("MySQL Tables in mysql database:\n");
-   while ((row = mysql_fetch_row(res)) != NULL)
-      printf("%s \n", row[0]);
-   /* close connection */
-   mysql_free_result(res);
-   mysql_close(conn);
+   gsScopeToJSON(campaign,json);
+    
 
-   /*Do this or leak. */
-   mysql_library_end();
-   return 0;
+   printf("%s\n", json);
+
+   testDB();
 }

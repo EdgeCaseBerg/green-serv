@@ -9,4 +9,6 @@
 	/*Returns a connection to the mySQL database.*/
 	MYSQL * getMySQLConnection();
 
+	/* Just a test function */
+	int testDB();
 #endif
