@@ -39,6 +39,8 @@ Place the configuration file into the headers directory before building.
 		#define DATABASE "green_xenon"
 		#define PASSWORD "pylons"
 		#define USERNAME "tassadar"
+        #define CAMPAIGN_ID 0L
+        #define CAMPAIGN_DESC "8CharMax"
 	
 	#endif
 
