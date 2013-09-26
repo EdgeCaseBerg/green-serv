@@ -16,8 +16,7 @@ MYSQL * _getMySQLConnection(){
 }
 
 
-void db_getScopeById(long id, struct gs_scope * gss){
-   MYSQL *conn;
+void db_getScopeById(long id, struct gs_scope * gss, MYSQL * conn){
    MYSQL_RES * result;
    MYSQL_ROW row; 
    char query[64];
@@ -25,17 +24,11 @@ void db_getScopeById(long id, struct gs_scope * gss){
    /*Zero the scope structure */
    gs_scope_ZeroStruct(gss);
 
-   conn = _getMySQLConnection();
-   if(!conn)
-      return; /* Callee must check for zero-ed gss*/
-
    bzero(query,64);
    sprintf(query, GS_SCOPE_GET_BY_ID, id);
 
    if(0 != mysql_query(conn, query) ){
       fprintf(stderr, "%s\n", mysql_error(conn));
-      mysql_close(conn);
-      mysql_library_end();
       return;
    }
 
@@ -43,8 +36,6 @@ void db_getScopeById(long id, struct gs_scope * gss){
    row = mysql_fetch_row(result);
    if(row == NULL){
       mysql_free_result(result);
-      mysql_close(conn);
-      mysql_library_end();
       return;    
    }
 
@@ -53,18 +44,13 @@ void db_getScopeById(long id, struct gs_scope * gss){
    gs_scope_setDesc(row[1], gss);
 
    mysql_free_result(result);
-   mysql_close(conn);
-
-   /*Do this or leak. */
-   mysql_library_end();
 
 }
 
 #ifndef DB_INSERT_COMMENT_QUERY_SIZE
    #define DB_INSERT_COMMENT_QUERY_SIZE 58+140+10
 #endif
-void db_insertComment(struct gs_comment * gsc){
-   MYSQL *conn;
+void db_insertComment(struct gs_comment * gsc, MYSQL * conn){
    MYSQL_RES * result;
    MYSQL_ROW row; 
    long affected;
@@ -74,25 +60,17 @@ void db_insertComment(struct gs_comment * gsc){
    if(gsc->scopeId == GS_SCOPE_INVALID_ID)
       return; /* Return if scope is invalid that we can tell*/
 
-   conn = _getMySQLConnection();
-   if(!conn)
-      return; /* Callee must check for zero-ed gss*/
-
    bzero(query,DB_INSERT_COMMENT_QUERY_SIZE);
    sprintf(query, GS_COMMENT_INSERT, gsc->content, gsc->scopeId);
 
     if(0 != mysql_query(conn, query) ){
       fprintf(stderr, "%s\n", mysql_error(conn));
-      mysql_close(conn);
-      mysql_library_end();
       return;
    }
 
    affected = mysql_insert_id(conn);
    if( affected == 0){
       fprintf(stderr, "%s\n", mysql_error(conn));
-      mysql_close(conn);
-      mysql_library_end();
       return;
    }
 
@@ -108,8 +86,6 @@ void db_insertComment(struct gs_comment * gsc){
 
    if(0 != mysql_query(conn, query) ){
       fprintf(stderr, "%s\n", mysql_error(conn));
-      mysql_close(conn);
-      mysql_library_end();
       return;
    }
 
@@ -117,8 +93,6 @@ void db_insertComment(struct gs_comment * gsc){
    row = mysql_fetch_row(result);
    if(row == NULL){
       mysql_free_result(result);
-      mysql_close(conn);
-      mysql_library_end();
       return;    
    }
 
@@ -129,39 +103,37 @@ void db_insertComment(struct gs_comment * gsc){
    gs_comment_setCreatedTime( row[3], gsc);
 
    mysql_free_result(result);
-   mysql_close(conn);
-   mysql_library_end();
    
 }
 
 
 int testDB(){
 	MYSQL *conn;
-   	MYSQL_RES *res;
-   	MYSQL_ROW row;
+   MYSQL_RES *res;
+   MYSQL_ROW row;
 
-   	conn = _getMySQLConnection();
+   conn = _getMySQLConnection();
 	   
-   	if (!conn) {
-      	fprintf(stderr, "%s\n", mysql_error(conn));
-      	exit(1);
-   	}
+   if (!conn) {
+     	fprintf(stderr, "%s\n", mysql_error(conn));
+     	exit(1);
+   }
 
-	   	/* send SQL query */
-   	if (mysql_query(conn, "show tables")) {
-	      fprintf(stderr, "%s\n", mysql_error(conn));
-      	exit(1);
-   	}
-   	res = mysql_use_result(conn);
-   	printf("MySQL Tables in mysql database:\n");
-   	while ((row = mysql_fetch_row(res)) != NULL)
-      	printf("%s \n", row[0]);
+	/* send SQL query */
+   if (mysql_query(conn, "show tables")) {
+	     fprintf(stderr, "%s\n", mysql_error(conn));
+     	exit(1);
+   }
+   res = mysql_use_result(conn);
+   printf("MySQL Tables in mysql database:\n");
+   while ((row = mysql_fetch_row(res)) != NULL)
+     	printf("%s \n", row[0]);
 	   	
-   	/* close connection */
-   	mysql_free_result(res);
-   	mysql_close(conn);
+   /* close connection */
+   mysql_free_result(res);
+   mysql_close(conn);
 
-   	/*Do this or leak. */
-   	mysql_library_end();
+   /*Do this or leak. */
+   mysql_library_end();
 	return 0;
 }
