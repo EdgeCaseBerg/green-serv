@@ -46,6 +46,37 @@ void db_getScopeById(long id, struct gs_scope * gss, MYSQL * conn){
    mysql_free_result(result);
 }
 
+/* We assume the calling party has used the page size to set the size of gsc */
+int db_getComments(int page, struct gs_comment * gsc, MYSQL * conn){
+   MYSQL_RES * result;
+   MYSQL_ROW row; 
+   int i;
+   char query[90];
+
+   bzero(query,90);
+   sprintf(query, GS_COMMENT_GET_ALL, page);
+
+   if(0 != mysql_query(conn, query) ){
+      fprintf(stderr, "%s\n", mysql_error(conn));
+      return 0;
+   }
+
+   i=0;
+   result = mysql_use_result(conn);
+   while( (row=mysql_fetch_row(result)) != NULL ){
+      /* Initialize */
+      gs_comment_ZeroStruct(&gsc[i]);
+
+      gs_comment_setId( atol(row[0]), &gsc[i]);
+      gs_comment_setContent( row[1], &gsc[i]);
+      gs_comment_setScopeId( atol(row[2]), &gsc[i]);
+      gs_comment_setCreatedTime( row[3], &gsc[i]);
+      i++;
+   }
+   mysql_free_result(result);  
+   return i;
+}
+
 void db_getCommentById(long id, struct gs_comment * gsc, MYSQL * conn){
    MYSQL_RES * result;
    MYSQL_ROW row; 

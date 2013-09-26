@@ -11,7 +11,9 @@
 	#include <string.h>
 	
 	/* How many of an entity per page*/
-	#define RESULTS_PER_PAGE (20)
+	#define RESULTS_PER_PAGE 20
+	#define TOSTR(x) #x
+	#define STRINGIFY(x) TOSTR(x)
 	#define GS_INVALID_ID (-1)
 
 	/*Returns a connection to the mySQL database.*/
@@ -25,6 +27,11 @@
 
 	/* Get a single comment by it's id */
 	void db_getCommentById(long id, struct gs_comment * gsc, MYSQL * conn);
+
+	/* Get comments by page. The size of each page is determined by RESULTS_PER_PAGE in db.h 
+	 * returns the number of comments returned, make sure to use this value
+	*/
+	int db_getComments(int page, struct gs_comment * gsc, MYSQL * conn);
 
 	/* Just a test function */
 	int testDB();

@@ -21,8 +21,11 @@ int main(int argc, const char* argv[]) {
    MYSQL * conn;
    struct gs_scope campaign;
    struct gs_comment testComment;
+   struct gs_comment * commentsPage;
    char json[512];
    bzero(json,512);
+   int numComments;
+   int i;
 
    conn = _getMySQLConnection();
    if(!conn){
@@ -54,6 +57,21 @@ int main(int argc, const char* argv[]) {
    db_getCommentById(testComment.id,&testComment,conn);
    gsCommentToJSON(testComment,json);
    printf("%s\n", json);
+
+   commentsPage = malloc(RESULTS_PER_PAGE * sizeof(struct gs_comment));
+   if(commentsPage != NULL){
+
+      numComments = db_getComments(0, commentsPage, conn);
+      for(i=0; i < numComments; ++i){
+         gsCommentToJSON(commentsPage[i],json);
+         printf("%s\n", json);      
+      }
+
+      free(commentsPage);
+   }else{
+      fprintf(stderr, "%s\n", "Could not allocate enough memory for comment page");
+   }
+
 
    /*Clean Up database connection*/
    mysql_close(conn);
