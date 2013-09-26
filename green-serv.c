@@ -4,7 +4,9 @@
 #include "json.h"
 #include "flags.h"
 #include "comment.h"
+#include "marker.h"
 #include <string.h>
+
 
 /* Check for flags. */
 void parseArgs(int argc, const char * argv[], struct gs_scope * campaign, MYSQL * conn){
@@ -22,6 +24,9 @@ int main(int argc, const char* argv[]) {
    struct gs_scope campaign;
    struct gs_comment testComment;
    struct gs_comment * commentsPage;
+   struct gs_marker testMarker;
+   Decimal latitude;
+   Decimal longitude;
    char json[512];
    bzero(json,512);
    int numComments;
@@ -72,6 +77,20 @@ int main(int argc, const char* argv[]) {
    }else{
       fprintf(stderr, "%s\n", "Could not allocate enough memory for comment page");
    }
+
+   /* Test markers */
+   createDecimal(-44, 50, &latitude);
+   createDecimal(-44, 70, &longitude);
+   
+   gs_marker_ZeroStruct(&testMarker);
+
+   gs_marker_setCommentId(testComment.id, &testMarker);
+   gs_marker_setScopeId(campaign.id, &testMarker);
+   gs_marker_setLongitude(longitude, &testMarker);
+   gs_marker_setLatitude(latitude, &testMarker);
+   
+   printf("%ld.%lu\n", testMarker.latitude.left,testMarker.latitude.right);
+
 
 
    /*Clean Up database connection*/
