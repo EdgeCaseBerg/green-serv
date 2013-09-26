@@ -51,10 +51,10 @@ int db_getComments(int page, long scopeId, struct gs_comment * gsc, MYSQL * conn
    	MYSQL_RES * result;
    	MYSQL_ROW row; 
    	int i;
-   	char query[90];
+   	char query[110];
 
-   	bzero(query,90);
-   	sprintf(query, GS_COMMENT_GET_ALL, scopeId, page);
+   	bzero(query,110);
+   	sprintf(query, GS_COMMENT_GET_ALL, scopeId, page*RESULTS_PER_PAGE);
 
    	if(0 != mysql_query(conn, query) ){
       	fprintf(stderr, "%s\n", mysql_error(conn));

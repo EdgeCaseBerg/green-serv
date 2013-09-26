@@ -63,6 +63,7 @@ int main(int argc, const char* argv[]) {
 
       numComments = db_getComments(0, campaign.id,commentsPage, conn);
       for(i=0; i < numComments; ++i){
+         bzero(json,512);
          gsCommentToJSON(commentsPage[i],json);
          printf("%s\n", json);      
       }
