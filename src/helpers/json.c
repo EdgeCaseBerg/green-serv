@@ -1,6 +1,7 @@
 
 /* JSON Escaping function and encoding */
 #include "scope.h"
+#include "comment.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -75,4 +76,16 @@ int gsScopeToJSON(struct gs_scope gss, char * jsonOutput){
 	_escapeJSON(gss.description,strlen(gss.description), escaped );
 
     return sprintf(jsonOutput, json, gss.id ,escaped);
+}
+
+
+int gsCommentToJSON(struct gs_comment gsc, char * jsonOutput){
+    char * json;
+    char escaped[141];
+    bzero(escaped,141);
+
+    json = "{\"id\" : %ld, \"message\" : \"%s\", \"timestamp\" : \"%s\" }";
+    _escapeJSON(gsc.content, strlen(gsc.content), escaped);
+
+    return sprintf(jsonOutput, json, gsc.id, escaped, gsc.createdTime);
 }
