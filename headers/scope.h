@@ -5,8 +5,8 @@
 
 	#define GS_SCOPE_GET_ALL "SELECT id, description FROM scope LIMIT %d;"
 	#define GS_SCOPE_GET_BY_ID "SELECT id, description FROM scope WHERE id = %ld;"
-	#define GS_SCOPE_GET_BY_DESC "SELECT id, description FROM scope where description = %8.8s LIMIT %d;"
-	#define GS_SCOPE_INSERT "INSERT INTO scope (description) VALUES (%s);"
+	#define GS_SCOPE_GET_BY_DESC "SELECT id, description FROM scope where description = \"%8.8s\" LIMIT %d;"
+	#define GS_SCOPE_INSERT "INSERT INTO scope (description) VALUES (\"%s\");"
 
 	#define GS_SCOPE_INVALID_ID -1
 	

@@ -2,8 +2,10 @@
 	#define __JSON_H__
 	
 	#include "scope.h" 
+	#include "comment.h"
 
-	int * _escapeJSON(char * input, int inputlen, char * output);
-	int * gsScopeToJSON(struct gs_scope gss, char * jsonOutput);
+	int _escapeJSON(char * input, int inputlen, char * output);
+	int gsScopeToJSON(struct gs_scope gss, char * jsonOutput);
+	int gsCommentToJSON(struct gs_comment gsc, char * jsonOutput);
 
 #endif
