@@ -61,7 +61,7 @@ int main(int argc, const char* argv[]) {
    commentsPage = malloc(RESULTS_PER_PAGE * sizeof(struct gs_comment));
    if(commentsPage != NULL){
 
-      numComments = db_getComments(0, commentsPage, conn);
+      numComments = db_getComments(0, campaign.id,commentsPage, conn);
       for(i=0; i < numComments; ++i){
          gsCommentToJSON(commentsPage[i],json);
          printf("%s\n", json);      
