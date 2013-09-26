@@ -68,72 +68,68 @@ SQL to create database structure:
     
     #Cache table for fast pagination
     CREATE TABLE cacheComments (
-    	id INT(12) NOT NULL auto_increment PRIMARY KEY,
-    	content VARCHAR(140) NOT NULL,
-    	scope_id INT(12) NOT NULL, -- this is an ancestor style query
-    	created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    	INDEX(`id`),
-        CONSTRAINT FOREIGN KEY (`scope_id`) REFERENCES `scope` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+        id INT(12) NOT NULL auto_increment PRIMARY KEY,
+        content VARCHAR(140) NOT NULL,
+        scope_id INT(12) NOT NULL, -- this is an ancestor style query
+        created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
     ) ENGINE Memory;
-    
-    
+
+
     CREATE TABLE comments (
-    	id INT(12) NOT NULL auto_increment PRIMARY KEY,
-    	content VARCHAR(140),
-    	scope_id INT(12) NOT NULL, -- this is an ancestor style query
-    	created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    	INDEX (`scope_id`),
-    	CONSTRAINT FOREIGN KEY (`scope_id`) REFERENCES `scope` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+        id INT(12) NOT NULL auto_increment PRIMARY KEY,
+        content VARCHAR(140),
+        scope_id INT(12) NOT NULL, -- this is an ancestor style query
+        created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+        INDEX (`scope_id`),
+        CONSTRAINT FOREIGN KEY (`scope_id`) REFERENCES `scope` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
     ) ENGINE InnoDB;
-    
+
     #High speed reading
     CREATE TABLE cacheMarkers (
-    	id INT(12) NOT NULL auto_increment PRIMARY KEY,
-    	comment_id INT(12),
-    	scope_id INT(12), -- this is an ancestor style query
-    	created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    	latitude DECIMAL(10, 8) NOT NULL,
-    	longitude DECIMAL(11, 8) NOT NULL,
-        INDEX (`id`),
-        CONSTRAINT FOREIGN KEY (`id`) REFERENCES `comments` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-        CONSTRAINT FOREIGN KEY (`scope_id`) REFERENCES `scope` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+        id INT(12) NOT NULL auto_increment PRIMARY KEY,
+        comment_id INT(12) NULL,
+        scope_id INT(12), -- this is an ancestor style query
+        created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+        latitude DECIMAL(10, 8) NOT NULL,
+        longitude DECIMAL(11, 8) NOT NULL,
+        INDEX (`id`)
     ) ENGINE Memory;
-    
-    
+
+
     CREATE TABLE markers (
-    	id INT(12) NOT NULL auto_increment PRIMARY KEY,
-    	comment_id INT(12),
-    	scope_id INT(12), -- this is an ancestor style query
-    	created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    	latitude DECIMAL(10, 8) NOT NULL,
-    	longitude DECIMAL(11, 8) NOT NULL,
-    	INDEX (`id`),
-    	CONSTRAINT FOREIGN KEY (`id`) REFERENCES `comments` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-    	CONSTRAINT FOREIGN KEY (`scope_id`) REFERENCES `scope` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+        id INT(12) NOT NULL auto_increment PRIMARY KEY,
+        comment_id INT(12) NULL,
+        scope_id INT(12), -- this is an ancestor style query
+        created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+        latitude DECIMAL(10, 8) NOT NULL,
+        longitude DECIMAL(11, 8) NOT NULL,
+        INDEX (`id`),
+        CONSTRAINT FOREIGN KEY (`comment_id`) REFERENCES `comments` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+        CONSTRAINT FOREIGN KEY (`scope_id`) REFERENCES `scope` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
     ) ENGINE InnoDB;
-    
-    
+
+
     CREATE TABLE heatmap (
-    	id INT(12) NOT NULL auto_increment PRIMARY KEY,
-    	scope_id INT(12), -- this is an ancestor style query
-    	intensity INT(12), -- this is seconds worked
-    	created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, -- for dampening
-    	latitude DECIMAL(10, 8) NOT NULL,
-    	longitude DECIMAL(11, 8) NOT NULL,
-    	INDEX(`scope_id`),
-    	CONSTRAINT FOREIGN KEY (`scope_id`) REFERENCES `scope` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+        id INT(12) NOT NULL auto_increment PRIMARY KEY,
+        scope_id INT(12), -- this is an ancestor style query
+        intensity INT(12), -- this is seconds worked
+        created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- for dampening
+        latitude DECIMAL(10, 8) NOT NULL,
+        longitude DECIMAL(11, 8) NOT NULL,
+        INDEX(`scope_id`),
+        CONSTRAINT FOREIGN KEY (`scope_id`) REFERENCES `scope` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
     ) ENGINE InnoDB;
-    
+
     CREATE TABLE report (
-		id INT(12) NOT NULL auto_increment PRIMARY KEY,
-		content TEXT, -- stores 64Kb.
-		scope_id INT(12), -- this is an ancestor style query
-		origin CHAR(64) NOT NULL, -- sha256 hash
-		authorize CHAR(64) NOT NULL, -- sha256 hash
-		created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-		INDEX(`scope_id`),
-		CONSTRAINT FOREIGN KEY (`scope_id`) REFERENCES `scope` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-	) ENGINE InnoDB;
+        id INT(12) NOT NULL auto_increment PRIMARY KEY,
+        content TEXT, -- stores 64Kb.
+        scope_id INT(12), -- this is an ancestor style query
+        origin CHAR(64) NOT NULL, -- sha256 hash
+        authorize CHAR(64) NOT NULL, -- sha256 hash
+        created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX(`scope_id`),
+        CONSTRAINT FOREIGN KEY (`scope_id`) REFERENCES `scope` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+    ) ENGINE InnoDB;
 
 
 Example Compilation and Verification:
