@@ -30,8 +30,10 @@
 
 	/* Get comments by page. The size of each page is determined by RESULTS_PER_PAGE in db.h 
 	 * returns the number of comments returned, make sure to use this value
+	 * If unsure about what scopeId to pass, send the invalid Scope and the default configured 
+	 * scope will be used instead.
 	*/
-	int db_getComments(int page, struct gs_comment * gsc, MYSQL * conn);
+	int db_getComments(int page, long scopeId, struct gs_comment * gsc, MYSQL * conn);
 
 	/* Just a test function */
 	int testDB();

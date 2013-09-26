@@ -26,7 +26,7 @@
 
 	#include "db.h" /* For pagination and invalid flag*/
 
-	#define GS_COMMENT_GET_ALL "SELECT id, content, scope_id, created_time FROM comments LIMIT %d, " STRINGIFY(RESULTS_PER_PAGE) ";"
+	#define GS_COMMENT_GET_ALL "SELECT id, content, scope_id, created_time FROM comments WHERE scope_id = %ld LIMIT %d, " STRINGIFY(RESULTS_PER_PAGE) ";"
 	#define GS_COMMENT_GET_BY_ID "SELECT id, content, scope_id, created_time FROM comments WHERE id = %ld;"
 	#define GS_COMMENT_INSERT "INSERT INTO comments (content, scope_id) VALUES (\"%s\", %ld);"
 
