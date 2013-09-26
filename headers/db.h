@@ -23,6 +23,9 @@
 	/* Insert a comment struct and return the database's version of it*/
 	void db_insertComment(struct gs_comment * gsc, MYSQL * conn);
 
+	/* Get a single comment by it's id */
+	void db_getCommentById(long id, struct gs_comment * gsc, MYSQL * conn);
+
 	/* Just a test function */
 	int testDB();
 #endif
