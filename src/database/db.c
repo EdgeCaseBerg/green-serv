@@ -44,7 +44,38 @@ void db_getScopeById(long id, struct gs_scope * gss, MYSQL * conn){
    gs_scope_setDesc(row[1], gss);
 
    mysql_free_result(result);
+}
 
+void db_getCommentById(long id, struct gs_comment * gsc, MYSQL * conn){
+   MYSQL_RES * result;
+   MYSQL_ROW row; 
+   char query[80]; /* 72 for query, 8 for padding and null char*/
+
+   /*Zero the scope structure */
+   gs_comment_ZeroStruct(gsc);
+
+   bzero(query,80);
+   sprintf(query, GS_COMMENT_GET_BY_ID, id);
+
+   if(0 != mysql_query(conn, query) ){
+      fprintf(stderr, "%s\n", mysql_error(conn));
+      return;
+   }
+
+   result = mysql_use_result(conn);
+   row = mysql_fetch_row(result);
+   if(row == NULL){
+      mysql_free_result(result);
+      return;    
+   }
+
+   /* Make sure id is integer */
+   gs_comment_setId( atol(row[0]), gsc);
+   gs_comment_setContent( row[1], gsc);
+   gs_comment_setScopeId( atol(row[2]), gsc);
+   gs_comment_setCreatedTime( row[3], gsc);
+
+   mysql_free_result(result);  
 }
 
 #ifndef DB_INSERT_COMMENT_QUERY_SIZE

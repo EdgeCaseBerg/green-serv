@@ -50,7 +50,12 @@ int main(int argc, const char* argv[]) {
    gsCommentToJSON(testComment,json);
    printf("%s\n", json);
 
-   /*Clean Up*/
+   /* test getting comment by id */
+   db_getCommentById(testComment.id,&testComment,conn);
+   gsCommentToJSON(testComment,json);
+   printf("%s\n", json);
+
+   /*Clean Up database connection*/
    mysql_close(conn);
    mysql_library_end();
 }
