@@ -67,7 +67,7 @@ int _escapeJSON(const char * input, int inputlen, char * output){
 }
 
 /* Recommended at least 128 bytes for safety */
-int gsScopeToJSON(const struct gs_scope gss, char * jsonOutput){
+int gs_scopeToJSON(const struct gs_scope gss, char * jsonOutput){
 	char * json;
     char escaped[33];
     bzero(escaped,33);
@@ -80,7 +80,7 @@ int gsScopeToJSON(const struct gs_scope gss, char * jsonOutput){
 }
 
 /* Recommended at least 256 bytes for jsonOutput to be allocated */
-int gsCommentToJSON(const struct gs_comment gsc, char * jsonOutput){
+int gs_commentToJSON(const struct gs_comment gsc, char * jsonOutput){
     char * json;
     char escaped[141];
     bzero(escaped,141);
@@ -92,7 +92,7 @@ int gsCommentToJSON(const struct gs_comment gsc, char * jsonOutput){
 }
 
 /* I'd recommend at least 110 bytes to be specified.  Probably 128 for safety*/
-int gsMarkerToJSON(const struct gs_marker gsm, char * jsonOutput){
+int gs_markerToJSON(const struct gs_marker gsm, char * jsonOutput){
     char * json;
 
     json = "{\"id\" : %ld, \"commentId\" : %ld, \"timestamp\" : \"%s\", \"latitude\" : %ld.%lu, \"longitude\" : %ld.%lu }";
@@ -107,7 +107,7 @@ int gsMarkerToJSON(const struct gs_marker gsm, char * jsonOutput){
 }
 
 /* Recommend at least 128 for safety*/ 
-int gsHeatmapToJSON(const struct gs_heatmap gsh, char * jsonOutput){
+int gs_heatmapToJSON(const struct gs_heatmap gsh, char * jsonOutput){
     char * json;
 
     json = "{\"latitude\" : %ld.%lu, \"longitude\" : %ld.%lu, \"secondsWorked\" : %ld }";
