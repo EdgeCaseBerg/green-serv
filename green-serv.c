@@ -5,6 +5,7 @@
 #include "flags.h"
 #include "models/comment.h"
 #include "models/marker.h"
+#include "models/heatmap.h"
 #include <string.h>
 
 
@@ -26,6 +27,7 @@ int main(int argc, const char* argv[]) {
    	struct gs_comment * commentPage;
    	struct gs_marker testMarker;
    	struct gs_marker * markerPage;
+   	struct gs_heatmap testHeatmap;
    	Decimal latitude;
    	Decimal longitude;
    	char json[512];
@@ -44,7 +46,7 @@ int main(int argc, const char* argv[]) {
    	db_getScopeById(CAMPAIGN_ID, &campaign, conn);
    	parseArgs(argc,argv,&campaign,conn);
 
-	gsScopeToJSON(campaign,json);
+	gs_scopeToJSON(campaign,json);
 	
    	printf("%s\n", json);
 
@@ -57,12 +59,12 @@ int main(int argc, const char* argv[]) {
 
    	bzero(json,512);
 
-   	gsCommentToJSON(testComment,json);
+   	gs_commentToJSON(testComment,json);
    	printf("%s\n", json);
 
    	/* test getting comment by id */
 	db_getCommentById(testComment.id,&testComment,conn);
-	gsCommentToJSON(testComment,json);
+	gs_commentToJSON(testComment,json);
 	printf("%s\n", json);
 
 	commentPage = malloc(RESULTS_PER_PAGE * sizeof(struct gs_comment));
@@ -71,7 +73,7 @@ int main(int argc, const char* argv[]) {
 	  	numComments = db_getComments(0, campaign.id,commentPage, conn);
 	  	for(i=0; i < numComments; ++i){
 		 	bzero(json,512);
-		 	gsCommentToJSON(commentPage[i],json);
+		 	gs_commentToJSON(commentPage[i],json);
 		 	printf("%s\n", json);	  
 	  	}
 
@@ -92,11 +94,11 @@ int main(int argc, const char* argv[]) {
 	gs_marker_setLatitude(latitude, &testMarker);
 
 	db_insertMarker(&testMarker, conn);
-	gsMarkerToJSON(testMarker, json);
+	gs_markerToJSON(testMarker, json);
 	printf("%s\n", json);	
 
 	db_getMarkerById(testMarker.id, &testMarker, conn);
-	gsMarkerToJSON(testMarker, json);
+	gs_markerToJSON(testMarker, json);
 	printf("%s\n", json);	
 
 	markerPage = malloc(RESULTS_PER_PAGE * sizeof(struct gs_marker));
@@ -105,7 +107,7 @@ int main(int argc, const char* argv[]) {
 		numMarkers = db_getMarkers(0, campaign.id, markerPage, conn);
 		for(i=0; i < numMarkers; ++i){
 			bzero(json,512);
-			gsMarkerToJSON(markerPage[i], json);
+			gs_markerToJSON(markerPage[i], json);
 			printf("%s\n", json);		
 		}
 		
@@ -114,6 +116,11 @@ int main(int argc, const char* argv[]) {
 	  	fprintf(stderr, "%s\n", "Could not allocate enough memory for marker page");
 	}
 
+	bzero(json,512);
+	gs_heatmap_ZeroStruct(&testHeatmap);
+	gs_heatmapToJSON(testHeatmap, json);
+
+	printf("%s\n", json);
 
 	/*Clean Up database connection*/
 	mysql_close(conn);
