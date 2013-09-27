@@ -1,5 +1,4 @@
-#include "scope.h"
-
+#include "models/scope.h"
 #include <string.h>
 
 /* Set the Id of the function*/

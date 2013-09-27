@@ -2,7 +2,7 @@
 	#define __GS_MARKER_H__
 	/* Fun Fact: GS stands for green-serv*/
 
-	#define GS_MARKER_INVALID_ID -1
+	#include "flags.h"
 	#define GS_MARKER_CREATED_TIME_LENGTH 19
 	
 	typedef struct{			 /* Calling them more convenient terms: */
@@ -29,19 +29,9 @@
 	void gs_marker_setLongitude(Decimal longitude, struct gs_marker * gsm);
 	void gs_marker_setLatitude(Decimal latitude, struct gs_marker * gsm);
 	
-	/* For Invalid Flags (Perhaps they should be moved to their own header...)*/
-	#include "scope.h"
-	#include "comment.h"
 
 	/* Empties a marker structure of data and sets flag values */
 	void gs_marker_ZeroStruct(struct gs_marker * gsm);
-
-	#include "db.h" /* For pagination and invalid flag*/
-
-	#define GS_MARKER_GET_ALL "SELECT id, comment_id, scope_id, created_time, latitude, longitude FROM markers WHERE scope_id = %ld ORDER BY created_time DESC LIMIT %d, " STRINGIFY(RESULTS_PER_PAGE) ";"
-	#define GS_MARKER_GET_BY_ID "SELECT id, comment_id, scope_id, created_time, latitude, longitude FROM markers WHERE id = %ld;"
-	#define GS_MARKER_INSERT "INSERT INTO markers (comment_id, scope_id, latitude, longitude) VALUES (%ld, %ld, %ld.%lu, %ld.%lu);"
-
 
 
 

@@ -1,11 +1,11 @@
 
 /* JSON Escaping function and encoding */
-#include "scope.h"
-#include "comment.h"
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+
+#include "json.h"
+
 
 /*This function assumes that the output is large enough to handle
  *whatever input is being escaped. For safety, you should allocate
