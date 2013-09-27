@@ -7,6 +7,7 @@
 	#include <stdlib.h>
 	#include "scope.h"
 	#include "comment.h"
+	#include "marker.h"
 	#include "config.h"
 	#include <string.h>
 	
@@ -18,6 +19,9 @@
 
 	/*Returns a connection to the mySQL database.*/
 	MYSQL * _getMySQLConnection();
+
+	/* Helper function to create a decimal with arbitrary precision */
+	void createDecimalFromString(Decimal * dec, char * str);
 
 	/* Given a struct and an id, return a structure populate from db*/
 	void db_getScopeById(long id, struct gs_scope * gss, MYSQL * conn);
@@ -35,6 +39,15 @@
 	*/
 	int db_getComments(int page, long scopeId, struct gs_comment * gsc, MYSQL * conn);
 
-	/* Just a test function */
-	int testDB();
+	/*Same warning for getComments, you need to make sure there is enough space.
+	 *
+	*/
+	int db_getMarkers(int page, long scopeId, struct gs_marker * gsm, MYSQL * conn);
+
+	/* Insert a single marker into the database */
+	void db_insertMarker(struct gs_marker * gsm, MYSQL * conn);
+
+	/* Retrieve a single marker by it's id */
+	void db_getMarkerById(long id, struct gs_marker * gsm, MYSQL * conn);
+
 #endif
