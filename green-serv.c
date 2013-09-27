@@ -5,6 +5,7 @@
 #include "flags.h"
 #include "models/comment.h"
 #include "models/marker.h"
+#include "models/heatmap.h"
 #include <string.h>
 
 
@@ -26,6 +27,7 @@ int main(int argc, const char* argv[]) {
    	struct gs_comment * commentPage;
    	struct gs_marker testMarker;
    	struct gs_marker * markerPage;
+   	struct gs_heatmap testHeatmap;
    	Decimal latitude;
    	Decimal longitude;
    	char json[512];
@@ -113,6 +115,8 @@ int main(int argc, const char* argv[]) {
 	}else{	
 	  	fprintf(stderr, "%s\n", "Could not allocate enough memory for marker page");
 	}
+
+	gs_heatmap_ZeroStruct(&testHeatmap);
 
 
 	/*Clean Up database connection*/
