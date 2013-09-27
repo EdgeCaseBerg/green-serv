@@ -89,3 +89,18 @@ int gsCommentToJSON(struct gs_comment gsc, char * jsonOutput){
 
     return sprintf(jsonOutput, json, gsc.id, escaped, gsc.createdTime);
 }
+
+/* I'd recommend at least 110 bytes to be specified.  Probably 128 for safety*/
+int gsMarkerToJSON(struct gs_marker gsm, char * jsonOutput){
+    char * json;
+
+    json = "{\"id\" : %ld, \"commentId\" : %ld, \"timestamp\" : \"%s\", \"latitude\" : %ld.%lu, \"longitude\" : %ld.%lu }";
+
+    return sprintf( jsonOutput, 
+                    json, 
+                    gsm.id, 
+                    gsm.commentId, 
+                    gsm.createdTime, 
+                    gsm.latitude.left, gsm.latitude.right, 
+                    gsm.longitude.left, gsm.longitude.right);    
+}

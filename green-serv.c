@@ -31,6 +31,7 @@ int main(int argc, const char* argv[]) {
    	char json[512];
    	bzero(json,512);
    	int numComments;
+   	int numMarkers;
    	int i;
 
    	conn = _getMySQLConnection();
@@ -91,12 +92,22 @@ int main(int argc, const char* argv[]) {
 	gs_marker_setLatitude(latitude, &testMarker);
 
 	db_insertMarker(&testMarker, conn);
+	gsMarkerToJSON(testMarker, json);
+	printf("%s\n", json);	
 
 	db_getMarkerById(testMarker.id, &testMarker, conn);
+	gsMarkerToJSON(testMarker, json);
+	printf("%s\n", json);	
 
 	markerPage = malloc(RESULTS_PER_PAGE * sizeof(struct gs_marker));
 	if(markerPage != NULL){
-		db_getMarkers(0, campaign.id, markerPage, conn);
+
+		numMarkers = db_getMarkers(0, campaign.id, markerPage, conn);
+		for(i=0; i < numMarkers; ++i){
+			bzero(json,512);
+			gsMarkerToJSON(markerPage[i], json);
+			printf("%s\n", json);		
+		}
 		
 		free(markerPage);
 	}else{	
