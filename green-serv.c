@@ -90,9 +90,9 @@ int main(int argc, const char* argv[]) {
 	gs_marker_setLongitude(longitude, &testMarker);
 	gs_marker_setLatitude(latitude, &testMarker);
 
-	printf("%ld.%lu\n", testMarker.latitude.left,testMarker.latitude.right);
-
 	db_insertMarker(&testMarker, conn);
+
+	db_getMarkerById(testMarker.id, &testMarker, conn);
 
 	markerPage = malloc(RESULTS_PER_PAGE * sizeof(struct gs_marker));
 	if(markerPage != NULL){

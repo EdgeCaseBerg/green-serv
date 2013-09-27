@@ -281,6 +281,39 @@ void db_insertMarker(struct gs_marker * gsm, MYSQL * conn){
    
 }
 
-/*
-gs_marker_GET_BY_ID
-*/
+
+void db_getMarkerById(long id, struct gs_marker * gsm, MYSQL * conn){
+	MYSQL_RES * result;
+	MYSQL_ROW row; 
+	char query[95+5]; /* 95 for query, 5 for padding and null char*/
+
+	/*Zero the scope structure */
+	gs_marker_ZeroStruct(gsm);
+
+	bzero(query,95+5);
+	sprintf(query, GS_MARKER_GET_BY_ID, id);
+
+	if(0 != mysql_query(conn, query) ){
+		fprintf(stderr, "%s\n", mysql_error(conn));
+		return;
+	}
+
+	result = mysql_use_result(conn);
+	row = mysql_fetch_row(result);
+	if(row == NULL){
+		mysql_free_result(result);
+		return;    
+	}
+
+	/* Make sure id is integer */
+	gs_marker_setId( atol(row[0]), gsm);
+	gs_marker_setCommentId( row[1] == NULL ? GS_COMMENT_INVALID_ID :  atol(row[1]), gsm);
+	gs_marker_setScopeId( row[2] == NULL ? GS_SCOPE_INVALID_ID : atol(row[2]), gsm);
+	gs_marker_setCreatedTime( row[3], gsm);
+	createDecimalFromString(&gsm->latitude,row[4]);
+	createDecimalFromString(&gsm->longitude,row[5]);
+	
+
+
+	mysql_free_result(result);  
+}

@@ -47,4 +47,7 @@
 	/* Insert a single marker into the database */
 	void db_insertMarker(struct gs_marker * gsm, MYSQL * conn);
 
+	/* Retrieve a single marker by it's id */
+	void db_getMarkerById(long id, struct gs_marker * gsm, MYSQL * conn);
+
 #endif
