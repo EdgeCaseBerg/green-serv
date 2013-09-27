@@ -38,9 +38,9 @@
 
 	#include "db.h" /* For pagination and invalid flag*/
 
-	#define gs_marker_GET_ALL "SELECT id, commentId, scope_id, created_time, latitude, longitude FROM markers WHERE scope_id = %ld ORDER BY created_time DESC LIMIT %d, " STRINGIFY(RESULTS_PER_PAGE) ";"
-	#define gs_marker_GET_BY_ID "SELECT id, commentId, scope_id, created_time, latitude, longitude FROM markers WHERE id = %ld;"
-	#define gs_marker_INSERT "INSERT INTO markers (commentId, latitude, longitude) VALUES (%ld, %ld.%lu, %ld.%lu);"
+	#define GS_MARKER_GET_ALL "SELECT id, comment_id, scope_id, created_time, latitude, longitude FROM markers WHERE scope_id = %ld ORDER BY created_time DESC LIMIT %d, " STRINGIFY(RESULTS_PER_PAGE) ";"
+	#define GS_MARKER_GET_BY_ID "SELECT id, comment_id, scope_id, created_time, latitude, longitude FROM markers WHERE id = %ld;"
+	#define GS_MARKER_INSERT "INSERT INTO markers (comment_id, scope_id, latitude, longitude) VALUES (%ld, %ld, %ld.%lu, %ld.%lu);"
 
 
 
