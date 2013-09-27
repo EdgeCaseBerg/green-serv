@@ -14,7 +14,7 @@
  *how many of each escaped character you have, but hey, whose gonna 
  *do that? (write a function for it maybe?)
 */
-int _escapeJSON(char * input, int inputlen, char * output){
+int _escapeJSON(const char * input, int inputlen, char * output){
     int i,j;
     for(i=j=0; input[i] != '\0' && i < inputlen; ++i,++j ){
         switch(input[i]){
@@ -66,7 +66,8 @@ int _escapeJSON(char * input, int inputlen, char * output){
     return (j+1);
 }
 
-int gsScopeToJSON(struct gs_scope gss, char * jsonOutput){
+/* Recommended at least 128 bytes for safety */
+int gsScopeToJSON(const struct gs_scope gss, char * jsonOutput){
 	char * json;
     char escaped[33];
     bzero(escaped,33);
@@ -78,8 +79,8 @@ int gsScopeToJSON(struct gs_scope gss, char * jsonOutput){
     return sprintf(jsonOutput, json, gss.id ,escaped);
 }
 
-
-int gsCommentToJSON(struct gs_comment gsc, char * jsonOutput){
+/* Recommended at least 256 bytes for jsonOutput to be allocated */
+int gsCommentToJSON(const struct gs_comment gsc, char * jsonOutput){
     char * json;
     char escaped[141];
     bzero(escaped,141);
@@ -91,7 +92,7 @@ int gsCommentToJSON(struct gs_comment gsc, char * jsonOutput){
 }
 
 /* I'd recommend at least 110 bytes to be specified.  Probably 128 for safety*/
-int gsMarkerToJSON(struct gs_marker gsm, char * jsonOutput){
+int gsMarkerToJSON(const struct gs_marker gsm, char * jsonOutput){
     char * json;
 
     json = "{\"id\" : %ld, \"commentId\" : %ld, \"timestamp\" : \"%s\", \"latitude\" : %ld.%lu, \"longitude\" : %ld.%lu }";
@@ -103,4 +104,18 @@ int gsMarkerToJSON(struct gs_marker gsm, char * jsonOutput){
                     gsm.createdTime, 
                     gsm.latitude.left, gsm.latitude.right, 
                     gsm.longitude.left, gsm.longitude.right);    
+}
+
+/* Recommend at least 128 for safety*/ 
+int gsHeatmapToJSON(const struct gs_heatmap gsh, char * jsonOutput){
+    char * json;
+
+    json = "{\"latitude\" : %ld.%lu, \"longitude\" : %ld.%lu, \"secondsWorked\" : %ld }";
+
+    return sprintf( jsonOutput,
+                    json,
+                    gsh.latitude.left, gsh.latitude.right,
+                    gsh.longitude.left, gsh.longitude.right,
+                    gsh.intensity
+                    );
 }

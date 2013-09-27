@@ -14,6 +14,10 @@
 	
 	/* How many of an entity per page*/
 	#define RESULTS_PER_PAGE 20
+	/* Gets it's own results because it's more likely we'll want more
+	 * heatmap data than something like comments
+	*/
+	#define HEATMAP_RESULTS_PER_PAGE 50
 	#define TOSTR(x) #x
 	#define STRINGIFY(x) TOSTR(x)
 
@@ -30,6 +34,8 @@
 	#define GS_MARKER_GET_BY_ID "SELECT id, comment_id, scope_id, created_time, latitude, longitude FROM markers WHERE id = %ld;"
 	#define GS_MARKER_INSERT "INSERT INTO markers (comment_id, scope_id, latitude, longitude) VALUES (%ld, %ld, %ld.%lu, %ld.%lu);"
 
+	#define GS_HEATMAP_GET_ALL "SELECT intensity, latitude, longitude FROM heatmap WHERE scope_id = %ld ORDER BY created_time DESC LIMIT %d, " STRINGIFY(HEATMAP_RESULTS_PER_PAGE) ";"
+	#define GS_HEATMAP_INSERT "INSERT INTO heatmap (scope_id, intensity, latitude, longitude) VALUES (%ld, %ld, %ld.%lu, %ld.%lu);"
 
 	/*Returns a connection to the mySQL database.*/
 	MYSQL * _getMySQLConnection();

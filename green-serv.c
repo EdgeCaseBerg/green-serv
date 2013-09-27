@@ -116,8 +116,11 @@ int main(int argc, const char* argv[]) {
 	  	fprintf(stderr, "%s\n", "Could not allocate enough memory for marker page");
 	}
 
+	bzero(json,512);
 	gs_heatmap_ZeroStruct(&testHeatmap);
+	gsHeatmapToJSON(testHeatmap, json);
 
+	printf("%s\n", json);
 
 	/*Clean Up database connection*/
 	mysql_close(conn);

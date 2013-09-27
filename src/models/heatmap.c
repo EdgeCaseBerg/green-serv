@@ -32,6 +32,7 @@ void gs_heatmap_setLatitude(Decimal latitude, struct gs_heatmap * gsh){
 void gs_heatmap_ZeroStruct(struct gs_heatmap * gsh){
 	bzero(gsh->createdTime, GS_HEATMAP_CREATED_TIME_LENGTH+1);
 	gsh->id = GS_HEATMAP_INVALID_ID;
+	gsh->scopeId = GS_SCOPE_INVALID_ID;
 	gsh->intensity = 0;
 	/* 0 is actually a good 'invalid' or default for the right
 	 * side because if someone gives just 1. or 1 to a string 
