@@ -1,6 +1,4 @@
-
-#include "scope.h" /* For invalid id for scope */
-#include "comment.h"
+#include "models/comment.h"
 
 #include <string.h>
 

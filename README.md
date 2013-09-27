@@ -29,6 +29,8 @@ Example apache virtual hosts configuration:
 
 Example Configuration File:
 Place the configuration file into the headers directory before building.
+You will need to create a config.h file, you can copy the one below if 
+you'd like.
 ------------------------------------------------------------------------
 
 	#ifndef __CONFIG_H__
@@ -133,6 +135,10 @@ SQL to create database structure:
 
 
 Example Compilation and Verification:
+Something that you can do to make sure you're content with your build is
+to check the md5 hash of the compiled a.out file that is generated from
+running make. You can check the hash generated against the last record
+of the md5sum hash in the git log.
 ------------------------------------------------------------------------
 
 	make

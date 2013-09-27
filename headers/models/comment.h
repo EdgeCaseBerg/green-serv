@@ -2,7 +2,7 @@
 	#define __GS_COMMENT_H__
 	/* Fun Fact: GS stands for green-serv*/
 
-	#define GS_COMMENT_INVALID_ID -1
+	#include "flags.h"
 	#define GS_COMMENT_MAX_LENGTH 140
 	#define GS_COMMENT_CREATED_TIME_LENGTH 19
 	
@@ -24,11 +24,6 @@
 	/* Empties a comment structure of data and sets flag values */
 	void gs_comment_ZeroStruct(struct gs_comment * gsc);
 
-	#include "db.h" /* For pagination and invalid flag*/
-
-	#define GS_COMMENT_GET_ALL "SELECT id, content, scope_id, created_time FROM comments WHERE scope_id = %ld ORDER BY created_time DESC LIMIT %d, " STRINGIFY(RESULTS_PER_PAGE) ";"
-	#define GS_COMMENT_GET_BY_ID "SELECT id, content, scope_id, created_time FROM comments WHERE id = %ld;"
-	#define GS_COMMENT_INSERT "INSERT INTO comments (content, scope_id) VALUES (\"%s\", %ld);"
 
 
 

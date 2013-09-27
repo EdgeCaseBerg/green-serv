@@ -3,11 +3,12 @@
 	
 	#include <mysql/mysql.h>
 
+	#include "flags.h"
 	#include <stdio.h>
 	#include <stdlib.h>
-	#include "scope.h"
-	#include "comment.h"
-	#include "marker.h"
+	#include "models/scope.h"
+	#include "models/comment.h"
+	#include "models/marker.h"
 	#include "config.h"
 	#include <string.h>
 	
@@ -15,7 +16,20 @@
 	#define RESULTS_PER_PAGE 20
 	#define TOSTR(x) #x
 	#define STRINGIFY(x) TOSTR(x)
-	#define GS_INVALID_ID (-1)
+
+	/* SQL Queries for entities */	
+	#define GS_SCOPE_GET_ALL "SELECT id, description FROM scope LIMIT %d;"
+	#define GS_SCOPE_GET_BY_ID "SELECT id, description FROM scope WHERE id = %ld;"
+	#define GS_SCOPE_INSERT "INSERT INTO scope (description) VALUES (\"%s\");"
+
+	#define GS_COMMENT_GET_ALL "SELECT id, content, scope_id, created_time FROM comments WHERE scope_id = %ld ORDER BY created_time DESC LIMIT %d, " STRINGIFY(RESULTS_PER_PAGE) ";"
+	#define GS_COMMENT_GET_BY_ID "SELECT id, content, scope_id, created_time FROM comments WHERE id = %ld;"
+	#define GS_COMMENT_INSERT "INSERT INTO comments (content, scope_id) VALUES (\"%s\", %ld);"
+
+	#define GS_MARKER_GET_ALL "SELECT id, comment_id, scope_id, created_time, latitude, longitude FROM markers WHERE scope_id = %ld ORDER BY created_time DESC LIMIT %d, " STRINGIFY(RESULTS_PER_PAGE) ";"
+	#define GS_MARKER_GET_BY_ID "SELECT id, comment_id, scope_id, created_time, latitude, longitude FROM markers WHERE id = %ld;"
+	#define GS_MARKER_INSERT "INSERT INTO markers (comment_id, scope_id, latitude, longitude) VALUES (%ld, %ld, %ld.%lu, %ld.%lu);"
+
 
 	/*Returns a connection to the mySQL database.*/
 	MYSQL * _getMySQLConnection();

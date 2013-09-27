@@ -1,10 +1,10 @@
 #include "config.h"
 #include "db.h"
-#include "scope.h"
+#include "models/scope.h"
 #include "json.h"
 #include "flags.h"
-#include "comment.h"
-#include "marker.h"
+#include "models/comment.h"
+#include "models/marker.h"
 #include <string.h>
 
 
