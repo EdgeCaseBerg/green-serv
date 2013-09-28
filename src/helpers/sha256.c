@@ -1,7 +1,7 @@
 #include "helpers/sha256.h"
 
 void sha256(char *string, char outputBuffer[65]){
-	bzero(outputBuffer,65);
+	bzero(outputBuffer,64);
     unsigned char hash[SHA256_DIGEST_LENGTH];
     SHA256_CTX sha256;
     SHA256_Init(&sha256);
@@ -12,5 +12,5 @@ void sha256(char *string, char outputBuffer[65]){
     {
         sprintf(outputBuffer + (i * 2), "%02x", hash[i]);
     }
-    outputBuffer[65] = '\0';
+    outputBuffer[64] = '\0';
 }
