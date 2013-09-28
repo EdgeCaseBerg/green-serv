@@ -38,6 +38,8 @@
 	#define GS_HEATMAP_GET_ALL "SELECT intensity, latitude, longitude FROM heatmap WHERE scope_id = %ld ORDER BY created_time DESC LIMIT %d, " STRINGIFY(HEATMAP_RESULTS_PER_PAGE) ";"
 	#define GS_HEATMAP_GET_BY_ID "SELECT id, intensity, scope_id, created_time, latitude, longitude FROM heatmap WHERE id = %ld;"
 	#define GS_HEATMAP_INSERT "INSERT INTO heatmap (scope_id, intensity, latitude, longitude) VALUES (%ld, %ld, %ld.%lu, %ld.%lu);"
+	#define GS_HEATMAP_FIND_MATCH "SELECT id, intensity FROM heatmap WHERE scope_id = %ld AND latitude = %ld.%lu AND longitude = %ld.%lu;"
+	#define GS_HEATMAP_UPDATE_BY_ID "UPDATE heatmap SET intensity = %ld WHERE id = %ld;"
 
 	/*Returns a connection to the mySQL database.*/
 	MYSQL * _getMySQLConnection();

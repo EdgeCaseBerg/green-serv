@@ -321,37 +321,75 @@ void db_getMarkerById(long id, struct gs_marker * gsm, MYSQL * conn){
 
 
 #ifndef DB_INSERT_HEATMAP_QUERY_SIZE
-	#define DB_INSERT_HEATMAP_QUERY_SIZE 99 + 32 /* 92 for Query, 32 for safety */
+	#define DB_INSERT_HEATMAP_QUERY_SIZE 144/* 144 for safety */
 #endif
 void db_insertHeatmap(struct gs_heatmap * gsh, MYSQL * conn){
 	MYSQL_RES * result;
 	MYSQL_ROW row; 
 	long affected;
+	int updated;
 	char query[DB_INSERT_HEATMAP_QUERY_SIZE]; /* Query, content, id, some extra padding*/
 
 	if(gsh->scopeId == GS_SCOPE_INVALID_ID)
 		return; /* Return if scope is invalid that we can tell*/
 
+	/* Check for possible merges */
 	bzero(query,DB_INSERT_HEATMAP_QUERY_SIZE);
-	sprintf(query, GS_HEATMAP_INSERT, gsh->scopeId, gsh->intensity, gsh->latitude.left, gsh->latitude.right, gsh->longitude.left, gsh->longitude.right);
+	sprintf(query, GS_HEATMAP_FIND_MATCH, gsh->scopeId, gsh->latitude.left, gsh->latitude.right, gsh->longitude.left, gsh->longitude.right);
 
 	if(0 != mysql_query(conn, query) ){
 		fprintf(stderr, "%s\n", mysql_error(conn));
 		return;
 	}
 
-	affected = mysql_insert_id(conn);
-	if( affected == 0){
+
+	result = mysql_use_result(conn);
+	row = mysql_fetch_row(result);
+	bzero(query, DB_INSERT_HEATMAP_QUERY_SIZE);
+	updated = 0;
+	if(row == NULL){
+		mysql_free_result(result);
+		/* This means we can insert a new one */
+		sprintf(query, GS_HEATMAP_INSERT, gsh->scopeId, gsh->intensity, gsh->latitude.left, gsh->latitude.right, gsh->longitude.left, gsh->longitude.right);
+	}else{
+		/* Time to merge! */
+		updated = 1;
+		gsh->id = atol(row[0]);
+		sprintf(query, GS_HEATMAP_UPDATE_BY_ID, (gsh->intensity + atol(row[1])) , atol(row[0]));	
+		mysql_free_result(result);
+	}
+
+
+	if(0 != mysql_query(conn, query) ){
 		fprintf(stderr, "%s\n", mysql_error(conn));
 		return;
 	}
 
-	/* Set the id of the comment to be what it is now  */
-	gsh->id = affected;
+	if(updated == 0){
+		/* Only if we inserted is the mysql_insert_id going to return the id 
+		 * a bit of an kick is that mysql_insert_id doesn't return the id of
+		 * the last UPDATED row because it assumes you already know the id.
+		 * the documentation does say that it should work for update, kinda:
+		 * "Returns the value generated for an AUTO_INCREMENT column by the 
+		    previous INSERT or UPDATE statement. Use this function after you 
+		    have performed an INSERT statement into a table that contains an 
+		    AUTO_INCREMENT field, or have used INSERT or UPDATE to set a column 
+		    value with LAST_INSERT_ID(expr)." -- http://dev.mysql.com/doc/refman/5.0/en/mysql-insert-id.html
+		 * so our update statement apparently doesn't fit the requirement.
+		*/
+		affected = mysql_insert_id(conn);
+		if( affected == 0){
+			fprintf(stderr, "%s\n", mysql_error(conn));
+			return;
+		}
 
+		/* Set the id of the comment to be what it is now  */
+		gsh->id = affected;	
+	}
+	
 	/* Now we could either compute the time stamp or ask the db for it. */
 	bzero(query,DB_INSERT_HEATMAP_QUERY_SIZE);
-	sprintf(query,GS_HEATMAP_GET_BY_ID, affected);
+	sprintf(query,GS_HEATMAP_GET_BY_ID, gsh->id);
 
 	/* Fresh Start and we want to return to the user EXACTLY what's in the db */
 	gs_heatmap_ZeroStruct(gsh);
