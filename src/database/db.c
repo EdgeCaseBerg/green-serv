@@ -466,3 +466,65 @@ int db_getHeatmap(int page, long scopeId, long precision, Decimal lowerLatBound,
 	mysql_free_result(result);  
 	return i;
 }
+
+#ifndef DB_INSERT_REPORT_QUERY_SIZE
+	#define DB_INSERT_REPORT_QUERY_SIZE 96 + GS_REPORT_MAX_LENGTH + (SHA_LENGTH+1)*2 +4/* 96 for Query, 65*2 for hashes, +4 for safety */
+#endif
+void db_insertReport(struct gs_report * gsr, MYSQL * conn){
+	MYSQL_RES * result;
+	MYSQL_ROW row; 
+	long affected;
+	char query[DB_INSERT_REPORT_QUERY_SIZE]; 
+
+	if(gsr->scopeId == GS_SCOPE_INVALID_ID)
+		return; /* Return if scope is invalid that we can tell*/
+
+	bzero(query,DB_INSERT_REPORT_QUERY_SIZE);
+	sprintf(query, GS_REPORT_INSERT, gsr->content, gsr->scopeId, gsr->origin, gsr->authorize);
+
+	if(0 != mysql_query(conn, query) ){
+		fprintf(stderr, "%s\n", mysql_error(conn));
+		return;
+	}
+
+	affected = mysql_insert_id(conn);
+	if( affected == 0){
+		fprintf(stderr, "%s\n", mysql_error(conn));
+		return;
+	}
+
+	/* Set the id of the comment to be what it is now  */
+	gsr->id = affected;
+
+	/* Now we could either compute the time stamp or ask the db for it. */
+	bzero(query,DB_INSERT_REPORT_QUERY_SIZE);
+	sprintf(query,GS_REPORT_GET_BY_AUTH, gsr->authorize);
+
+	/* Fresh Start and we want to return to the user EXACTLY what's in the db */
+	gs_report_ZeroStruct(gsr);
+
+	if(0 != mysql_query(conn, query) ){
+		fprintf(stderr, "%s\n", mysql_error(conn));
+		return;
+	}
+
+	result = mysql_use_result(conn);
+	row = mysql_fetch_row(result);
+	if(row == NULL){
+		mysql_free_result(result);
+		return;    
+	}
+
+
+	/* Fill er up */
+	gs_report_setId( atol(row[0]), gsr);
+	gs_report_setContent( row[1], gsr);
+	gs_report_setScopeId( row[2] == NULL ? GS_SCOPE_INVALID_ID : atol(row[2]), gsr);
+	strncpy(gsr->origin,row[3], SHA_LENGTH);
+	strncpy(gsr->authorize, row[4], SHA_LENGTH);
+	gs_report_setCreatedTime( row[5], gsr);
+	
+
+	mysql_free_result(result);
+   
+}
