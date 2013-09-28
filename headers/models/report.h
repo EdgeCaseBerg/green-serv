@@ -3,7 +3,7 @@
 	/* Fun Fact: GS stands for green-serv*/
 
 	#include "flags.h"
-	#define GS_REPORT_MAX_LENGTH 1024
+	#define GS_REPORT_MAX_LENGTH 512
 	#define GS_REPORT_CREATED_TIME_LENGTH 19
 	#define SHA_LENGTH 64 /* 64 * 4 = 256*/
 	

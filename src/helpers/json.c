@@ -119,3 +119,17 @@ int gs_heatmapToJSON(const struct gs_heatmap gsh, char * jsonOutput){
                     gsh.intensity
                     );
 }
+
+
+/* Recommed at least 67 + GS_REPORT_MAX_LENGTH*3 for safety for jsonOutput size*/
+int gs_reportToJSON(const struct gs_report gsr, char * jsonOutput){
+    char * json;
+    char escaped[strlen(gsr.content)*3];
+    bzero(escaped,strlen(gsr.content)*3);
+
+    /* The hash is the auth hash not the origin hash*/
+    json = "{\"message\" : \"%s\", \"timestamp\" : \"%s\", \"hash\" : \"%s\" }";
+    _escapeJSON(gsr.content, strlen(gsr.content), escaped);
+
+    return sprintf( jsonOutput,json,escaped,gsr.createdTime,gsr.authorize);
+}

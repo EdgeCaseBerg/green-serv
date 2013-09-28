@@ -1,6 +1,7 @@
 #ifndef __SHA_256_H__
     #define __SHA_256_H__
     #include <openssl/sha.h>
+
     #include <stdio.h>
     #include <string.h>
 
