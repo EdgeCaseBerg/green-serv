@@ -9,6 +9,7 @@
 	#include "models/scope.h"
 	#include "models/comment.h"
 	#include "models/marker.h"
+	#include "models/heatmap.h"
 	#include "config.h"
 	#include <string.h>
 	
@@ -35,6 +36,7 @@
 	#define GS_MARKER_INSERT "INSERT INTO markers (comment_id, scope_id, latitude, longitude) VALUES (%ld, %ld, %ld.%lu, %ld.%lu);"
 
 	#define GS_HEATMAP_GET_ALL "SELECT intensity, latitude, longitude FROM heatmap WHERE scope_id = %ld ORDER BY created_time DESC LIMIT %d, " STRINGIFY(HEATMAP_RESULTS_PER_PAGE) ";"
+	#define GS_HEATMAP_GET_BY_ID "SELECT id, intensity, scope_id, created_time, latitude, longitude FROM heatmap WHERE id = %ld;"
 	#define GS_HEATMAP_INSERT "INSERT INTO heatmap (scope_id, intensity, latitude, longitude) VALUES (%ld, %ld, %ld.%lu, %ld.%lu);"
 
 	/*Returns a connection to the mySQL database.*/
@@ -69,5 +71,8 @@
 
 	/* Retrieve a single marker by it's id */
 	void db_getMarkerById(long id, struct gs_marker * gsm, MYSQL * conn);
+
+	/* Insert a single heatmap point into the database */
+	void db_insertHeatmap(struct gs_heatmap * gsh, MYSQL * conn);
 
 #endif

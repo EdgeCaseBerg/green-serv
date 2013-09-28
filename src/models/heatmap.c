@@ -2,7 +2,7 @@
 #include "models/heatmap.h"
 
 /* Any functions specifically working with just gs_marker: */
-void gs_mheatmap_setId(long id, struct gs_heatmap * gsh){
+void gs_heatmap_setId(long id, struct gs_heatmap * gsh){
 	gsh->id = id;
 }
 

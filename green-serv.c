@@ -119,7 +119,16 @@ int main(int argc, const char* argv[]) {
 	bzero(json,512);
 	gs_heatmap_ZeroStruct(&testHeatmap);
 	gs_heatmapToJSON(testHeatmap, json);
+	printf("%s\n", json);
 
+	gs_heatmap_setIntensity( 2, &testHeatmap);
+	gs_heatmap_setScopeId( campaign.id, &testHeatmap);
+	createDecimalFromString(&testHeatmap.latitude,"-44.78");
+	createDecimalFromString(&testHeatmap.longitude,"70.81");
+	
+	db_insertHeatmap(&testHeatmap, conn);
+
+	gs_heatmapToJSON(testHeatmap, json);
 	printf("%s\n", json);
 
 	/*Clean Up database connection*/
