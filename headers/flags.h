@@ -10,5 +10,6 @@
 	#define GS_SCOPE_INVALID_ID (-1)
 	#define GS_MARKER_INVALID_ID (-1)
 	#define GS_COMMENT_INVALID_ID (-1)
+	#define GS_REPORT_INVALID_ID (-1)
 
 #endif
