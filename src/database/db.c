@@ -466,3 +466,144 @@ int db_getHeatmap(int page, long scopeId, long precision, Decimal lowerLatBound,
 	mysql_free_result(result);  
 	return i;
 }
+
+#ifndef DB_INSERT_REPORT_QUERY_SIZE
+	#define DB_INSERT_REPORT_QUERY_SIZE 96 + GS_REPORT_MAX_LENGTH + (SHA_LENGTH+1)*2 +4/* 96 for Query, 65*2 for hashes, +4 for safety */
+#endif
+void db_insertReport(struct gs_report * gsr, MYSQL * conn){
+	MYSQL_RES * result;
+	MYSQL_ROW row; 
+	long affected;
+	char query[DB_INSERT_REPORT_QUERY_SIZE]; 
+
+	if(gsr->scopeId == GS_SCOPE_INVALID_ID)
+		return; /* Return if scope is invalid that we can tell*/
+
+	bzero(query,DB_INSERT_REPORT_QUERY_SIZE);
+	sprintf(query, GS_REPORT_INSERT, gsr->content, gsr->scopeId, gsr->origin, gsr->authorize);
+
+	if(0 != mysql_query(conn, query) ){
+		fprintf(stderr, "%s\n", mysql_error(conn));
+		return;
+	}
+
+	affected = mysql_insert_id(conn);
+	if( affected == 0){
+		fprintf(stderr, "%s\n", mysql_error(conn));
+		return;
+	}
+
+	/* Set the id of the comment to be what it is now  */
+	gsr->id = affected;
+
+	/* Now we could either compute the time stamp or ask the db for it. */
+	bzero(query,DB_INSERT_REPORT_QUERY_SIZE);
+	sprintf(query,GS_REPORT_GET_BY_AUTH, gsr->authorize);
+
+	/* Fresh Start and we want to return to the user EXACTLY what's in the db */
+	gs_report_ZeroStruct(gsr);
+
+	if(0 != mysql_query(conn, query) ){
+		fprintf(stderr, "%s\n", mysql_error(conn));
+		return;
+	}
+
+	result = mysql_use_result(conn);
+	row = mysql_fetch_row(result);
+	if(row == NULL){
+		mysql_free_result(result);
+		return;    
+	}
+
+
+	/* Fill er up */
+	gs_report_setId( atol(row[0]), gsr);
+	gs_report_setContent( row[1], gsr);
+	gs_report_setScopeId( row[2] == NULL ? GS_SCOPE_INVALID_ID : atol(row[2]), gsr);
+	strncpy(gsr->origin,row[3], SHA_LENGTH);
+	strncpy(gsr->authorize, row[4], SHA_LENGTH);
+	gs_report_setCreatedTime( row[5], gsr);
+	
+
+	mysql_free_result(result);
+   
+}
+
+void db_getReportByAuth(char * auth, struct gs_report * gsr, MYSQL * conn){
+	MYSQL_RES * result;
+	MYSQL_ROW row; 
+	char query[99+65+4]; /* 99 for query, 65 for auth hash, 4 for safety*/
+
+	gs_report_ZeroStruct(gsr);
+	bzero(query,99+65+4);
+	sprintf(query, GS_REPORT_GET_BY_AUTH, auth);
+
+	if(0 != mysql_query(conn, query) ){
+		fprintf(stderr, "%s\n", mysql_error(conn));
+		return;
+	}
+
+	result = mysql_use_result(conn);
+	row = mysql_fetch_row(result);
+	if(row == NULL){
+		mysql_free_result(result);
+		return;    
+	}
+
+	gs_report_setId( atol(row[0]), gsr);
+	gs_report_setContent( row[1], gsr);
+	gs_report_setScopeId( row[2] == NULL ? GS_SCOPE_INVALID_ID : atol(row[2]), gsr);
+	strncpy(gsr->origin,row[3], SHA_LENGTH);
+	strncpy(gsr->authorize, row[4], SHA_LENGTH);
+	gs_report_setCreatedTime( row[5], gsr);
+
+	mysql_free_result(result);  
+}
+
+int db_deleteReport(struct gs_report * gsr, MYSQL * conn){
+	char query[99+(64*2)+5]; /* 61 for query, 64*2+1 for hashes, 4 for safety*/
+
+	bzero(query,99+(64*2)+5);
+	sprintf(query, GS_REPORT_DELETE, gsr->origin,gsr->authorize);
+
+	if(0 != mysql_query(conn, query) ){
+		fprintf(stderr, "%s\n", mysql_error(conn));
+		return 0;
+	}
+
+	return mysql_affected_rows(conn);  
+}
+
+#ifndef REPORT_PAGE_QUERY_SIZE
+	#define REPORT_PAGE_QUERY_SIZE 256 
+#endif
+int db_getReports(int page, long scopeId, struct gs_report * gsr, MYSQL * conn){
+	MYSQL_RES * result;
+	MYSQL_ROW row; 
+	int i;
+	char query[REPORT_PAGE_QUERY_SIZE];
+	bzero(query,REPORT_PAGE_QUERY_SIZE);
+	sprintf(query,GS_REPORT_GET_ALL,scopeId, page);
+
+	if(0 != mysql_query(conn, query) ){
+		fprintf(stderr, "%s\n", mysql_error(conn));
+		return 0;
+	}
+
+	i=0;
+	result = mysql_use_result(conn);
+	while( (row=mysql_fetch_row(result)) != NULL ){
+		/* Initialize */
+		gs_report_ZeroStruct(&gsr[i]);
+
+		gs_report_setId( atol(row[0]), &gsr[i]);
+		gs_report_setContent( row[1], &gsr[i]);
+		gs_report_setScopeId( row[2] == NULL ? GS_SCOPE_INVALID_ID : atol(row[2]), &gsr[i]);
+		strncpy(gsr[i].origin,row[3], SHA_LENGTH);
+		strncpy(gsr[i].authorize, row[4], SHA_LENGTH);
+		gs_report_setCreatedTime( row[5], &gsr[i]);
+		i++;
+	}
+	mysql_free_result(result);  
+	return i;
+}

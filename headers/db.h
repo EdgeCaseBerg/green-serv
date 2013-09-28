@@ -10,6 +10,7 @@
 	#include "models/comment.h"
 	#include "models/marker.h"
 	#include "models/heatmap.h"
+	#include "models/report.h"
 	#include "config.h"
 	#include <string.h>
 	
@@ -40,6 +41,12 @@
 	#define GS_HEATMAP_INSERT "INSERT INTO heatmap (scope_id, intensity, latitude, longitude) VALUES (%ld, %ld, %ld.%lu, %ld.%lu);"
 	#define GS_HEATMAP_FIND_MATCH "SELECT id, intensity FROM heatmap WHERE scope_id = %ld AND latitude = %ld.%lu AND longitude = %ld.%lu;"
 	#define GS_HEATMAP_UPDATE_BY_ID "UPDATE heatmap SET intensity = %ld WHERE id = %ld;"
+
+	#define GS_REPORT_GET_ALL "SELECT id, content, scope_id, origin, authorize, created_time FROM report WHERE scope_id = %ld ORDER BY created_time DESC LIMIT %d, " STRINGIFY(RESULTS_PER_PAGE) ";" 
+	#define GS_REPORT_GET_BY_AUTH "SELECT id, content, scope_id, origin, authorize, created_time FROM report WHERE authorize = \"%s\";"
+	#define GS_REPORT_INSERT "INSERT INTO report (content, scope_id, origin, authorize) VALUES (\"%s\", %ld, \"%s\", \"%s`\");"
+	#define GS_REPORT_DELETE "DELETE FROM report WHERE origin =\"%s\" AND authorize=\"%s\";"
+
 
 	/*Returns a connection to the mySQL database.*/
 	MYSQL * _getMySQLConnection();
@@ -97,5 +104,13 @@
 	 * might need for comments or markers. 
 	*/
 	int db_getHeatmap(int page, long scopeId, long precision, Decimal lowerLatBound, Decimal upperLatBound, Decimal lowerLonBound, Decimal upperLonBound, struct gs_heatmap * gsh, MYSQL * conn);
+
+	void db_insertReport(struct gs_report * gsr, MYSQL * conn);
+
+	void db_getReportByAuth(char * auth, struct gs_report * gsr, MYSQL * conn);
+
+	int db_deleteReport(struct gs_report * gsr, MYSQL * conn);
+
+	int db_getReports(int page, long scopeId, struct gs_report * gsr, MYSQL * conn);
 
 #endif
