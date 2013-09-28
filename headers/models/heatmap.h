@@ -2,7 +2,7 @@
 	#define __GS_HEATMAP_H__
 
 	#include "flags.h"
-	#include "models/marker.h" /* For Decimal type*/
+	#include "helpers/decimal.h"
 	#define GS_HEATMAP_CREATED_TIME_LENGTH 19
 
 	struct gs_heatmap {

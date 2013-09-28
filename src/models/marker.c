@@ -1,11 +1,6 @@
 #include <string.h>
 #include "models/marker.h"
 
-void createDecimal(long left, unsigned long right, Decimal * dec){
-	dec->left = left;
-	dec->right = right;
-}
-
 /* Any functions specifically working with just gs_marker: */
 void gs_marker_setId(long id, struct gs_marker * gsm){
 	gsm->id = id;

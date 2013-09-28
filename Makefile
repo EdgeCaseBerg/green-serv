@@ -18,11 +18,10 @@ scope.o: src/models/scope.c
 comment.o: src/models/comment.c
 	cc -I./headers -std=gnu99 -pedantic -Wall -Wextra -Werror -g -c src/models/comment.c -o obj/comment.o  	
 
-marker.o: src/models/marker.c
+marker.o: src/models/marker.c decimal.o
 	cc -I./headers -std=gnu99 -pedantic -Wall -Wextra -Werror -g -c src/models/marker.c -o obj/marker.o  		
 
-#Heatmap depends on marker for implementation of createDecimal
-heatmap.o: src/models/heatmap.c marker.o
+heatmap.o: src/models/heatmap.c decimal.o
 	cc -I./headers -std=gnu99 -pedantic -Wall -Wextra -Werror -g -c src/models/heatmap.c -o obj/heatmap.o  			
 
 report.o: src/models/report.c sha256.o
@@ -30,6 +29,9 @@ report.o: src/models/report.c sha256.o
 
 sha256.o: src/helpers/sha256.c
 	cc -I./headers -std=gnu99 -pedantic -Wall -Wextra -Werror -g -c src/helpers/sha256.c -o obj/sha256.o
+
+decimal.o: src/helpers/decimal.c
+	cc -I./headers -std=gnu99 -pedantic -Wall -Wextra -Werror -g -c src/helpers/decimal.c -o obj/decimal.o
 
 clean:
 	rm obj/*.o *.out

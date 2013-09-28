@@ -5,12 +5,7 @@
 	#include "flags.h"
 	#define GS_MARKER_CREATED_TIME_LENGTH 19
 	
-	typedef struct{			 /* Calling them more convenient terms: */
-		long left;  		 /* characteristic */
-		unsigned long right; /* mantissa */
-	}Decimal;
-
-	void createDecimal(long left, unsigned long right, Decimal * dec);
+	#include "helpers/decimal.h"
 
 	struct gs_marker {
 		long id;
