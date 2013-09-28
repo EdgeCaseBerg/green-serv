@@ -109,4 +109,6 @@
 
 	void db_getReportByAuth(char * auth, struct gs_report * gsr, MYSQL * conn);
 
+	int db_deleteReport(struct gs_report * gsr, MYSQL * conn);
+
 #endif

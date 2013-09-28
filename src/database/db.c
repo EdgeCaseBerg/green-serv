@@ -546,7 +546,6 @@ void db_getReportByAuth(char * auth, struct gs_report * gsr, MYSQL * conn){
 	result = mysql_use_result(conn);
 	row = mysql_fetch_row(result);
 	if(row == NULL){
-		fprintf(stderr, "%s\n", query);
 		mysql_free_result(result);
 		return;    
 	}
@@ -559,4 +558,18 @@ void db_getReportByAuth(char * auth, struct gs_report * gsr, MYSQL * conn){
 	gs_report_setCreatedTime( row[5], gsr);
 
 	mysql_free_result(result);  
+}
+
+int db_deleteReport(struct gs_report * gsr, MYSQL * conn){
+	char query[99+(64*2)+5]; /* 61 for query, 64*2+1 for hashes, 4 for safety*/
+
+	bzero(query,99+(64*2)+5);
+	sprintf(query, GS_REPORT_DELETE, gsr->origin,gsr->authorize);
+
+	if(0 != mysql_query(conn, query) ){
+		fprintf(stderr, "%s\n", mysql_error(conn));
+		return 0;
+	}
+
+	return mysql_affected_rows(conn);  
 }

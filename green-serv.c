@@ -187,6 +187,8 @@ int main(int argc, const char* argv[]) {
 	gs_reportToJSON(testReport,json);
 	printf("%s\n", json);
 
+	printf("%d deleted\n", db_deleteReport(&testReport,  conn));
+
 	/*Clean Up database connection*/
 	mysql_close(conn);
 	mysql_library_end();
