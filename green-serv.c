@@ -6,6 +6,7 @@
 #include "models/comment.h"
 #include "models/marker.h"
 #include "models/heatmap.h"
+#include "models/report.h"
 #include <string.h>
 
 
@@ -29,6 +30,7 @@ int main(int argc, const char* argv[]) {
    	struct gs_marker * markerPage;
    	struct gs_heatmap testHeatmap;
    	struct gs_heatmap * heatmapPage;
+   	struct gs_report testReport;
    	Decimal latitude;
    	Decimal longitude;
    	Decimal lowerBoundLat;
@@ -164,6 +166,9 @@ int main(int argc, const char* argv[]) {
 		fprintf(stderr, "%s\n", "Could not allocate enough memory for heatmap page");
 	}
 	
+	gs_report_ZeroStruct(&testReport);
+
+
 
 	/*Clean Up database connection*/
 	mysql_close(conn);
