@@ -107,4 +107,6 @@
 
 	void db_insertReport(struct gs_report * gsr, MYSQL * conn);
 
+	void db_getReportByAuth(char * auth, struct gs_report * gsr, MYSQL * conn);
+
 #endif

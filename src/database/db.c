@@ -528,3 +528,35 @@ void db_insertReport(struct gs_report * gsr, MYSQL * conn){
 	mysql_free_result(result);
    
 }
+
+void db_getReportByAuth(char * auth, struct gs_report * gsr, MYSQL * conn){
+	MYSQL_RES * result;
+	MYSQL_ROW row; 
+	char query[99+65+4]; /* 99 for query, 65 for auth hash, 4 for safety*/
+
+	gs_report_ZeroStruct(gsr);
+	bzero(query,99+65+4);
+	sprintf(query, GS_REPORT_GET_BY_AUTH, auth);
+
+	if(0 != mysql_query(conn, query) ){
+		fprintf(stderr, "%s\n", mysql_error(conn));
+		return;
+	}
+
+	result = mysql_use_result(conn);
+	row = mysql_fetch_row(result);
+	if(row == NULL){
+		fprintf(stderr, "%s\n", query);
+		mysql_free_result(result);
+		return;    
+	}
+
+	gs_report_setId( atol(row[0]), gsr);
+	gs_report_setContent( row[1], gsr);
+	gs_report_setScopeId( row[2] == NULL ? GS_SCOPE_INVALID_ID : atol(row[2]), gsr);
+	strncpy(gsr->origin,row[3], SHA_LENGTH);
+	strncpy(gsr->authorize, row[4], SHA_LENGTH);
+	gs_report_setCreatedTime( row[5], gsr);
+
+	mysql_free_result(result);  
+}

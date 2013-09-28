@@ -38,11 +38,13 @@ int main(int argc, const char* argv[]) {
    	Decimal upperBoundLat;
    	Decimal upperBoundLon;
    	char json[512];
-   	bzero(json,512);
+   	char auth[65];
    	int numComments;
    	int numMarkers;
    	int numHeatmap;
    	int i;
+	bzero(auth,65);
+   	bzero(json,512);
 
    	conn = _getMySQLConnection();
    	if(!conn){
@@ -174,6 +176,13 @@ int main(int argc, const char* argv[]) {
 	gs_report_setOrigin("admin",&testReport);
 	
 	db_insertReport(&testReport, conn);
+	bzero(json,512);
+	gs_reportToJSON(testReport,json);
+	printf("%s\n", json);
+
+	strncpy(auth, testReport.authorize,64);
+
+	db_getReportByAuth(auth, &testReport, conn);
 	bzero(json,512);
 	gs_reportToJSON(testReport,json);
 	printf("%s\n", json);
