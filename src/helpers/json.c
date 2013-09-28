@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "json.h"
+#include "helpers/json.h"
 
 
 /*This function assumes that the output is large enough to handle

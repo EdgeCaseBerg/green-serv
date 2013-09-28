@@ -1,7 +1,7 @@
 #include "config.h"
 #include "db.h"
 #include "models/scope.h"
-#include "json.h"
+#include "helpers/json.h"
 #include "flags.h"
 #include "models/comment.h"
 #include "models/marker.h"
@@ -168,6 +168,10 @@ int main(int argc, const char* argv[]) {
 	
 	gs_report_ZeroStruct(&testReport);
 
+	
+	gs_report_setOrigin("test",&testReport);
+	printf("%s\n",testReport.origin );
+	
 
 
 	/*Clean Up database connection*/

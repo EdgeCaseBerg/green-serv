@@ -28,7 +28,10 @@
 	/* Empties a report structure of data and sets flag values */
 	void gs_report_ZeroStruct(struct gs_report * gsr);
 
-
+	#include "helpers/sha256.h"
+	#include <string.h>
+	
+	
 
 
 #endif

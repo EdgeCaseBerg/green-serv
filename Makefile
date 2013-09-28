@@ -1,7 +1,7 @@
 #Make sure to compile with: $(mysql_config --cflags) and link to: $(mysql_config --libs)
 
 a.out: gs.o
-	cc  obj/*o  -o a.out -L/usr/lib/x86_64-linux-gnu -lmysqlclient -lpthread -lz -lm -lrt -ldl -g  	
+	cc  obj/*o  -o a.out -L/usr/lib/x86_64-linux-gnu -lmysqlclient -lpthread -lz -lm -lrt -ldl -g -lcrypto
 
 gs.o: green-serv.c json.o db.o 
 	cc -I./headers -std=gnu99 -pedantic -Wall -Wextra -Werror -g -c green-serv.c -o obj/gs.o  	
@@ -25,9 +25,11 @@ marker.o: src/models/marker.c
 heatmap.o: src/models/heatmap.c marker.o
 	cc -I./headers -std=gnu99 -pedantic -Wall -Wextra -Werror -g -c src/models/heatmap.c -o obj/heatmap.o  			
 
-report.o: src/models/report.c 
+report.o: src/models/report.c sha256.o
 	cc -I./headers -std=gnu99 -pedantic -Wall -Wextra -Werror -g -c src/models/report.c -o obj/report.o  			
 
+sha256.o: src/helpers/sha256.c
+	cc -I./headers -std=gnu99 -pedantic -Wall -Wextra -Werror -g -c src/helpers/sha256.c -o obj/sha256.o
 
 clean:
 	rm obj/*.o *.out

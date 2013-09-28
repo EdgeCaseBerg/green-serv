@@ -1,7 +1,5 @@
 #include "models/report.h"
 
-#include <string.h>
-
 
 void gs_report_setId(long id, struct gs_report * gsr){
 	gsr->id = id;
@@ -13,13 +11,13 @@ void gs_report_setContent(char * content, struct gs_report * gsr){
 }
 
 void gs_report_setOrigin(char * origin, struct gs_report * gsr){
-	bzero(gsr->origin,GS_REPORT_MAX_LENGTH+1);
-	strncpy(gsr->origin,origin,GS_REPORT_MAX_LENGTH);
+	bzero(gsr->origin,SHA_LENGTH+1);
+	sha256(origin, gsr->origin);
 }
 
 void gs_report_setAuthorize(char * authorize, struct gs_report * gsr){
-	bzero(gsr->authorize,GS_REPORT_MAX_LENGTH+1);
-	strncpy(gsr->authorize,authorize,GS_REPORT_MAX_LENGTH);
+	bzero(gsr->authorize,SHA_LENGTH+1);
+	sha256(authorize,gsr->authorize);
 }
 
 void gs_report_setScopeId(long scopeId, struct gs_report * gsr){
