@@ -9,6 +9,7 @@
 	#include "models/scope.h"
 	#include "models/comment.h"
 	#include "models/marker.h"
+	#include "models/heatmap.h"
 	#include "config.h"
 	#include <string.h>
 	
@@ -34,8 +35,11 @@
 	#define GS_MARKER_GET_BY_ID "SELECT id, comment_id, scope_id, created_time, latitude, longitude FROM markers WHERE id = %ld;"
 	#define GS_MARKER_INSERT "INSERT INTO markers (comment_id, scope_id, latitude, longitude) VALUES (%ld, %ld, %ld.%lu, %ld.%lu);"
 
-	#define GS_HEATMAP_GET_ALL "SELECT intensity, latitude, longitude FROM heatmap WHERE scope_id = %ld ORDER BY created_time DESC LIMIT %d, " STRINGIFY(HEATMAP_RESULTS_PER_PAGE) ";"
+	#define GS_HEATMAP_GET_ALL "SELECT SUM(intensity), TIMESTAMP(AVG(created_time)) ,TRUNCATE(latitude,%ld), TRUNCATE(longitude,%ld) FROM heatmap WHERE scope_id = %ld AND latitude BETWEEN %ld.%lu AND %ld.%lu AND longitude BETWEEN %ld.%lu AND %ld.%lu GROUP BY latitude ORDER BY created_time DESC LIMIT %d, " STRINGIFY(HEATMAP_RESULTS_PER_PAGE) ";"
+	#define GS_HEATMAP_GET_BY_ID "SELECT id, intensity, scope_id, created_time, latitude, longitude FROM heatmap WHERE id = %ld;"
 	#define GS_HEATMAP_INSERT "INSERT INTO heatmap (scope_id, intensity, latitude, longitude) VALUES (%ld, %ld, %ld.%lu, %ld.%lu);"
+	#define GS_HEATMAP_FIND_MATCH "SELECT id, intensity FROM heatmap WHERE scope_id = %ld AND latitude = %ld.%lu AND longitude = %ld.%lu;"
+	#define GS_HEATMAP_UPDATE_BY_ID "UPDATE heatmap SET intensity = %ld WHERE id = %ld;"
 
 	/*Returns a connection to the mySQL database.*/
 	MYSQL * _getMySQLConnection();
@@ -69,5 +73,29 @@
 
 	/* Retrieve a single marker by it's id */
 	void db_getMarkerById(long id, struct gs_marker * gsm, MYSQL * conn);
+
+	/* Insert a single heatmap point into the database */
+	void db_insertHeatmap(struct gs_heatmap * gsh, MYSQL * conn);
+
+	/* Returns a page from the heatmap. Some important notes:  
+	 * - The id's for the heatmap structs returned will be the same as the page! 
+	 *   this is because averaging an id in the database makes 0 sense. And 
+	 *   since the heatmaps from this function are merged and grouped and bucket
+	 *   sorted, it makes no sense to return an id becuase they are an 
+	 *   aggregation of points, not the points themself.
+	 * page: The page to retrieve
+	 * scopeId: The scope of the points to recieve (multilayer support of heatmaps
+	 *    		by multi scopes client side if they want to implement it)
+	 * precision: Truncates after the decimal to 'precision' places. Example: 
+	 *			  44.781 with precision 2 becomes 44.78 This is NOT a round. 
+	 * lowerLatBound
+	 * A couple warnings about this function. Similarally to the other pagination
+	 * functions, you need to make sure that the structure array passed in that
+	 * will be populated is large enough for at least HEATMAP_RESULTS_PER_PAGE 
+	 * many entities. Note that the heatmap has its own constant for page size
+	 * this is because you need more data to created a good heatmap then you 
+	 * might need for comments or markers. 
+	*/
+	int db_getHeatmap(int page, long scopeId, long precision, Decimal lowerLatBound, Decimal upperLatBound, Decimal lowerLonBound, Decimal upperLonBound, struct gs_heatmap * gsh, MYSQL * conn);
 
 #endif
