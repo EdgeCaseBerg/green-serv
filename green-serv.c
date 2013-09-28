@@ -28,12 +28,18 @@ int main(int argc, const char* argv[]) {
    	struct gs_marker testMarker;
    	struct gs_marker * markerPage;
    	struct gs_heatmap testHeatmap;
+   	struct gs_heatmap * heatmapPage;
    	Decimal latitude;
    	Decimal longitude;
+   	Decimal lowerBoundLat;
+   	Decimal lowerBoundLon;
+   	Decimal upperBoundLat;
+   	Decimal upperBoundLon;
    	char json[512];
    	bzero(json,512);
    	int numComments;
    	int numMarkers;
+   	int numHeatmap;
    	int i;
 
    	conn = _getMySQLConnection();
@@ -130,6 +136,34 @@ int main(int argc, const char* argv[]) {
 
 	gs_heatmapToJSON(testHeatmap, json);
 	printf("%s\n", json);
+
+	createDecimalFromString(&lowerBoundLat, "-50.0");
+	createDecimalFromString(&upperBoundLat, "-43.78");
+	createDecimalFromString(&lowerBoundLon, "69.9");
+	createDecimalFromString(&upperBoundLon, "71.78");
+	heatmapPage = malloc(HEATMAP_RESULTS_PER_PAGE* sizeof(struct gs_heatmap));
+	if(heatmapPage != NULL){
+		numHeatmap = db_getHeatmap(	
+					/* page 	*/ 		0,
+					/* scope 	*/ 	campaign.id, 
+					/* precision*/	3, 
+					/* Low Lat 	*/ 	lowerBoundLat,
+					/* Up Lat  	*/	upperBoundLat,
+					/* Low Lon 	*/	lowerBoundLon,
+					/* Up Lat 	*/ 	upperBoundLon,
+					/* array 	*/ 	heatmapPage,
+					/* mysql con*/	conn
+					);
+		for(i=0; i < numHeatmap; ++i){
+			bzero(json,512);
+			gs_heatmapToJSON(heatmapPage[i], json);
+			printf("%s\n", json);
+		}
+		free(heatmapPage);
+	}else{
+		fprintf(stderr, "%s\n", "Could not allocate enough memory for heatmap page");
+	}
+	
 
 	/*Clean Up database connection*/
 	mysql_close(conn);

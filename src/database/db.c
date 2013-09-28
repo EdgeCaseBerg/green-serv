@@ -419,3 +419,50 @@ void db_insertHeatmap(struct gs_heatmap * gsh, MYSQL * conn){
 	mysql_free_result(result);
    
 }
+
+#ifndef HEATMAP_PAGE_QUERY_SIZE
+	#define HEATMAP_PAGE_QUERY_SIZE 512 /* Super safe estimate (could probably just be 300 or so)*/
+#endif
+int db_getHeatmap(int page, long scopeId, long precision, Decimal lowerLatBound, Decimal upperLatBound, Decimal lowerLonBound, Decimal upperLonBound, struct gs_heatmap * gsh, MYSQL * conn){
+	MYSQL_RES * result;
+	MYSQL_ROW row; 
+	Decimal latitude;
+	Decimal longitude;
+	int i;
+	char query[HEATMAP_PAGE_QUERY_SIZE];
+
+	bzero(query,HEATMAP_PAGE_QUERY_SIZE);
+	sprintf(query, 	GS_HEATMAP_GET_ALL, 
+				   	precision, 	/* Latitude precision */
+				   	precision, 	/* Longitude precision */
+				   	scopeId,  	/* Scope */
+				   	lowerLatBound.left, lowerLatBound.right , /* Latitude lower bound  */
+					upperLatBound.left, lowerLatBound.right , /* Latitude upper bound  */
+					lowerLonBound.left, lowerLonBound.right , /* Longitude lower bound */
+					upperLonBound.left, upperLonBound.right , /* Longitude upper bound */
+				   	page*HEATMAP_RESULTS_PER_PAGE);
+
+	if(0 != mysql_query(conn, query) ){
+		fprintf(stderr, "%s\n", mysql_error(conn));
+		return 0;
+	}
+
+	i=0;
+	result = mysql_use_result(conn);
+	while( (row=mysql_fetch_row(result)) != NULL ){
+		/* Initialize */
+		gs_heatmap_ZeroStruct(&gsh[i]);
+
+		gs_heatmap_setId( page, &gsh[i]); /* Just setting the page as the id becuase these points are merged grouped heatmap points*/
+		gs_heatmap_setIntensity( atol(row[0]), &gsh[i]);
+		gs_heatmap_setScopeId( scopeId, &gsh[i]);
+		gs_heatmap_setCreatedTime( row[1], &gsh[i]);
+		createDecimalFromString(&latitude,row[2]);
+		gs_heatmap_setLatitude(latitude,&gsh[i]);
+		createDecimalFromString(&longitude,row[3]);
+		gs_heatmap_setLongitude(longitude,&gsh[i]);
+		i++;
+	}
+	mysql_free_result(result);  
+	return i;
+}
