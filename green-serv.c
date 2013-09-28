@@ -31,6 +31,7 @@ int main(int argc, const char* argv[]) {
    	struct gs_heatmap testHeatmap;
    	struct gs_heatmap * heatmapPage;
    	struct gs_report testReport;
+   	struct gs_report * reportPage;
    	Decimal latitude;
    	Decimal longitude;
    	Decimal lowerBoundLat;
@@ -42,6 +43,7 @@ int main(int argc, const char* argv[]) {
    	int numComments;
    	int numMarkers;
    	int numHeatmap;
+   	int numReports;
    	int i;
 	bzero(auth,65);
    	bzero(json,512);
@@ -180,8 +182,24 @@ int main(int argc, const char* argv[]) {
 	gs_reportToJSON(testReport,json);
 	printf("%s\n", json);
 
-	strncpy(auth, testReport.authorize,64);
 
+	
+	reportPage = malloc(RESULTS_PER_PAGE * sizeof(struct gs_report));
+	if(reportPage != NULL){
+
+		numReports = db_getReports(0, campaign.id, reportPage, conn);;
+		for(i=0; i < numReports; ++i){
+			bzero(json,512);
+			gs_reportToJSON(reportPage[i], json);
+			printf("%s\n", json);		
+		}
+		
+		free(reportPage);
+	}else{	
+	  	fprintf(stderr, "%s\n", "Could not allocate enough memory for marker page");
+	}
+
+	strncpy(auth, testReport.authorize,64);
 	db_getReportByAuth(auth, &testReport, conn);
 	bzero(json,512);
 	gs_reportToJSON(testReport,json);

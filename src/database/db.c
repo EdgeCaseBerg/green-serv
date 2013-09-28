@@ -573,3 +573,37 @@ int db_deleteReport(struct gs_report * gsr, MYSQL * conn){
 
 	return mysql_affected_rows(conn);  
 }
+
+#ifndef REPORT_PAGE_QUERY_SIZE
+	#define REPORT_PAGE_QUERY_SIZE 256 
+#endif
+int db_getReports(int page, long scopeId, struct gs_report * gsr, MYSQL * conn){
+	MYSQL_RES * result;
+	MYSQL_ROW row; 
+	int i;
+	char query[REPORT_PAGE_QUERY_SIZE];
+	bzero(query,REPORT_PAGE_QUERY_SIZE);
+	sprintf(query,GS_REPORT_GET_ALL,scopeId, page);
+
+	if(0 != mysql_query(conn, query) ){
+		fprintf(stderr, "%s\n", mysql_error(conn));
+		return 0;
+	}
+
+	i=0;
+	result = mysql_use_result(conn);
+	while( (row=mysql_fetch_row(result)) != NULL ){
+		/* Initialize */
+		gs_report_ZeroStruct(&gsr[i]);
+
+		gs_report_setId( atol(row[0]), &gsr[i]);
+		gs_report_setContent( row[1], &gsr[i]);
+		gs_report_setScopeId( row[2] == NULL ? GS_SCOPE_INVALID_ID : atol(row[2]), &gsr[i]);
+		strncpy(gsr[i].origin,row[3], SHA_LENGTH);
+		strncpy(gsr[i].authorize, row[4], SHA_LENGTH);
+		gs_report_setCreatedTime( row[5], &gsr[i]);
+		i++;
+	}
+	mysql_free_result(result);  
+	return i;
+}

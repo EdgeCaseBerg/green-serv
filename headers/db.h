@@ -111,4 +111,6 @@
 
 	int db_deleteReport(struct gs_report * gsr, MYSQL * conn);
 
+	int db_getReports(int page, long scopeId, struct gs_report * gsr, MYSQL * conn);
+
 #endif
