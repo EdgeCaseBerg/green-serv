@@ -11,3 +11,6 @@ error.log
 #Ignore configuration files
 headers/config.h
 config.sql
+
+#Ignore vim swap files
+*.swp
