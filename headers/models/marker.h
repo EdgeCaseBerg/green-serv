@@ -2,11 +2,8 @@
 	#define __GS_MARKER_H__
 	/* Fun Fact: GS stands for green-serv*/
 
-	#include <limits.h>
     #include "flags.h"
-	#define GS_MARKER_CREATED_TIME_LENGTH 19
-    #define MANTISSA_LIMIT 1000000000
-	
+	#define GS_MARKER_CREATED_TIME_LENGTH 19	
 	#include "helpers/decimal.h"
 
 	struct gs_marker {
@@ -28,11 +25,6 @@
 	
 
 	/* Empties a marker structure of data and sets flag values */
-	void gs_marker_ZeroStruct(struct gs_marker * gsm);
-    
-    /* Perform arithmetic operations on Decimal structures */
-    void add_decimals(Decimal* a, Decimal* b, Decimal* sum); 
-    void subtract_decimals(Decimal* a, Decimal* b, Decimal* diff); 
-      
+	void gs_marker_ZeroStruct(struct gs_marker * gsm);     
 
 #endif
