@@ -27,15 +27,59 @@ void subtract_decimals(Decimal* a, Decimal* b, Decimal* diff){
     }
 }
 
-void createDecimalFromString(Decimal * dec, char * str){
+static long powlu(long base, long raisemeto){
+    int i;
+    long result;
+    if(raisemeto <= 0) /* I aint dealing with negative*/
+        return 1L;
+    result = base;
+    
+    for(i=1; i < raisemeto; ++i){
+        result = result*base;
+    }
+    return result;
+}
+
+void createDecimalFromString(Decimal * dec, const char * str){
     long left;
     unsigned long right;
+    char * dotLocation;
+    char rawLeft[9];
+    char rawRight[9];
+    int i;
+    int dotPos;
+    long leadingZeros;
 
     if(str == NULL)
         return;
 
-    if(sscanf(str, "%ld.%lu", &left, &right) == EOF)
-        return;
+    bzero(rawLeft,9);
+    bzero(rawRight,9);
+
+    dotLocation = strstr(str, ".");
+    leadingZeros = 0;
+    if(dotLocation == NULL){
+        left = atol(str);
+        right = 0;
+    }else{
+        /* ghetto strncpy */
+        for(i=0; i != 9 && str[i] != *dotLocation; ++i)
+            rawLeft[i] = str[i];
+        rawLeft[i] = '\0';
+        dotPos = i+1;
+        left = atol(rawLeft);
+        for(i=0; i != 9 && str[dotPos] != '\0'; ++i,++dotPos){
+            if(str[dotPos] == '0')
+                leadingZeros++;
+            rawRight[i] = str[dotPos];
+        }
+        rawRight[i] = '\0';
+        right = strtoul(rawRight,NULL,10);
+        if(leadingZeros > 0)
+            right = (right*(powlu(10,7-leadingZeros)));
+        else
+            right = right*10000000;
+    }
 
     dec->left = left;
     dec->right = right;

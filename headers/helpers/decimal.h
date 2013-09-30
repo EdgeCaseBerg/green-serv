@@ -1,6 +1,6 @@
 #ifndef __DECIMAL_H__	
 	#include <limits.h> 
-    #define MANTISSA_LIMIT 1000000000
+    #define MANTISSA_LIMIT 100000000
     #define __DECIMAL_H__
 	typedef struct{			 /* Calling them more convenient terms: */
 		long left;  		 /* characteristic */
@@ -14,6 +14,8 @@
     void subtract_decimals(Decimal* a, Decimal* b, Decimal* diff); 
  	#include <stdlib.h>
  	#include <stdio.h>
- 	void createDecimalFromString(Decimal * dec, char * str);
+ 	#include <string.h>
+ 	#include <math.h>
+ 	void createDecimalFromString(Decimal * dec, const char * str);
 
 #endif
