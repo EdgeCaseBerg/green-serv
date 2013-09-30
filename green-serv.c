@@ -136,8 +136,8 @@ int main(int argc, const char* argv[]) {
 
 	gs_heatmap_setIntensity( 2, &testHeatmap);
 	gs_heatmap_setScopeId( campaign.id, &testHeatmap);
-	createDecimalFromString(&testHeatmap.latitude,"-44.781");
-	createDecimalFromString(&testHeatmap.longitude,"70.11");
+	createDecimalFromString(&testHeatmap.latitude,"-44.0781");
+	createDecimalFromString(&testHeatmap.longitude,"70.011");
 	
 	db_insertHeatmap(&testHeatmap, conn);
 
@@ -153,7 +153,7 @@ int main(int argc, const char* argv[]) {
 		numHeatmap = db_getHeatmap(	
 					/* page 	*/ 		0,
 					/* scope 	*/ 	campaign.id, 
-					/* precision*/	3, 
+					/* precision*/	8, 
 					/* Low Lat 	*/ 	lowerBoundLat,
 					/* Up Lat  	*/	upperBoundLat,
 					/* Low Lon 	*/	lowerBoundLon,
