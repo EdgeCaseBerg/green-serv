@@ -11,6 +11,7 @@
 	#include "models/marker.h"
 	#include "models/heatmap.h"
 	#include "models/report.h"
+	#include "helpers/decimal.h"
 	#include "config.h"
 	#include <string.h>
 	
@@ -50,9 +51,6 @@
 
 	/*Returns a connection to the mySQL database.*/
 	MYSQL * _getMySQLConnection();
-
-	/* Helper function to create a decimal with arbitrary precision */
-	void createDecimalFromString(Decimal * dec, char * str);
 
 	/* Given a struct and an id, return a structure populate from db*/
 	void db_getScopeById(long id, struct gs_scope * gss, MYSQL * conn);

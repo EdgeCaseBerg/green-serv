@@ -40,6 +40,9 @@ static long powlu(long base, long raisemeto){
     return result;
 }
 
+/*
+Be sure to read decimal.h for a good explanation of why we do what we do
+*/
 void createDecimalFromString(Decimal * dec, const char * str){
     long left;
     unsigned long right;
