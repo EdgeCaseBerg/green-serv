@@ -12,5 +12,8 @@
     /* Perform arithmetic operations on Decimal structures */
     void add_decimals(Decimal* a, Decimal* b, Decimal* sum); 
     void subtract_decimals(Decimal* a, Decimal* b, Decimal* diff); 
- 
+ 	#include <stdlib.h>
+ 	#include <stdio.h>
+ 	void createDecimalFromString(Decimal * dec, char * str);
+
 #endif

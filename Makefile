@@ -35,3 +35,9 @@ decimal.o: src/helpers/decimal.c
 
 clean:
 	rm obj/*.o *.out
+
+tests: test-decimal
+	valgrind --tool=memcheck --leak-check=yes --show-reachable=yes --num-callers=20 --track-fds=yes tests/bin/*.out
+
+test-decimal: tests/decimal-test.c decimal.o
+	cc -I./headers -std=gnu99 -pedantic -Wall -Wextra -Werror -g tests/decimal-test.c obj/decimal.o -o tests/bin/decimal.out

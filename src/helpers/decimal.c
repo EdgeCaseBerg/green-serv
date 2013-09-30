@@ -27,3 +27,17 @@ void subtract_decimals(Decimal* a, Decimal* b, Decimal* diff){
     }
 }
 
+void createDecimalFromString(Decimal * dec, char * str){
+    long left;
+    unsigned long right;
+
+    if(str == NULL)
+        return;
+
+    if(sscanf(str, "%ld.%lu", &left, &right) == EOF)
+        return;
+
+    dec->left = left;
+    dec->right = right;
+
+}

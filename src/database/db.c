@@ -15,22 +15,6 @@ MYSQL * _getMySQLConnection(){
 	return mysql_real_connect(conn, server, user, password, database, 0, NULL, 0);
 }
 
-
-void createDecimalFromString(Decimal * dec, char * str){
-	long left;
-	unsigned long right;
-
-	if(str == NULL)
-		return;
-
-	if(sscanf(str, "%ld.%lu", &left, &right) == EOF)
-		return;
-
-	dec->left = left;
-	dec->right = right;
-
-}
-
 void db_getScopeById(long id, struct gs_scope * gss, MYSQL * conn){
 	MYSQL_RES * result;
 	MYSQL_ROW row; 
