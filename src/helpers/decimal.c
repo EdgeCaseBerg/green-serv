@@ -1,6 +1,9 @@
 #include "helpers/decimal.h"
 
 void createDecimal(long left, unsigned long right, Decimal * dec){
+    /* There is SO much that can go wrong here. 
+     * creating a decimal should be done from the createfromString function
+    */
 	dec->left = left;
 	dec->right = right;
 }
@@ -52,6 +55,7 @@ void createDecimalFromString(Decimal * dec, const char * str){
     int i;
     int dotPos;
     long leadingZeros;
+    int numDetected;
 
     if(str == NULL)
         return;
@@ -60,7 +64,7 @@ void createDecimalFromString(Decimal * dec, const char * str){
     bzero(rawRight,9);
 
     dotLocation = strstr(str, ".");
-    leadingZeros = 0;
+    leadingZeros = numDetected = 0;
     if(dotLocation == NULL){
         left = atol(str);
         right = 0;
@@ -72,16 +76,20 @@ void createDecimalFromString(Decimal * dec, const char * str){
         dotPos = i+1;
         left = atol(rawLeft);
         for(i=0; i != 9 && str[dotPos] != '\0'; ++i,++dotPos){
-            if(str[dotPos] == '0')
+            if(str[dotPos] == '0' && numDetected == 0)
                 leadingZeros++;
+            else
+                numDetected = 1;
+             
             rawRight[i] = str[dotPos];
         }
         rawRight[i] = '\0';
         right = strtoul(rawRight,NULL,10);
         if(leadingZeros > 0)
-            right = (right*(powlu(10,7-leadingZeros)));
+            /* subtract the leading zeros, then also the powers of ten taken by the number itself*/
+            right = (right*(powlu(10,7-leadingZeros-(i-2))));
         else
-            right = right*10000000;
+            right = right*(powlu(10,(i > 1 ? 8-(i-1) : 7 ))); 
     }
 
     dec->left = left;

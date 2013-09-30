@@ -95,7 +95,7 @@ int gs_commentToJSON(const struct gs_comment gsc, char * jsonOutput){
 int gs_markerToJSON(const struct gs_marker gsm, char * jsonOutput){
     char * json;
 
-    json = "{\"id\" : %ld, \"commentId\" : %ld, \"timestamp\" : \"%s\", \"latitude\" : %ld.%lu, \"longitude\" : %ld.%lu }";
+    json = "{\"id\" : %ld, \"commentId\" : %ld, \"timestamp\" : \"%s\", \"latitude\" : %ld.%08lu, \"longitude\" : %ld.%08lu }";
 
     return sprintf( jsonOutput, 
                     json, 
@@ -110,7 +110,7 @@ int gs_markerToJSON(const struct gs_marker gsm, char * jsonOutput){
 int gs_heatmapToJSON(const struct gs_heatmap gsh, char * jsonOutput){
     char * json;
 
-    json = "{\"latitude\" : %ld.%lu, \"longitude\" : %ld.%lu, \"secondsWorked\" : %ld }";
+    json = "{\"latitude\" : %ld.%08lu, \"longitude\" : %ld.%08lu, \"secondsWorked\" : %ld }";
 
     return sprintf( jsonOutput,
                     json,
