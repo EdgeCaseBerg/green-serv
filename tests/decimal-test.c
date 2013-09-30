@@ -19,6 +19,17 @@ void testAndPrint(const char * decimalString){
 	free(strings);
 }
 
+void traceAndPrintDecimal(Decimal testDec){
+	int nptrs;
+	void *buffer[100];
+    char **strings;	
+    nptrs = backtrace(buffer, 100);
+    strings = backtrace_symbols(buffer, nptrs);
+    printf("Test: %s  Decimal: %ld.%08lu\n", strings[1], testDec.left, testDec.right);
+
+    free(strings);
+}
+
 void noLeading(){
 	testAndPrint("22.1");
 }
@@ -51,10 +62,52 @@ void withExtraZerosAndLeading(){
 	testAndPrint("22.015600");	
 }
 
-int main(){
+void addDecimals(){
 	Decimal oper1;
 	Decimal oper2;
 	Decimal result;
+	createDecimalFromString(&oper1, "22.1");
+	createDecimalFromString(&oper2, "10.2");
+	add_decimals(&oper1, &oper2, &result);
+	printf("Adding %ld.%08lu to %ld.%08lu\n",oper1.left,oper1.right,oper2.left,oper2.right);
+	traceAndPrintDecimal(result);
+}
+
+void addDecimalsWithCarry(){
+	Decimal oper1;
+	Decimal oper2;
+	Decimal result;
+	createDecimalFromString(&oper1, "22.5");
+	createDecimalFromString(&oper2, "10.5");
+	add_decimals(&oper1, &oper2, &result);
+	printf("Adding %ld.%08lu to %ld.%08lu\n",oper1.left,oper1.right,oper2.left,oper2.right);
+	traceAndPrintDecimal(result);
+}
+
+void subtractDecimals(){
+	Decimal oper1;
+	Decimal oper2;
+	Decimal result;
+	createDecimalFromString(&oper1, "10.4");
+	createDecimalFromString(&oper2, "10.2");
+	subtract_decimals(&oper1, &oper2, &result);
+	printf("Subtracting %ld.%08lu from %ld.%08lu\n",oper2.left,oper2.right,oper1.left,oper1.right);
+	traceAndPrintDecimal(result);
+}
+
+void subtractDecimalsWithCarry(){
+	Decimal oper1;
+	Decimal oper2;
+	Decimal result;
+	createDecimalFromString(&oper1, "10.2");
+	createDecimalFromString(&oper2, "10.4");
+	subtract_decimals(&oper1, &oper2, &result);
+	printf("Subtracting %ld.%08lu from %ld.%08lu\n",oper2.left,oper2.right,oper1.left,oper1.right);
+	traceAndPrintDecimal(result);
+}
+
+int main(){
+	
 
 	noDot();
 	noMantissa();
@@ -64,18 +117,9 @@ int main(){
 	largeMantissa();
 	withExtraZeros();
 	withExtraZerosAndLeading();
-
-	createDecimalFromString(&oper1, "22.0550");
-	printf("%ld.%08lu\n", oper1.left, oper1.right);
-
-	createDecimalFromString(&oper2, "10.06");
-	printf("%ld.%08lu\n", oper2.left, oper2.right);
-
-	add_decimals(&oper1, &oper2, &result);
-	printf("%ld.%08lu\n", result.left, result.right);
-
-	subtract_decimals(&oper1, &oper2, &result);
-	printf("%ld.%08lu\n", result.left, result.right);
-
+	addDecimals();
+	addDecimalsWithCarry();
+	subtractDecimals();
+	subtractDecimalsWithCarry();
 	return 0;
 }
