@@ -95,8 +95,9 @@ int main(int argc, const char* argv[]) {
    	}
 
 	/* Test markers */
-	createDecimalFromString(&latitude, "-44.50");
-	createDecimal(-44, 70, &longitude);
+	createDecimalFromString(&latitude, "-44.050");
+	createDecimalFromString(&longitude, "-44.70");
+
    
 	gs_marker_ZeroStruct(&testMarker);
 
