@@ -7,9 +7,9 @@
     A unsigned long value cannot store these leading zeroes as that makes
     absolutely no sense. So instead, consider the table:
     
-    +---------------+-----------------+
+    +-----------+---------------------+
     | Mantissa  | Long Representation |
-    +---------------+-----------------+
+    +-----------+---------------------+
     |.5         | 50,000,000          |
     |.05        | 5,000,000           |
     |.005       | 500,000             |
@@ -18,7 +18,7 @@
     |.000005    | 500                 |
     |.0000005   | 50                  |
     |.00000005  | 5                   |
-    +---------------+-----------------+
+    +-----------+---------------------+
     
     As one can see, the zeroes are essentially fliped around. The reason for
     representing the mantissa in this way is wholy based on the need for
