@@ -43,6 +43,14 @@ void largeMantissa(){
 	testAndPrint("22.123456789");
 }
 
+void withExtraZeros(){
+	testAndPrint("22.1000");		
+}
+
+void withExtraZerosAndLeading(){
+	testAndPrint("22.015600");	
+}
+
 int main(){
 	Decimal oper1;
 	Decimal oper2;
@@ -54,6 +62,8 @@ int main(){
 	leadingZero();
 	multiDigitNum();
 	largeMantissa();
+	withExtraZeros();
+	withExtraZerosAndLeading();
 
 	createDecimalFromString(&oper1, "22.0550");
 	printf("%ld.%08lu\n", oper1.left, oper1.right);
