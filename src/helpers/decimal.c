@@ -1,6 +1,9 @@
 #include "helpers/decimal.h"
 
 void createDecimal(long left, unsigned long right, Decimal * dec){
+    /* There is SO much that can go wrong here. 
+     * creating a decimal should be done from the createfromString function
+    */
 	dec->left = left;
 	dec->right = right;
 }
