@@ -36,8 +36,11 @@ decimal.o: src/helpers/decimal.c
 clean:
 	rm obj/*.o *.out
 
-tests: test-decimal
+tests: test-decimal test-comment
 	valgrind --tool=memcheck --leak-check=yes --show-reachable=yes --num-callers=20 --track-fds=yes tests/bin/*.out
 
 test-decimal: tests/decimal-test.c decimal.o
 	cc -I./headers -std=gnu99 -pedantic -Wall -Wextra -Werror -g tests/decimal-test.c obj/decimal.o -o tests/bin/decimal.out -lm -rdynamic
+
+test-comment: tests/comment-test.c comment.o json.o db.o marker.o report.o heatmap.o
+	cc -I./headers -I/usr/include/mysql -DBIG_JOINS=1 -fno-strict-aliasing -std=gnu99 -pedantic -Wall -Wextra -Werror -g tests/comment-test.c obj/*.o -o tests/bin/comment.out -L/usr/lib/x86_64-linux-gnu -lmysqlclient -lpthread -lz -lm -lrt -ldl -g -lcrypto
