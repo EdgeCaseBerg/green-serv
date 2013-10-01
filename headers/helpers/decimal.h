@@ -31,12 +31,17 @@
 */
 
 #ifndef __DECIMAL_H__	
-	#include <limits.h> 
-    #define MANTISSA_LIMIT 100000000
     #define __DECIMAL_H__
+    #define MANTISSA_LIMIT 100000000
+	#include <limits.h> 
+    
+    
+    #define NEGATIVE_ZERO 1
+    #define POSITIVE_ZERO 0
 	typedef struct{			 /* Calling them more convenient terms: */
 		long left;  		 /* characteristic */
 		unsigned long right; /* mantissa */
+        int signBit;         /* handle behavior -0.1 to -0.9 */
 	}Decimal;
 
 	void createDecimal(long left, unsigned long right, Decimal * dec);
@@ -49,5 +54,6 @@
  	#include <string.h>
  	#include <math.h>
  	void createDecimalFromString(Decimal * dec, const char * str);
+    void formatDecimal(const Decimal dec, char *  output);
 
 #endif

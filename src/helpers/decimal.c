@@ -6,8 +6,17 @@ void createDecimal(long left, unsigned long right, Decimal * dec){
     */
 	dec->left = left;
 	dec->right = right;
+    dec->signBit = left < 0 ? NEGATIVE_ZERO : POSITIVE_ZERO;
 }
 
+void formatDecimal(const Decimal dec, char *  output){
+    char * format;
+    if(dec.left > -1 && dec.signBit == NEGATIVE_ZERO)/* -0.9 to -0.1*/
+        format = "-%ld.%08lu";
+    else
+        format = "%ld.%08lu";
+    sprintf(output, format, dec.left,dec.right);
+}
 
 /* Add two decimals */
 void add_decimals(Decimal* a, Decimal* b, Decimal* sum){
@@ -17,6 +26,8 @@ void add_decimals(Decimal* a, Decimal* b, Decimal* sum){
         sum->left += 1;
         sum->right -= MANTISSA_LIMIT;
     }
+    if(sum->left >0)
+        sum->signBit = POSITIVE_ZERO;
 }
 
 
@@ -24,10 +35,18 @@ void add_decimals(Decimal* a, Decimal* b, Decimal* sum){
 void subtract_decimals(Decimal* a, Decimal* b, Decimal* diff){
     diff->left = a->left - b->left;
     diff->right = a->right - b->right;
-    if(diff->right >= MANTISSA_LIMIT) { //it wll be around the limit for longs but it should never be lower than MANTISSA_LIMIT
-        diff->left -= 1;                //because neither operand can be more than 1 billion
-        diff->right = ULONG_MAX - diff->right;
+    if(diff->right > MANTISSA_LIMIT) { //it wll be around the limit for longs but it should never be lower than MANTISSA_LIMIT
+        if(diff->left != 0)
+            diff->left -= 1;            
+        else
+            diff->signBit = NEGATIVE_ZERO; /* Set flag here */
+        diff->right = (ULONG_MAX+1) - diff->right;
+    }  
+    if(b->left >= a->left){
+        diff->signBit = NEGATIVE_ZERO;
+        diff->left = diff->left < -1 ? diff->left+1 : diff->left;
     }
+
 }
 
 static long powlu(long base, long raisemeto){
@@ -94,5 +113,8 @@ void createDecimalFromString(Decimal * dec, const char * str){
 
     dec->left = left;
     dec->right = right;
+    dec->signBit = left < 0 ? NEGATIVE_ZERO : POSITIVE_ZERO;
+    if(str[0] == '-')
+        dec->signBit = NEGATIVE_ZERO;
 
 }

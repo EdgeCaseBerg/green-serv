@@ -8,24 +8,29 @@
 void testAndPrint(const char * decimalString){
 	int nptrs;
 	void *buffer[100];
+	char decBuff[16];
     char **strings;
+    bzero(decBuff,16);
 
     nptrs = backtrace(buffer, 100);
     strings = backtrace_symbols(buffer, nptrs);
 	Decimal testDec;
 	createDecimalFromString(&testDec, decimalString);
-	printf("Test: %s  Decimal: %ld.%08lu\n", strings[1], testDec.left, testDec.right);
+	formatDecimal(testDec, decBuff);
+	printf("Test: %s  Decimal: %s\n", strings[1], decBuff);
 
 	free(strings);
 }
 
 void traceAndPrintDecimal(Decimal testDec){
 	int nptrs;
+	char decBuff[16];
 	void *buffer[100];
     char **strings;	
     nptrs = backtrace(buffer, 100);
     strings = backtrace_symbols(buffer, nptrs);
-    printf("Test: %s  Decimal: %ld.%08lu\n", strings[1], testDec.left, testDec.right);
+    formatDecimal(testDec, decBuff);
+    printf("Test: %s  Decimal: %s\n", strings[1], decBuff);
 
     free(strings);
 }
@@ -43,7 +48,7 @@ void noDot(){
 }
 
 void leadingZero(){
-	testAndPrint("22.01");
+	testAndPrint("-22.01");
 }
 
 void multiDigitNum(){
@@ -88,8 +93,8 @@ void subtractDecimals(){
 	Decimal oper1;
 	Decimal oper2;
 	Decimal result;
-	createDecimalFromString(&oper1, "10.4");
-	createDecimalFromString(&oper2, "10.2");
+	createDecimalFromString(&oper1, "10.04");
+	createDecimalFromString(&oper2, "10.02");
 	subtract_decimals(&oper1, &oper2, &result);
 	printf("Subtracting %ld.%08lu from %ld.%08lu\n",oper2.left,oper2.right,oper1.left,oper1.right);
 	traceAndPrintDecimal(result);
@@ -99,11 +104,17 @@ void subtractDecimalsWithCarry(){
 	Decimal oper1;
 	Decimal oper2;
 	Decimal result;
-	createDecimalFromString(&oper1, "10.2");
-	createDecimalFromString(&oper2, "10.4");
+	createDecimalFromString(&oper1, "10.0");
+	createDecimalFromString(&oper2, "10.1");
 	subtract_decimals(&oper1, &oper2, &result);
 	printf("Subtracting %ld.%08lu from %ld.%08lu\n",oper2.left,oper2.right,oper1.left,oper1.right);
 	traceAndPrintDecimal(result);
+}
+
+void negativeZeroValue(){
+	Decimal testDec;
+	createDecimalFromString(&testDec, "-0.1");
+	traceAndPrintDecimal(testDec);
 }
 
 int main(){
@@ -121,5 +132,6 @@ int main(){
 	addDecimalsWithCarry();
 	subtractDecimals();
 	subtractDecimalsWithCarry();
+	negativeZeroValue();
 	return 0;
 }
