@@ -15,7 +15,8 @@ void formatDecimal(const Decimal dec, char *  output){
         format = "-%ld.%08lu";
     else
         format = "%ld.%08lu";
-    sprintf(output, format, dec.left,dec.right);
+    /*14 is -ccc.mmmmmmmm\0 */
+    snprintf(output, 15, format, dec.left,dec.right);
 }
 
 /* Add two decimals */
