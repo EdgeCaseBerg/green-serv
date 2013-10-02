@@ -66,6 +66,49 @@ int _escapeJSON(const char * input, int inputlen, char * output){
     return (j+1);
 }
 
+/* This is a 'safe' version of the gs_scopeToJSON function. It very deliberately
+ * uses more than enough memory in its allocations and does it's best to detect
+ * possible stack smashing. If the function determines that it might be smashing
+ * the stack at all it prints an error message to stderr and returns -1 without
+ * copying the created input to jsonOutput. Because of the use of snprint instead
+ * of sprintf, this function should behave more stability than the other one and
+ * should be used instead.
+*/
+int gs_scopeNToJSON(const struct gs_scope gss, char * jsonOutput, int jsonOutputAllocatedSize){
+    #ifdef JSON_ID_LENGTH
+        #undef JSON_ID_LENGTH
+        #define JSON_ID_LENGTH (12+sizeof(long)+1)
+    #else
+        #define JSON_ID_LENGTH (12+sizeof(long)+1)
+    #endif
+    #ifdef JSON_DESCRIPTION_LENGTH
+        #undef JSON_DESCRIPTION_LENGTH
+        #define JSON_DESCRIPTION_LENGTH (23+GS_SCOPE_DESCRIPTION_SIZE+1)
+    #else
+        #define JSON_DESCRIPTION_LENGTH (23+GS_SCOPE_DESCRIPTION_SIZE+1)
+    #endif
+    char jsonId[JSON_ID_LENGTH];
+    char jsonDescription[JSON_DESCRIPTION_LENGTH];
+    char escaped[GS_SCOPE_DESCRIPTION_SIZE*4];
+    bzero(escaped,GS_SCOPE_DESCRIPTION_SIZE*4);
+    bzero(jsonId,JSON_ID_LENGTH);
+    int jsonIdWritten;
+    int jsonDescriptionWritten;
+    
+    jsonIdWritten = snprintf(jsonId,12+sizeof(long),"{\"id\" : %ld , ",gss.id);
+
+    /* The most important part is escaping the text*/
+    _escapeJSON(gss.description,strlen(gss.description), escaped );
+
+    jsonDescriptionWritten = snprintf(jsonDescription,JSON_DESCRIPTION_LENGTH,"\"description\" : \"%s\" }",escaped);
+    if(jsonIdWritten + jsonDescriptionWritten > jsonOutputAllocatedSize-1){
+        fprintf(stderr, "%s\n", "gs_scopeNToJSON may have overwritten the stack.");
+        return -1; /* Flag since normally we return the number of characters written */
+    }
+    return snprintf(jsonOutput,jsonOutputAllocatedSize-1,"%s%s",jsonId,jsonDescription);
+    
+}
+
 /* Recommended at least 128 bytes for safety */
 int gs_scopeToJSON(const struct gs_scope gss, char * jsonOutput){
 	char * json;
