@@ -123,13 +123,23 @@ int gs_heatmapToJSON(const struct gs_heatmap gsh, char * jsonOutput){
 
 /* Recommed at least 67 + GS_REPORT_MAX_LENGTH*3 for safety for jsonOutput size*/
 int gs_reportToJSON(const struct gs_report gsr, char * jsonOutput){
-    char * json;
+    char * jsonMsg;
+    char * jsonPartial;
     char escaped[strlen(gsr.content)*3];
+    char jsonPartialString[43+65+20];
+    char jsonPartialMsg[strlen(gsr.content)*3+20];
     bzero(escaped,strlen(gsr.content)*3);
+    bzero(jsonPartialMsg,strlen(gsr.content)*3+20);
 
     /* The hash is the auth hash not the origin hash*/
-    json = "{\"message\" : \"%s\", \"timestamp\" : \"%s\", \"hash\" : \"%s\" }";
-    _escapeJSON(gsr.content, strlen(gsr.content), escaped);
+    jsonMsg = "{\"message\" : \"%s\", ";
+    jsonPartial = "\"timestamp\" : \"%s\", \"hash\" : \"%s\" }";
+    _escapeJSON(gsr.content, GS_REPORT_MAX_LENGTH*3, escaped);
 
-    return sprintf( jsonOutput,json,escaped,gsr.createdTime,gsr.authorize);
+    /* the message content can easily overrun the stack so try to be extra careful */
+    snprintf(jsonPartialString,43+65+20,jsonPartial,gsr.createdTime, gsr.authorize);
+    snprintf(jsonPartialMsg,strlen(gsr.content)*3+20,jsonMsg, escaped);
+    
+
+    return sprintf( jsonOutput,"%s%s", jsonPartialMsg, jsonPartialString);
 }

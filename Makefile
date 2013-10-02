@@ -36,11 +36,12 @@ decimal.o: src/helpers/decimal.c
 clean:
 	rm obj/*.o *.out
 
-tests: test-decimal test-comment test-scope test-marker
+tests: test-decimal test-comment test-scope test-marker test-report
 	valgrind --tool=memcheck --leak-check=yes --show-reachable=yes --num-callers=20 --track-fds=yes tests/bin/scope.out
 	valgrind --tool=memcheck --leak-check=yes --show-reachable=yes --num-callers=20 --track-fds=yes tests/bin/comment.out
 	valgrind --tool=memcheck --leak-check=yes --show-reachable=yes --num-callers=20 --track-fds=yes tests/bin/decimal.out
 	valgrind --tool=memcheck --leak-check=yes --show-reachable=yes --num-callers=20 --track-fds=yes tests/bin/marker.out
+	valgrind --tool=memcheck --leak-check=yes --show-reachable=yes --num-callers=20 --track-fds=yes tests/bin/report.out
 
 test-decimal: tests/decimal-test.c decimal.o
 	cc -I./headers -std=gnu99 -pedantic -Wall -Wextra -Werror -g tests/decimal-test.c obj/decimal.o -o tests/bin/decimal.out -lm -rdynamic
@@ -53,3 +54,6 @@ test-scope: tests/scope-test.c scope.o json.o db.o
 
 test-marker: tests/marker-test.c marker.o comment.o json.o db.o
 	cc -I./headers -I/usr/include/mysql -DBIG_JOINS=1 -fno-strict-aliasing -std=gnu99 -pedantic -Wall -Wextra -Werror -g tests/marker-test.c obj/*.o -o tests/bin/marker.out -L/usr/lib/x86_64-linux-gnu -lmysqlclient -lpthread -lz -lm -lrt -ldl -g -lcrypto		
+
+test-report: tests/report-test.c report.o json.o db.o
+	cc -I./headers -I/usr/include/mysql -DBIG_JOINS=1 -fno-strict-aliasing -std=gnu99 -pedantic -Wall -Wextra -Werror -g tests/report-test.c obj/*.o -o tests/bin/report.out -L/usr/lib/x86_64-linux-gnu -lmysqlclient -lpthread -lz -lm -lrt -ldl -g -lcrypto
