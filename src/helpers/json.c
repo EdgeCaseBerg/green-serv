@@ -139,30 +139,72 @@ int gs_commentToJSON(const struct gs_comment gsc, char * jsonOutput){
 /* I'd recommend at least 110 bytes to be specified.  Probably 128 for safety*/
 int gs_markerToJSON(const struct gs_marker gsm, char * jsonOutput){
     char * json;
+    char latitude[16];
+    char longitude[16];
+    bzero(latitude,16);
+    bzero(longitude,16);
+    formatDecimal(gsm.latitude,latitude);
+    formatDecimal(gsm.longitude,longitude);
 
-    json = "{\"id\" : %ld, \"commentId\" : %ld, \"timestamp\" : \"%s\", \"latitude\" : %ld.%08lu, \"longitude\" : %ld.%08lu }";
+    json = "{\"id\" : %ld, \"commentId\" : %ld, \"timestamp\" : \"%s\", \"latitude\" : %s, \"longitude\" : %s }";
 
     return sprintf( jsonOutput, 
                     json, 
                     gsm.id, 
                     gsm.commentId, 
                     gsm.createdTime, 
-                    gsm.latitude.left, gsm.latitude.right, 
-                    gsm.longitude.left, gsm.longitude.right);    
+                    latitude,
+                    longitude);    
 }
 
 /* Recommend at least 128 for safety*/ 
 int gs_heatmapToJSON(const struct gs_heatmap gsh, char * jsonOutput){
     char * json;
+    char latitude[16];
+    char longitude[16];
+    bzero(latitude,16);
+    bzero(longitude,16);
+    formatDecimal(gsh.latitude,latitude);
+    formatDecimal(gsh.longitude,longitude);
 
-    json = "{\"latitude\" : %ld.%08lu, \"longitude\" : %ld.%08lu, \"secondsWorked\" : %ld }";
+    json = "{\"latitude\" : %s, \"longitude\" : %s, \"secondsWorked\" : %ld }";
 
     return sprintf( jsonOutput,
                     json,
-                    gsh.latitude.left, gsh.latitude.right,
-                    gsh.longitude.left, gsh.longitude.right,
+                    latitude,
+                    longitude,
                     gsh.intensity
                     );
+}
+
+int gs_heatmapNToJSON(const struct gs_heatmap gsh, char * jsonOutput, int jsonOutputAllocatedSize){
+    char jsonLat[21];
+    char jsonLon[22];
+    char latitude[16];
+    char longitude[16];
+    char jsonSeconds[27+sizeof(long)];
+    int jsonLatWritten;
+    int jsonLonWritten;
+    int jsonSecondsWritten;
+    bzero(latitude,16);
+    bzero(longitude,16);
+    bzero(jsonLat,21);
+    bzero(jsonLon,21);
+    bzero(jsonSeconds,27+sizeof(long));
+    formatDecimal(gsh.latitude,latitude);
+    formatDecimal(gsh.longitude,longitude);
+
+    jsonLatWritten = snprintf(jsonLat,21+16,"{\"latitude\" : %s", latitude);
+    jsonLonWritten = snprintf(jsonLon,22+16," \"longitude\" : %s,", longitude);
+    jsonSecondsWritten = snprintf(jsonSeconds,27+sizeof(long)," \"secondsWorked\" : %ld }",gsh.intensity);
+
+    if(jsonLonWritten + jsonLatWritten + jsonSecondsWritten > jsonOutputAllocatedSize-1){
+        fprintf(stderr, "%s\n", "gs_heatmapNToJSON may have returned partial JSON output due to not allocating enough memory");
+        #ifdef RETURN_ON_JSON_RISK
+            RETURN_ON_JSON_RISK;
+        #endif   
+    }
+    return snprintf(jsonOutput, jsonOutputAllocatedSize-1,"%s%s%s",jsonLat, jsonLon, jsonSeconds);
 }
 
 

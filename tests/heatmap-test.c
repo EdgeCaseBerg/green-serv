@@ -4,7 +4,7 @@
 #include "models/heatmap.h"
 #include "db.h"
 
-
+#define HEATMAP_JSON_LENGTH 10
 int main(){
 	MYSQL * conn;
 	Decimal lowerBoundLat;
@@ -13,10 +13,10 @@ int main(){
    	Decimal upperBoundLon;
    	struct gs_heatmap testHeatmap;
    	struct gs_heatmap * heatmapPage;
-   	char json[512];
+   	char json[HEATMAP_JSON_LENGTH];
    	int numHeatmap;
    	int i;
-   	bzero(json,512);
+   	bzero(json,HEATMAP_JSON_LENGTH);
 
    	conn = _getMySQLConnection();
    	if(!conn){
@@ -25,7 +25,7 @@ int main(){
    	}
 
 	gs_heatmap_ZeroStruct(&testHeatmap);
-	gs_heatmapToJSON(testHeatmap, json);
+	gs_heatmapNToJSON(testHeatmap, json,HEATMAP_JSON_LENGTH);
 	printf("%s\n", json);
 
 	gs_heatmap_setIntensity( 2, &testHeatmap);
@@ -35,7 +35,7 @@ int main(){
 	
 	db_insertHeatmap(&testHeatmap, conn);
 
-	gs_heatmapToJSON(testHeatmap, json);
+	gs_heatmapNToJSON(testHeatmap, json,HEATMAP_JSON_LENGTH);
 	printf("%s\n", json);
 
 	createDecimalFromString(&lowerBoundLat, "-50.0");
@@ -56,8 +56,8 @@ int main(){
 					/* mysql con*/	conn
 					);
 		for(i=0; i < numHeatmap; ++i){
-			bzero(json,512);
-			gs_heatmapToJSON(heatmapPage[i], json);
+			bzero(json,HEATMAP_JSON_LENGTH);
+			gs_heatmapNToJSON(heatmapPage[i], json,HEATMAP_JSON_LENGTH);
 			printf("%s\n", json);
 		}
 		free(heatmapPage);

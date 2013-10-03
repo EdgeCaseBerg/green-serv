@@ -13,6 +13,7 @@
 	int gs_commentToJSON(const struct gs_comment gsc, char * jsonOutput);
 	int gs_markerToJSON(const struct gs_marker gsm, char * jsonOutput);
 	int gs_heatmapToJSON(const struct gs_heatmap gsh, char * jsonOutput);
+	int gs_heatmapNToJSON(const struct gs_heatmap gsh, char * jsonOutput, int jsonOutputAllocatedSize);
 	int gs_reportToJSON(const struct gs_report gsr, char * jsonOutput);
 	int gs_reportNToJSON(const struct gs_report gsr, char * jsonOutput, int jsonOutputAllocatedSize);
 
