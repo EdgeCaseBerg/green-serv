@@ -34,7 +34,7 @@ int main(){
 	db_insertReport(&testReport, conn);
 	
 	bzero(json,JSON_LENGTH);
-	gs_reportToJSON(testReport,json);
+	gs_reportNToJSON(testReport,json,JSON_LENGTH);
 	printf("%s\n", json);
 	
 	reportPage = malloc(RESULTS_PER_PAGE * sizeof(struct gs_report));
@@ -42,7 +42,7 @@ int main(){
 		numReports = db_getReports(0, CAMPAIGN_ID, reportPage, conn);;
 		for(i=0; i < numReports; ++i){
 			bzero(json,JSON_LENGTH);
-			gs_reportToJSON(reportPage[i], json);
+			gs_reportNToJSON(reportPage[i], json,JSON_LENGTH);
 			printf("%s\n", json);		
 		}
 		
@@ -54,7 +54,7 @@ int main(){
 	strncpy(auth, testReport.authorize,64);
 	db_getReportByAuth(auth, &testReport, conn);
 	bzero(json,JSON_LENGTH);
-	gs_reportToJSON(testReport,json);
+	gs_reportNToJSON(testReport,json,JSON_LENGTH);
 	printf("%s\n", json);
 
 	printf("%d deleted\n", db_deleteReport(&testReport,  conn));

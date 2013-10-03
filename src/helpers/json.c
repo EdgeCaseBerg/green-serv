@@ -102,8 +102,10 @@ int gs_scopeNToJSON(const struct gs_scope gss, char * jsonOutput, int jsonOutput
 
     jsonDescriptionWritten = snprintf(jsonDescription,JSON_DESCRIPTION_LENGTH,"\"description\" : \"%s\" }",escaped);
     if(jsonIdWritten + jsonDescriptionWritten > jsonOutputAllocatedSize-1){
-        fprintf(stderr, "%s\n", "gs_scopeNToJSON may have overwritten the stack.");
-        return -1; /* Flag since normally we return the number of characters written */
+        fprintf(stderr, "%s\n", "gs_scopeNToJSON may have returned partial JSON output due to not allocating enough memory for output buffer");
+        #ifdef RETURN_ON_JSON_RISK
+            RETURN_ON_JSON_RISK;
+        #endif
     }
     return snprintf(jsonOutput,jsonOutputAllocatedSize-1,"%s%s",jsonId,jsonDescription);
     
@@ -185,4 +187,54 @@ int gs_reportToJSON(const struct gs_report gsr, char * jsonOutput){
     
 
     return sprintf( jsonOutput,"%s%s", jsonPartialMsg, jsonPartialString);
+}
+
+/* 'Safe' gs_reportTOJSON
+*/
+int gs_reportNToJSON(const struct gs_report gsr, char * jsonOutput, int jsonOutputAllocatedSize){
+    #ifndef JSON_CONTENT_LENGTH
+        #define JSON_CONTENT_LENGTH (20+(GS_REPORT_MAX_LENGTH)*4+1)
+    #else
+        #undef JSON_CONTENT_LENGTH
+        #define JSON_CONTENT_LENGTH (20+(GS_REPORT_MAX_LENGTH)*4+1)
+    #endif
+    char jsonMessage[JSON_CONTENT_LENGTH];
+    #ifndef JSON_TIMESTAMP_LENGTH
+        #define JSON_TIMESTAMP_LENGTH 20+(GS_REPORT_CREATED_TIME_LENGTH)+1
+    #else
+        #undef JSON_TIMESTAMP_LENGTH
+        #define JSON_TIMESTAMP_LENGTH 20+(GS_REPORT_CREATED_TIME_LENGTH)+1
+    #endif
+    char jsonTimestamp[JSON_TIMESTAMP_LENGTH];
+    #ifndef JSON_HASH_LENGTH
+        #define JSON_HASH_LENGTH 16 + SHA_LENGTH +1
+    #else
+        #undef JSON_HASH_LENGTH
+        #define JSON_HASH_LENGTH 16 + SHA_LENGTH +1
+    #endif
+    char jsonHash[JSON_HASH_LENGTH];
+    char escaped[JSON_CONTENT_LENGTH];
+    int jsonMessageWritten;
+    int jsonTimestampWritten;
+    int jsonHashWritten;
+    bzero(jsonMessage,JSON_CONTENT_LENGTH);
+    bzero(jsonTimestamp,JSON_TIMESTAMP_LENGTH);
+    bzero(jsonHash,JSON_HASH_LENGTH);
+    bzero(escaped,JSON_CONTENT_LENGTH);
+
+    jsonTimestampWritten = snprintf(jsonTimestamp,JSON_TIMESTAMP_LENGTH,"\"timestamp\" : \"%s\",",gsr.createdTime);
+    jsonHashWritten = snprintf(jsonHash, JSON_HASH_LENGTH," \"hash\" : \"%s\" }",gsr.authorize );
+
+    _escapeJSON(gsr.content, strlen(gsr.content), escaped);
+
+    jsonMessageWritten = snprintf(jsonMessage, JSON_CONTENT_LENGTH, "{\"message\" : \"%s\", ",escaped );
+    
+    if(jsonMessageWritten + jsonHashWritten + jsonTimestampWritten > jsonOutputAllocatedSize){
+        fprintf(stderr, "%s\n", "gs_reportNToJSON may have returned partial JSON output due to not allocating enough memory");
+        #ifdef RETURN_ON_JSON_RISK
+            RETURN_ON_JSON_RISK;
+        #endif
+    }
+    return snprintf(jsonOutput,jsonOutputAllocatedSize-1, "%s%s%s", jsonMessage,jsonTimestamp,jsonHash);
+
 }
