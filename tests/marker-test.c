@@ -4,6 +4,7 @@
 #include "models/marker.h"
 #include "helpers/json.h"
 
+#define JSON_LENGTH 512
 int main(){
 	MYSQL * conn;
 	struct gs_comment testComment;
@@ -11,10 +12,10 @@ int main(){
    	struct gs_marker * markerPage;
    	Decimal latitude;
    	Decimal longitude;
-   	char json[512];
+   	char json[JSON_LENGTH];
    	int numMarkers;
    	int i;
-	bzero(json,512);
+	bzero(json,JSON_LENGTH);
 
    	conn = _getMySQLConnection();
    	if(!conn){
@@ -41,11 +42,11 @@ int main(){
 	gs_marker_setLatitude(latitude, &testMarker);
 
 	db_insertMarker(&testMarker, conn);
-	gs_markerToJSON(testMarker, json);
+	gs_markerNToJSON(testMarker, json, JSON_LENGTH);
 	printf("%s\n", json);	
 
 	db_getMarkerById(testMarker.id, &testMarker, conn);
-	gs_markerToJSON(testMarker, json);
+	gs_markerNToJSON(testMarker, json, JSON_LENGTH);
 	printf("%s\n", json);	
 
 	markerPage = malloc(RESULTS_PER_PAGE * sizeof(struct gs_marker));
@@ -53,8 +54,8 @@ int main(){
 
 		numMarkers = db_getMarkers(0, CAMPAIGN_ID, markerPage, conn);
 		for(i=0; i < numMarkers; ++i){
-			bzero(json,512);
-			gs_markerToJSON(markerPage[i], json);
+			bzero(json,JSON_LENGTH);
+			gs_markerNToJSON(markerPage[i], json, JSON_LENGTH);
 			printf("%s\n", json);		
 		}
 		
@@ -68,3 +69,4 @@ int main(){
 	
 
 }
+#undef JSON_LENGTH

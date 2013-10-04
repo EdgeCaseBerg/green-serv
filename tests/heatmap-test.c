@@ -4,7 +4,7 @@
 #include "models/heatmap.h"
 #include "db.h"
 
-#define HEATMAP_JSON_LENGTH 10
+#define HEATMAP_JSON_LENGTH 512
 int main(){
 	MYSQL * conn;
 	Decimal lowerBoundLat;

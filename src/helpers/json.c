@@ -157,6 +157,44 @@ int gs_markerToJSON(const struct gs_marker gsm, char * jsonOutput){
                     longitude);    
 }
 
+int gs_markerNToJSON(const struct gs_marker gsm, char * jsonOutput, int jsonOutputAllocatedSize){
+    char jsonId[15+sizeof(long)]; /*{\"id\" : %ld, */
+    char jsonCommId[21+sizeof(long)];/*\"commentId\" : %ld, */
+    char jsonTimestamp[25+GS_MARKER_CREATED_TIME_LENGTH+1];/* \"timestamp\" : \"%s\", */
+    char jsonLat[21+16];/* \"latitude\" : %s, */
+    char jsonLon[21+16];/* \"longitude\" : %s }*/
+    char latitude[16];
+    char longitude[16];
+    int jsonIdWritten;
+    int jsonCommIdWritten;
+    int jsonTimestampWritten;
+    int jsonLatWritten;
+    int jsonLonWritten;
+    bzero(jsonId, 21+sizeof(long) );
+    bzero(jsonCommId, 21+sizeof(long) );
+    bzero(jsonTimestamp, 21+GS_MARKER_CREATED_TIME_LENGTH+1 );
+    bzero(jsonLat, 21+16);
+    bzero(jsonLon, 21+16 );   
+    formatDecimal(gsm.latitude,latitude);
+    formatDecimal(gsm.longitude,longitude);
+    
+    jsonIdWritten = snprintf(jsonId, 21+sizeof(long), "{\"id\" : %ld, ", gsm.id);
+    jsonCommIdWritten = snprintf(jsonCommId, 21+sizeof(long), "\"commentId\" : %ld, ", gsm.commentId);
+    jsonTimestampWritten = snprintf(jsonTimestamp, 21+GS_MARKER_CREATED_TIME_LENGTH, " \"timestamp\" : \"%s\", ", gsm.createdTime);
+    jsonLatWritten = snprintf(jsonLat, 21+15, " \"latitude\" : %s, ", latitude);
+    jsonLonWritten = snprintf(jsonLon, 21+15, " \"longitude\" : %s }", longitude);
+
+    if(jsonIdWritten + jsonCommIdWritten + jsonTimestampWritten + jsonLonWritten + jsonLatWritten > jsonOutputAllocatedSize-1){
+        fprintf(stderr, "%s\n", "gs_markerNToJSON may have returned partial JSON output due to not allocating enough memory");
+        #ifdef RETURN_ON_JSON_RISK
+            RETURN_ON_JSON_RISK;
+        #endif
+    }
+    return snprintf(jsonOutput,jsonOutputAllocatedSize-1,"%s%s%s%s%s",jsonId, jsonCommId,jsonTimestamp,jsonLat,jsonLon);
+}
+
+
+
 /* Recommend at least 128 for safety*/ 
 int gs_heatmapToJSON(const struct gs_heatmap gsh, char * jsonOutput){
     char * json;
