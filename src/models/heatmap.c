@@ -43,4 +43,6 @@ void gs_heatmap_ZeroStruct(struct gs_heatmap * gsh){
 	gsh->longitude.right = 0;
 	gsh->latitude.left = 0;
 	gsh->latitude.right = 0;
+	gsh->latitude.signBit = POSITIVE_ZERO;
+	gsh->longitude.signBit = POSITIVE_ZERO;
 }

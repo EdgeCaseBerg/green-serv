@@ -44,6 +44,14 @@ you'd like.
 		#define USERNAME "tassadar"
         #define CAMPAIGN_ID 0L
         #define CAMPAIGN_DESC "8CharMax"
+        /*Define json safe output return function 
+        * If you compile with the RETURN_ON_JSON_RISK constant defined
+        * then you will return early from the safe json output functions
+        * if the amount allocated was not enough for the json string.
+        * If you do not you may get a partial JSON back
+        */
+        #define RETURN_ON_JSON_RISK return -1;
+        #undef RETURN_ON_JSON_RISK
 	
 	#endif
 

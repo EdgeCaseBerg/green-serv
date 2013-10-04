@@ -4,12 +4,12 @@
 	/* Fun Fact: GS stands for green-serv*/
 
 	#include "flags.h"
-	
+	#define GS_SCOPE_DESCRIPTION_SIZE 9 /* 8 chars + \0 = 9 */
 
 	struct gs_scope {
 		long id;
 		/* Normally we might use a pointer, but descriptions are always 8 chars*/
-		char description[9]; /* 8 chars + \0 = 9 */
+		char description[GS_SCOPE_DESCRIPTION_SIZE]; 
 	};
 
 	/* Any functions specifically working with just gs_scope: */

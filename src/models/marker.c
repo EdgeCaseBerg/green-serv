@@ -38,5 +38,8 @@ void gs_marker_ZeroStruct(struct gs_marker * gsm){
 	gsm->longitude.right = 0;
 	gsm->latitude.left = 0;
 	gsm->latitude.right = 0;
+	gsm->latitude.signBit = POSITIVE_ZERO;
+	gsm->longitude.signBit = POSITIVE_ZERO;
 }
+
 

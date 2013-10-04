@@ -520,6 +520,7 @@ void db_getReportByAuth(char * auth, struct gs_report * gsr, MYSQL * conn){
 
 	gs_report_ZeroStruct(gsr);
 	bzero(query,99+65+4);
+	
 	sprintf(query, GS_REPORT_GET_BY_AUTH, auth);
 
 	if(0 != mysql_query(conn, query) ){
