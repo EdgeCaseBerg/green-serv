@@ -127,14 +127,43 @@ int gs_scopeToJSON(const struct gs_scope gss, char * jsonOutput){
 /* Recommended at least 256 bytes for jsonOutput to be allocated */
 int gs_commentToJSON(const struct gs_comment gsc, char * jsonOutput){
     char * json;
-    char escaped[141];
-    bzero(escaped,141);
+    char escaped[GS_COMMENT_MAX_LENGTH*3];
+    bzero(escaped,GS_COMMENT_MAX_LENGTH*3);
 
     json = "{\"id\" : %ld, \"message\" : \"%s\", \"timestamp\" : \"%s\" }";
     _escapeJSON(gsc.content, strlen(gsc.content), escaped);
 
     return sprintf(jsonOutput, json, gsc.id, escaped, gsc.createdTime);
 }
+
+int gs_commentToNJSON(const struct gs_comment gsc, char * jsonOutput, int jsonOutputAllocatedSize){
+    char jsonId[15+sizeof(long)]; /*{\"id\" : %ld, */
+    char jsonMessage[23+(GS_COMMENT_MAX_LENGTH*4)+1];/* \"message\" : \"%s\", */
+    char jsonTimestamp[25+GS_COMMENT_CREATED_TIME_LENGTH+1];/* \"timestamp\" : \"%s\" }*/
+    char escaped[GS_COMMENT_MAX_LENGTH*4+1];
+    int jsonIdWritten;
+    int jsonMessageWritten;
+    int jsonTimestampWritten;
+    bzero(jsonId,15+sizeof(long));
+    bzero(jsonMessage,23+(GS_COMMENT_MAX_LENGTH*4));
+    bzero(jsonTimestamp,25+GS_COMMENT_CREATED_TIME_LENGTH+1);
+    
+    jsonIdWritten = snprintf(jsonId,15+sizeof(long),"{\"id\" : %ld, ", gsc.id);
+    jsonTimestampWritten = snprintf(jsonTimestamp,25+GS_COMMENT_CREATED_TIME_LENGTH+1," \"timestamp\" : \"%s\" }",gsc.createdTime);
+
+    _escapeJSON(gsc.content, strlen(gsc.content), escaped);
+    jsonMessageWritten = snprintf(jsonMessage,23+(GS_COMMENT_MAX_LENGTH*4)," \"message\" : \"%s\", ",escaped);
+    
+    if(jsonTimestampWritten + jsonIdWritten + jsonMessageWritten > jsonOutputAllocatedSize-1){
+        fprintf(stderr, "%s\n", "gs_commentNToJSON may have returned partial JSON output due to not allocating enough memory");
+        #ifdef RETURN_ON_JSON_RISK
+            RETURN_ON_JSON_RISK;
+        #endif
+    }
+    return snprintf(jsonOutput,jsonOutputAllocatedSize-1, "%s%s%s", jsonId,jsonMessage,jsonTimestamp);
+
+}
+
 
 /* I'd recommend at least 110 bytes to be specified.  Probably 128 for safety*/
 int gs_markerToJSON(const struct gs_marker gsm, char * jsonOutput){

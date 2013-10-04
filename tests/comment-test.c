@@ -3,14 +3,15 @@
 #include "config.h"
 #include "helpers/json.h"
 
+#define JSON_LENGTH 512
 int main(){
 	MYSQL * conn;
 	struct gs_comment testComment;
 	struct gs_comment * commentPage;
-	char json[512];
+	char json[JSON_LENGTH];
 	int numComments;
 	int i;
-	bzero(json,512);
+	bzero(json,JSON_LENGTH);
 
 	conn = _getMySQLConnection();
    	if(!conn){
@@ -24,14 +25,14 @@ int main(){
 	   
    	db_insertComment(&testComment,conn);
 
-   	bzero(json,512);
+   	bzero(json,JSON_LENGTH);
 
-   	gs_commentToJSON(testComment,json);
+   	gs_commentToNJSON(testComment,json,JSON_LENGTH);
    	printf("%s\n", json);
 
    	/* test getting comment by id */
 	db_getCommentById(testComment.id,&testComment,conn);
-	gs_commentToJSON(testComment,json);
+	gs_commentToNJSON(testComment,json,JSON_LENGTH);
 	printf("%s\n", json);
 
 	commentPage = malloc(RESULTS_PER_PAGE * sizeof(struct gs_comment));
@@ -39,8 +40,8 @@ int main(){
 
 	  	numComments = db_getComments(0, CAMPAIGN_ID,commentPage, conn);
 	  	for(i=0; i < numComments; ++i){
-		 	bzero(json,512);
-		 	gs_commentToJSON(commentPage[i],json);
+		 	bzero(json,JSON_LENGTH);
+		 	gs_commentToNJSON(commentPage[i],json,JSON_LENGTH);
 		 	printf("%s\n", json);	  
 	  	}
 
@@ -54,3 +55,4 @@ int main(){
 
 
 }
+#undef JSON_LENGTH
