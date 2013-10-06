@@ -347,3 +347,26 @@ int gs_reportNToJSON(const struct gs_report gsr, char * jsonOutput, int jsonOutp
     return snprintf(jsonOutput,jsonOutputAllocatedSize-1, "%s%s%s", jsonMessage,jsonTimestamp,jsonHash);
 
 }
+
+
+/*Heartbeat Json: { \"heartbeat\" : epoch time}
+ * _only_ a safa version available.
+*/
+ int gs_heartbeatNToJSON(char * jsonOutput, int jsonOutputAllocatedSize){
+    char json[strlen("{ \"heartbeat\" : %ld}")+sizeof(long)];
+    int jsonWritten;
+    time_t heartbeat; 
+    bzero(json, strlen("{ \"heartbeat\" : %ld}")+sizeof(long));
+
+    heartbeat = time(0);
+    jsonWritten = snprintf(json, strlen("{ \"heartbeat\" : %ld}")+sizeof(long), "{ \"heartbeat\" : %ld}", heartbeat);
+
+    if (jsonWritten > jsonOutputAllocatedSize-1){
+        fprintf(stderr, "%s\n", "gs_hearbeatNToJSON may have returned partial JSON output due to not allocating enough memory");
+        #ifdef RETURN_ON_JSON_RISK
+            RETURN_ON_JSON_RISK;
+        #endif   
+    }
+    return snprintf(jsonOutput,jsonOutputAllocatedSize-1, "%s", json);
+
+ }

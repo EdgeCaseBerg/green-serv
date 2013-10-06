@@ -10,7 +10,7 @@ gflags = -I./headers -std=gnu99 -pedantic -Wall -Wextra -Werror -g
 mysqlflags = -I/usr/include/mysql -DBIG_JOINS=1 -fno-strict-aliasing
 mysqllibs  = -L/usr/lib/x86_64-linux-gnu -lmysqlclient -lpthread -lz -lm -lrt -ldl
 valgrind = valgrind --tool=memcheck --leak-check=yes --show-reachable=yes --num-callers=20 --track-fds=yes
-unittests = test-decimal test-comment test-scope test-marker test-report test-heatmap
+unittests = test-decimal test-comment test-scope test-marker test-report test-heatmap test-heartbeat
 unittestobj = obj/comment.o  obj/db.o  obj/decimal.o  obj/heatmap.o  obj/json.o obj/marker.o  obj/report.o  obj/scope.o  obj/sha256.o
 
 all: a.out
@@ -60,6 +60,7 @@ unit tests: $(unittests)
 	$(valgrind) tests/bin/marker.out
 	$(valgrind) tests/bin/report.out
 	$(valgrind) tests/bin/heatmap.out
+	$(valgrind) tests/bin/heartbeat.out
 
 test-decimal: tests/unit/decimal-test.c decimal.o
 	$(CC) $(gflags) tests/unit/decimal-test.c obj/decimal.o -o tests/bin/decimal.out -lm -rdynamic
@@ -78,3 +79,6 @@ test-report: tests/unit/report-test.c report.o json.o db.o
 
 test-heatmap: tests/unit/heatmap-test.c heatmap.o json.o db.o decimal.o
 	$(CC) $(mysqlflags) $(gflags) tests/unit/heatmap-test.c $(unittestobj) -o tests/bin/heatmap.out $(mysqllibs) -lcrypto	
+
+test-heartbeat: tests/unit/heartbeat-test.c json.o decimal.o
+	$(CC) $(gflags) tests/unit/heartbeat-test.c obj/json.o obj/decimal.o -o tests/bin/heartbeat.out 
