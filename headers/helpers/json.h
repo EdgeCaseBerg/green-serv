@@ -6,6 +6,7 @@
 	#include "models/marker.h"
 	#include "models/heatmap.h"
 	#include "models/report.h"
+	#include "time.h"
 
 	int _escapeJSON(const char * input, int inputlen, char * output);
 	int gs_scopeToJSON(const struct gs_scope gss, char * jsonOutput);
@@ -18,5 +19,6 @@
 	int gs_heatmapNToJSON(const struct gs_heatmap gsh, char * jsonOutput, int jsonOutputAllocatedSize);
 	int gs_reportToJSON(const struct gs_report gsr, char * jsonOutput);
 	int gs_reportNToJSON(const struct gs_report gsr, char * jsonOutput, int jsonOutputAllocatedSize);
+	int gs_heartbeatNToJSON(char * jsonOutput, int jsonOutputAllocatedSize);
 
 #endif
