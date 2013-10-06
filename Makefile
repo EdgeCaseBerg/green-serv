@@ -12,6 +12,7 @@ mysqllibs  = -L/usr/lib/x86_64-linux-gnu -lmysqlclient -lpthread -lz -lm -lrt -l
 valgrind = valgrind --tool=memcheck --leak-check=yes --show-reachable=yes --num-callers=20 --track-fds=yes
 unittests = test-decimal test-comment test-scope test-marker test-report test-heatmap test-heartbeat
 unittestobj = obj/comment.o  obj/db.o  obj/decimal.o  obj/heatmap.o  obj/json.o obj/marker.o  obj/report.o  obj/scope.o  obj/sha256.o
+controllertests = test-hb-controller
 
 all: a.out
 
@@ -24,7 +25,7 @@ gs.o: green-serv.c json.o db.o
 db.o: src/database/db.c scope.o comment.o marker.o heatmap.o report.o
 	$(CC) $(mysqlflags) $(gflags) -c src/database/db.c -o obj/db.o  	
 
-json.o: src/helpers/json.c comment.o scope.o marker.o heatmap.o report.o
+json.o: src/helpers/json.c comment.o scope.o marker.o heatmap.o report.o decimal.o
 	$(CC) $(gflags) -c src/helpers/json.c -o obj/json.o  	
 
 scope.o: src/models/scope.c
@@ -48,12 +49,16 @@ sha256.o: src/helpers/sha256.c
 decimal.o: src/helpers/decimal.c
 	$(CC) $(gflags) -c src/helpers/decimal.c -o obj/decimal.o
 
+heartbeatC.o: src/controllers/heartbeat.c
+	$(CC) $(gflags) -c src/controllers/heartbeat.c -o obj/heartbeatC.o
+
 clean:
 	rm obj/*.o *.out
 
-tests: unit tests
+tests: units controllers	
 
-unit tests: $(unittests)
+#Unit Tests
+units: $(unittests)
 	$(valgrind) tests/bin/scope.out
 	$(valgrind) tests/bin/comment.out
 	$(valgrind) tests/bin/decimal.out
@@ -82,3 +87,11 @@ test-heatmap: tests/unit/heatmap-test.c heatmap.o json.o db.o decimal.o
 
 test-heartbeat: tests/unit/heartbeat-test.c json.o decimal.o
 	$(CC) $(gflags) tests/unit/heartbeat-test.c obj/json.o obj/decimal.o -o tests/bin/heartbeat.out 
+
+#Controller Tests
+
+controllers: $(controllertests)
+	$(valgrind) tests/bin/heartbeatC.out
+
+test-hb-controller: tests/controllers/heartbeat-test.c heartbeatC.o json.o
+	$(CC) $(gflags) tests/controllers/heartbeat-test.c obj/heartbeatC.o obj/json.o obj/decimal.o -o tests/bin/heartbeatC.out
