@@ -215,13 +215,14 @@ int parseRequest(struct http_request * requestToFill, char * requestStr){
 }
 
 /* Just a test function... */
-int test_network(char * buffer, int bufferLength){
+int test_network(char * buffer, int bufferLength, void*(*func)(void*)){
     struct sockaddr_in sockserv,sockclient;
     int socketfd,clientfd;
     socklen_t clientsocklen;
     char buff[BUFSIZ];
-    pthread_t children[10];
-    struct threadData data[10];
+    pthread_t children[NUMTHREADS];
+    struct threadData data[NUMTHREADS];
+    pthread_attr_t attr;
     int i;
     
     clientfd = socketfd = 0; 
@@ -234,14 +235,17 @@ int test_network(char * buffer, int bufferLength){
     setupSockAndBind(socketfd, &sockserv, 80); 
     printf("Socket Bind: %s\n",strerror(errno));
 
-    listen(socketfd,10);
+    listen(socketfd,NUMTHREADS);
     printf("Socket Listen: %s\n%d\n",strerror(errno),errno);
 
     clientsocklen = sizeof socketfd;
 
+    pthread_attr_init(&attr);
+    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+
     i=0;
     if(errno != 13){
-        for(i=0; i < 10; i++){
+        for(i=0; i < NUMTHREADS; i++){
             clientfd = accept(socketfd,(struct sockaddr*)&sockclient,&clientsocklen);
             printf("request accepted\n");
 
@@ -253,13 +257,19 @@ int test_network(char * buffer, int bufferLength){
             sprintf(data[i].msg, "%s", buffer);
             data[i].clientfd = clientfd;
 
-            pthread_create(&children[i],NULL,(void*)ttest,&data[i]);
+            pthread_create(&children[i],&attr,func,&data[i]);
+            bzero(buff,BUFSIZ);
+            bzero(buffer,bufferLength);
             
         }           
+        /*Gobble Up the resources (if not detaching threads)*/
+        /*for(i=0; i < NUMTHREADS; ++i)
+            pthread_join(children[i],NULL);*/
     }
-    for(i=0; i < 10; ++i)
-        pthread_join(children[i],NULL);
+    pthread_attr_destroy(&attr);
     close(socketfd);
+    /* Sleep a moment to hope that any running threads will finish */
+    sleep(2);
 
     return 0;
 }
@@ -267,5 +277,5 @@ int test_network(char * buffer, int bufferLength){
 int main(){
     char buff[1024];
     bzero(buff,1024);
-    test_network(buff,1024);
+    test_network(buff,1024,(void*)&ttest);
 }

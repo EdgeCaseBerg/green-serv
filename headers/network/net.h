@@ -18,7 +18,7 @@
 	int setupSockAndBind(int fd, struct sockaddr_in * sockserv, int port );
 
 	/* This function is unlikely to live beyond testing things */
-	int test_network(char * buffer, int bufferLength);
+	int test_network(char * buffer, int bufferLength, void*( *func )(void*) );
 
 	#define METHOD_LENGTH 7
 	#define MAX_URL_LENGTH 100
@@ -28,6 +28,7 @@
 	#define PUT 8
 	#define DELETE 16
 	#define UNKNOWN_METHOD 32
+	#define NUMTHREADS 100
 	struct http_request{
 		int method;
 		char url[MAX_URL_LENGTH]; /* The request URL to determine the controller */
