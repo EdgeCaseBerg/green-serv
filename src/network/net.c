@@ -223,7 +223,7 @@ int test_network(char * buffer, int bufferLength, void*(*func)(void*)){
     pthread_t children[NUMTHREADS];
     struct threadData data[NUMTHREADS];
     pthread_attr_t attr;
-    int i;
+    int i,j;
     
     clientfd = socketfd = 0; 
     bzero(buff,BUFSIZ);
@@ -240,33 +240,47 @@ int test_network(char * buffer, int bufferLength, void*(*func)(void*)){
 
     clientsocklen = sizeof socketfd;
 
+    #ifdef DETACHED_THREADS
     pthread_attr_init(&attr);
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+    #endif
 
-    i=0;
+    i=j=0;
     if(errno != 13){
-        for(i=0; i < NUMTHREADS; i++){
-            clientfd = accept(socketfd,(struct sockaddr*)&sockclient,&clientsocklen);
-            printf("request accepted\n");
+        for(j=0; j < 10; ++j){
+            for(i=0; i < NUMTHREADS; i++){
+                clientfd = accept(socketfd,(struct sockaddr*)&sockclient,&clientsocklen);
+                printf("request accepted\n");
 
-            buff[read(clientfd,buff,BUFSIZ)] = '\0';
-            printf("Request recieved as \n%s\n",buff);  
+                buff[read(clientfd,buff,BUFSIZ)] = '\0';
+                printf("Request recieved as \n%s\n",buff);  
 
-            strncpy(buffer, buff ,bufferLength);
+                strncpy(buffer, buff ,bufferLength);
 
-            sprintf(data[i].msg, "%s", buffer);
-            data[i].clientfd = clientfd;
-
-            pthread_create(&children[i],&attr,func,&data[i]);
-            bzero(buff,BUFSIZ);
-            bzero(buffer,bufferLength);
-            
-        }           
-        /*Gobble Up the resources (if not detaching threads)*/
-        /*for(i=0; i < NUMTHREADS; ++i)
-            pthread_join(children[i],NULL);*/
+                sprintf(data[i].msg, "%s", buffer);
+                data[i].clientfd = clientfd;
+                #ifndef DETACHED_THREADS
+                    pthread_create(&children[i],NULL,func,&data[i]);
+                #else
+                    pthread_create(&children[i],NULL,&attr,&data[i]);
+                #endif
+                bzero(buff,BUFSIZ);
+                bzero(buffer,bufferLength);
+                
+            }           
+            /*Gobble Up the resources (if not detaching threads)
+             *If you do want to detach threads change the define. 
+             *in net.h
+            */
+            #ifndef DETACHED_THREADS
+            for(i=0; i < NUMTHREADS; ++i)
+                pthread_join(children[i],NULL);
+            #endif
+        }
     }
+    #ifdef DETACHED_THREADS
     pthread_attr_destroy(&attr);
+    #endif
     close(socketfd);
     /* Sleep a moment to hope that any running threads will finish */
     sleep(2);

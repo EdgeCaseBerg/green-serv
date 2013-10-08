@@ -29,6 +29,8 @@
 	#define DELETE 16
 	#define UNKNOWN_METHOD 32
 	#define NUMTHREADS 100
+	#define DETACHED_THREADS
+	#undef DETACHED_THREADS
 	struct http_request{
 		int method;
 		char url[MAX_URL_LENGTH]; /* The request URL to determine the controller */
