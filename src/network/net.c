@@ -8,6 +8,38 @@
 #include <time.h>
 
 #include "network/net.h"
+#include <pthread.h>
+
+struct threadData{
+    char msg[1024];
+    int clientfd;
+};
+
+void* ttest(struct threadData* td) {
+    /* Copy local data */
+    struct ThreadData* data=(struct ThreadData*) td;
+    struct http_request request;
+    int bytesSent;
+
+    
+    parseRequest(&request, td->msg);
+    printf("url: %s\n", request.url);
+    if(request.contentLength > 0)
+        printf("data: %s\n", request.data);
+    if(request.contentLength > 0)
+        free(request.data);
+
+
+    createResponse("{}",td->msg,200);
+    td->msg[strlen(td->msg)] = '\0';
+    
+    bytesSent = send(td->clientfd,td->msg,strlen(td->msg),0);  
+    printf("Sent %d bytes to the client : %s\n",bytesSent,strerror(errno));
+
+    close(td->clientfd);
+
+    return NULL;
+}
 
 int createResponse(char * content, char * buff, int status){
     char timeBuffer[1000];
@@ -187,10 +219,12 @@ int test_network(char * buffer, int bufferLength){
     struct sockaddr_in sockserv,sockclient;
     int socketfd,clientfd;
     socklen_t clientsocklen;
-    int bytesSent = clientfd = socketfd = 0; 
     char buff[BUFSIZ];
-    struct http_request request;
-
+    pthread_t children[10];
+    struct threadData data[10];
+    int i;
+    
+    clientfd = socketfd = 0; 
     bzero(buff,BUFSIZ);
     bzero(&sockserv,sizeof(sockserv));
 
@@ -204,35 +238,27 @@ int test_network(char * buffer, int bufferLength){
     printf("Socket Listen: %s\n%d\n",strerror(errno),errno);
 
     clientsocklen = sizeof socketfd;
+
+    i=0;
     if(errno != 13){
-        clientfd = accept(socketfd,(struct sockaddr*)&sockclient,&clientsocklen);
-        printf("request accepted\n");
+        for(i=0; i < 10; i++){
+            clientfd = accept(socketfd,(struct sockaddr*)&sockclient,&clientsocklen);
+            printf("request accepted\n");
 
-        buff[read(clientfd,buff,BUFSIZ)] = '\0';
-        printf("Request recieved as \n%s\n",buff);  
+            buff[read(clientfd,buff,BUFSIZ)] = '\0';
+            printf("Request recieved as \n%s\n",buff);  
 
-        strncpy(buffer, buff ,bufferLength);
+            strncpy(buffer, buff ,bufferLength);
 
-        /* We'd actually be interupted here and go do things based on the buffer.
-         * But for now we just copy it into the string and send back a 200
-        */
-        parseRequest(&request, buff);
-        printf("url: %s\n", request.url);
-        if(request.contentLength > 0)
-            printf("data: %s\n", request.data);
-        if(request.contentLength > 0)
-            free(request.data);
+            sprintf(data[i].msg, "%s", buffer);
+            data[i].clientfd = clientfd;
 
-
-        createResponse("{}",buff,200);
-        buff[strlen(buff)] = '\0';
-
-        bytesSent = send(clientfd,buff,strlen(buff),0);  
-        printf("Sent %d bytes to the client : %s\n",bytesSent,strerror(errno));
-
-        close(clientfd);
+            pthread_create(&children[i],NULL,(void*)ttest,&data[i]);
             
+        }           
     }
+    for(i=0; i < 10; ++i)
+        pthread_join(children[i],NULL);
     close(socketfd);
 
     return 0;
