@@ -1,36 +1,38 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <errno.h>
-#include <arpa/inet.h>
-#include <sys/socket.h>
-#include <fcntl.h>
-#include <time.h>
-
 #include "network/net.h"
-#include <pthread.h>
 
-struct threadData{
-    char msg[1024];
-    int clientfd;
-};
-
-void* ttest(struct threadData* td) {
-    /* Copy local data */
-    struct ThreadData* data=(struct ThreadData*) td;
+/* Ha, this function name is great. DO NETWORK WORK -- doNetWork! 
+ * Is funny because network is what we talk over see?
+*/
+void* doNetWork(struct threadData* td) {
+    /* Copy local data 
+    struct ThreadData* data=(struct ThreadData*) td;*/
     struct http_request request;
     int bytesSent;
+    int controller;
+    int status;
 
-    
+    status = 200;
     parseRequest(&request, td->msg);
+
+    /* Pass the request off to a handler */
+    controller = determineController(request.url,strlen(request.url));
+    /* Determine method and call. */
+    if(controller != INVALID_CONTROLLER){
+
+    }else{
+        /* We have no clue what the client is talking about with their url */
+        status = 404;
+    }
+
+    /* Log and clean up. */
     printf("url: %s\n", request.url);
     if(request.contentLength > 0)
-        printf("data: %s\n", request.data);
+        printf("td: %s\n", request.data);
     if(request.contentLength > 0)
         free(request.data);
 
 
-    createResponse("{}",td->msg,200);
+    createResponse("{}",td->msg,status);
     td->msg[strlen(td->msg)] = '\0';
     
     bytesSent = send(td->clientfd,td->msg,strlen(td->msg),0);  
@@ -41,6 +43,9 @@ void* ttest(struct threadData* td) {
     return NULL;
 }
 
+/*Create a HTTP response with the buff as content and sent out with the
+ *response code of status. This function call is not safe.
+*/
 int createResponse(char * content, char * buff, int status){
     char timeBuffer[1000];
     time_t now;
@@ -79,14 +84,14 @@ int createSocket(){
 int setupSockAndBind(int fd, struct sockaddr_in * sockserv, int port ){
     sockserv->sin_family = AF_INET;
     sockserv->sin_addr.s_addr = INADDR_ANY;
-    sockserv->sin_port = htons(80);
+    sockserv->sin_port = htons(port);
     return bind(fd,(struct sockaddr *)sockserv,sizeof(*sockserv));
 }
 
 static int strnstr(char * needle, char * haystack, int haystackLen){
     int i;
     int j;
-    int bad;
+    
     int needleLen = strlen(needle);
     for(i=0; i < haystackLen && haystack[i] != '\0'; ++i){
         if( needle[0] == haystack[i] ){
@@ -100,8 +105,6 @@ static int strnstr(char * needle, char * haystack, int haystackLen){
                 */
                  printf("found %s:%d\n",needle, i);
                  return i;
-            }else{
-                bad = 0;
             }
         }
     }
@@ -113,7 +116,6 @@ int parseRequest(struct http_request * requestToFill, char * requestStr){
     char buff[FIRSTLINEBUFFSIZE]; /* This is the most we'll read */
     int i;
     int methodLoc;
-    int urlStart;
     int urlEnd;
     int contentLength;
     bzero(buff,FIRSTLINEBUFFSIZE);
@@ -155,9 +157,6 @@ int parseRequest(struct http_request * requestToFill, char * requestStr){
         requestToFill->method = GET;
         methodLoc+=4;
     }
-    urlStart = methodLoc;
-    printf("urlStart %d\n", urlStart);
-    printf("%s\n", buff);
     urlEnd = strnstr("HTTP", buff, FIRSTLINEBUFFSIZE );
     /* Find the url (Which will be between the method to the http version)*/
     i=methodLoc;
@@ -188,7 +187,7 @@ int parseRequest(struct http_request * requestToFill, char * requestStr){
                     i = strnstr("\r\n\r\n", requestStr, strlen(requestStr));
                     if(i != -1){
                         i+=4; /* skip newlines */
-                        for(methodLoc = 0; i < strlen(requestStr) && requestStr[i] != '\0'; ++i, ++methodLoc)
+                        for(methodLoc = 0; i < (int)strlen(requestStr) && requestStr[i] != '\0'; ++i, ++methodLoc)
                             requestToFill->data[methodLoc] = requestStr[i];
                         requestToFill->data[methodLoc] = '\0';
                     }else{
@@ -222,8 +221,10 @@ int test_network(char * buffer, int bufferLength, void*(*func)(void*)){
     char buff[BUFSIZ];
     pthread_t children[NUMTHREADS];
     struct threadData data[NUMTHREADS];
-    pthread_attr_t attr;
     int i,j;
+    #ifdef DETACHED_THREADS
+    pthread_attr_t attr;
+    #endif
     
     clientfd = socketfd = 0; 
     bzero(buff,BUFSIZ);
@@ -232,7 +233,7 @@ int test_network(char * buffer, int bufferLength, void*(*func)(void*)){
     socketfd = createSocket();
     printf("Socket Creation: %s\n",strerror(errno));
 
-    setupSockAndBind(socketfd, &sockserv, 80); 
+    setupSockAndBind(socketfd, &sockserv, PORT); 
     printf("Socket Bind: %s\n",strerror(errno));
 
     listen(socketfd,NUMTHREADS);
@@ -257,12 +258,13 @@ int test_network(char * buffer, int bufferLength, void*(*func)(void*)){
 
                 strncpy(buffer, buff ,bufferLength);
 
+                /* A thread pool would be intelligent here */
                 sprintf(data[i].msg, "%s", buffer);
                 data[i].clientfd = clientfd;
                 #ifndef DETACHED_THREADS
                     pthread_create(&children[i],NULL,func,&data[i]);
                 #else
-                    pthread_create(&children[i],NULL,&attr,&data[i]);
+                    pthread_create(&children[i],&attr,func,&data[i]);
                 #endif
                 bzero(buff,BUFSIZ);
                 bzero(buffer,bufferLength);
@@ -283,13 +285,8 @@ int test_network(char * buffer, int bufferLength, void*(*func)(void*)){
     #endif
     close(socketfd);
     /* Sleep a moment to hope that any running threads will finish */
+    fprintf(stdout, "%s\n", "Exiting Server...");
     sleep(2);
 
     return 0;
-}
-
-int main(){
-    char buff[1024];
-    bzero(buff,1024);
-    test_network(buff,1024,(void*)&ttest);
 }

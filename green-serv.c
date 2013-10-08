@@ -7,6 +7,7 @@
 #include "models/marker.h"
 #include "models/heatmap.h"
 #include "models/report.h"
+#include "network/net.h"
 #include <string.h>
 
 
@@ -40,6 +41,11 @@ int main(int argc, const char* argv[]) {
 
 	gs_scopeToJSON(campaign,json);
    	printf("%s\n", json);
+
+   	char buff[1024];
+    bzero(buff,1024);
+    /*What a silly cast we have to make...*/
+    test_network(buff,1024,(void*(*)(void*))&doNetWork);
 
 	/*Clean Up database connection*/
 	mysql_close(conn);

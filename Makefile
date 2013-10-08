@@ -10,16 +10,16 @@ gflags = -I./headers -std=gnu99 -pedantic -Wall -Wextra -Werror -g
 mysqlflags = -I/usr/include/mysql -DBIG_JOINS=1 -fno-strict-aliasing
 mysqllibs  = -L/usr/lib/x86_64-linux-gnu -lmysqlclient -lpthread -lz -lm -lrt -ldl
 valgrind = valgrind --tool=memcheck --leak-check=yes --show-reachable=yes --num-callers=20 --track-fds=yes
-unittests = test-decimal test-comment test-scope test-marker test-report test-heatmap test-heartbeat
+unittests = test-decimal test-comment test-scope test-marker test-report test-heatmap test-heartbeat test-router
 unittestobj = obj/comment.o  obj/db.o  obj/decimal.o  obj/heatmap.o  obj/json.o obj/marker.o  obj/report.o  obj/scope.o  obj/sha256.o
 controllertests = test-hb-controller
 
 all: a.out
 
 a.out: gs.o
-	$(CC)  obj/*o  -o a.out $(mysqllibs) -g -lcrypto
+	$(CC)  obj/*o  -o a.out $(mysqllibs) -g -lcrypto -lpthread
 
-gs.o: green-serv.c json.o db.o 
+gs.o: green-serv.c json.o db.o network.o
 	$(CC) $(gflags) -c green-serv.c -o obj/gs.o  	
 
 db.o: src/database/db.c scope.o comment.o marker.o heatmap.o report.o
@@ -52,6 +52,12 @@ decimal.o: src/helpers/decimal.c
 heartbeatC.o: src/controllers/heartbeat.c
 	$(CC) $(gflags) -c src/controllers/heartbeat.c -o obj/heartbeatC.o
 
+network.o: src/network/net.c router.o
+	$(CC) $(gflags) -c src/network/net.c -o obj/network.o
+
+router.o: src/network/router.c
+	$(CC) $(gflags) -c src/network/router.c -o obj/router.o
+
 clean:
 	rm obj/*.o *.out
 
@@ -66,6 +72,7 @@ units: $(unittests)
 	$(valgrind) tests/bin/report.out
 	$(valgrind) tests/bin/heatmap.out
 	$(valgrind) tests/bin/heartbeat.out
+	$(valgrind) tests/bin/router.out
 
 test-decimal: tests/unit/decimal-test.c decimal.o
 	$(CC) $(gflags) tests/unit/decimal-test.c obj/decimal.o -o tests/bin/decimal.out -lm -rdynamic
@@ -88,6 +95,9 @@ test-heatmap: tests/unit/heatmap-test.c heatmap.o json.o db.o decimal.o
 test-heartbeat: tests/unit/heartbeat-test.c json.o decimal.o
 	$(CC) $(gflags) tests/unit/heartbeat-test.c obj/json.o obj/decimal.o -o tests/bin/heartbeat.out 
 
+test-router: tests/unit/router-test.c router.o
+	$(CC) $(gflags) tests/unit/router-test.c obj/router.o -o tests/bin/router.out
+
 #Controller Tests
 
 controllers: $(controllertests)
@@ -95,3 +105,6 @@ controllers: $(controllertests)
 
 test-hb-controller: tests/controllers/heartbeat-test.c heartbeatC.o json.o
 	$(CC) $(gflags) tests/controllers/heartbeat-test.c obj/heartbeatC.o obj/json.o obj/decimal.o -o tests/bin/heartbeatC.out
+
+
+#Integration Tests with network 
