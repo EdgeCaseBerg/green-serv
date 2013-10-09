@@ -2,6 +2,7 @@
 	#define __NET_H__
 
 	#define METHOD_LENGTH 7
+	#define HASH_TABLE_CAPACITY 15
 	#define MAX_URL_LENGTH 100
 	#define FIRSTLINEBUFFSIZE 256
 	#define GET 2
@@ -36,6 +37,7 @@
 	#include <pthread.h>
 	#include "config.h"
 	#include "network/router.h"
+	#include "helpers/strmap.h"
 
 
 
@@ -71,5 +73,8 @@
 
 	/* This function is unlikely to live beyond testing things */
 	int test_network(char * buffer, int bufferLength, void*( *func )(void*) );
+
+	/* Parse a url and return the number of parameters begotten from it */
+	int parseURL(char * url, int urlLength, StrMap * table);
 
 #endif 

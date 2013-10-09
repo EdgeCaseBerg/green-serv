@@ -4,12 +4,12 @@ static inline int min(int a, int b){
 	return a < b ? a : b;
 }
 
-int determineController(char * url, int urlLength){
+int determineController(char * url){
 	/* Compare only the length up to the point where parameters might
 	 * show up. This is not a regex after all. (although we could prob
 	 *-ably use strstr...)
 	*/
-urlLength+=1;
+
 	if(strncasecmp(url, "/api/comments",13 ) == 0		||
 			strncasecmp(url,"/api/comments/",14 ) == 0	){
 			/* Comments Controller */

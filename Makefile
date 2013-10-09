@@ -10,7 +10,7 @@ gflags = -I./headers -std=gnu99 -pedantic -Wall -Wextra -Werror -g
 mysqlflags = -I/usr/include/mysql -DBIG_JOINS=1 -fno-strict-aliasing
 mysqllibs  = -L/usr/lib/x86_64-linux-gnu -lmysqlclient -lpthread -lz -lm -lrt -ldl
 valgrind = valgrind --tool=memcheck --leak-check=yes --show-reachable=yes --num-callers=20 --track-fds=yes
-unittests = test-decimal test-comment test-scope test-marker test-report test-heatmap test-heartbeat test-router
+unittests = test-decimal test-comment test-scope test-marker test-report test-heatmap test-heartbeat test-router test-network
 unittestobj = obj/comment.o  obj/db.o  obj/decimal.o  obj/heatmap.o  obj/json.o obj/marker.o  obj/report.o  obj/scope.o  obj/sha256.o
 controllertests = test-hb-controller
 
@@ -52,11 +52,14 @@ decimal.o: src/helpers/decimal.c
 heartbeatC.o: src/controllers/heartbeat.c
 	$(CC) $(gflags) -c src/controllers/heartbeat.c -o obj/heartbeatC.o
 
-network.o: src/network/net.c router.o
+network.o: src/network/net.c router.o strmap.o
 	$(CC) $(gflags) -c src/network/net.c -o obj/network.o
 
 router.o: src/network/router.c
 	$(CC) $(gflags) -c src/network/router.c -o obj/router.o
+
+strmap.o: src/helpers/strmap.c
+	$(CC) $(gflags) -c src/helpers/strmap.c -o obj/strmap.o
 
 clean:
 	rm obj/*.o *.out
@@ -73,6 +76,7 @@ units: $(unittests)
 	$(valgrind) tests/bin/heatmap.out
 	$(valgrind) tests/bin/heartbeat.out
 	$(valgrind) tests/bin/router.out
+	$(valgrind) tests/bin/network.out
 
 test-decimal: tests/unit/decimal-test.c decimal.o
 	$(CC) $(gflags) tests/unit/decimal-test.c obj/decimal.o -o tests/bin/decimal.out -lm -rdynamic
@@ -95,8 +99,11 @@ test-heatmap: tests/unit/heatmap-test.c heatmap.o json.o db.o decimal.o
 test-heartbeat: tests/unit/heartbeat-test.c json.o decimal.o
 	$(CC) $(gflags) tests/unit/heartbeat-test.c obj/json.o obj/decimal.o -o tests/bin/heartbeat.out 
 
-test-router: tests/unit/router-test.c router.o
+test-router: tests/unit/router-test.c router.o 
 	$(CC) $(gflags) tests/unit/router-test.c obj/router.o -o tests/bin/router.out
+
+test-network: tests/unit/network-test.c router.o  strmap.o network.o
+	$(CC) $(gflags) tests/unit/network-test.c obj/router.o obj/network.o obj/strmap.o -o tests/bin/network.out -lpthread
 
 #Controller Tests
 

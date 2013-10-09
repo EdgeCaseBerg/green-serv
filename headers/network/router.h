@@ -9,7 +9,7 @@
 	#define REPORT_CONTROLLER 5
 
 	/* Returns a flag constant to determine which controller to call */
-	int determineController(char * url, int urlLength);
+	int determineController(char * url);
 
 	#include <string.h>
 #endif
