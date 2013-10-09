@@ -4,7 +4,7 @@
 
 static void expected(char * url, int expectedResponse){
 	int response;
-	response = determineController(url, strlen(url));
+	response = determineController(url);
 	printf("Expected %d Got %d \n", expectedResponse, response);
 }
 

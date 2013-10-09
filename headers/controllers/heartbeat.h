@@ -11,6 +11,11 @@
 	#include "string.h"
 	#include <stdio.h>
 
+	/*Outside method to call that will deteremine the actions taken by the heartbeat 
+	 *and then returned to the outside world within the string.
+	*/
+	int heartbeat_controller(char * stringToReturn, int strLength);
+
 	/*Respond to a Get Request. 
  	* Takes the string to fill with the response
  	* and the length of allocation

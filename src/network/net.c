@@ -10,15 +10,31 @@ void* doNetWork(struct threadData* td) {
     int bytesSent;
     int controller;
     int status;
+    char response[2056];
+    bzero(response, sizeof response);
 
+    /*Blank JSON response for no control*/
+    response[0]='{'; response[1]='}'; response[2]='\0';
     status = 200;
     parseRequest(&request, td->msg);
 
     /* Pass the request off to a handler */
-    controller = determineController(request.url,strlen(request.url));
+    controller = determineController(request.url);
     /* Determine method and call. */
     if(controller != INVALID_CONTROLLER){
-
+        switch(controller){
+            case HEARTBEAT_CONTROLLER :
+                status = heartbeat_controller(response,sizeof response);
+                break;
+            case COMMENTS_CONTROLLER :
+                break;
+            case HEATMAP_CONTROLLER :
+                break;
+            case MARKER_CONTROLLER :
+                break;
+            case REPORT_CONTROLLER :
+                break;
+        }
     }else{
         /* We have no clue what the client is talking about with their url */
         status = 404;
@@ -32,7 +48,7 @@ void* doNetWork(struct threadData* td) {
         free(request.data);
 
 
-    createResponse("{}",td->msg,status);
+    createResponse(response,td->msg,status);
     td->msg[strlen(td->msg)] = '\0';
     
     bytesSent = send(td->clientfd,td->msg,strlen(td->msg),0);  
@@ -41,6 +57,50 @@ void* doNetWork(struct threadData* td) {
     close(td->clientfd);
 
     return NULL;
+}
+
+/*
+ * Parse the url and store values into the hash table
+ * returns the number of values successfully placed into the hashtable
+*/
+int parseURL(char * url, int urlLength, StrMap * table){
+    int i;
+    int j;
+    int pairCounter;
+    char keyBuff[256];
+    char valBuff[256];
+    bzero(keyBuff,sizeof keyBuff);
+    bzero(valBuff,sizeof valBuff);
+
+    if(url == NULL)
+        return 0;
+    if(table == NULL)
+        return -1; /* Err ... */
+    pairCounter = 0;
+    /* Find ? */
+    for(i=0; url[i] != '\0' && i < urlLength; ++i)
+        if(url[i] == '?')
+            break;
+    while(url[i] != '\0' && i < urlLength){
+        for(j=0,i++; url[i] != '=' && url[i] != '\0' && i < urlLength; ++i)
+            keyBuff[j++] = url[i];
+        keyBuff[j] = '\0';
+        for(j=0,i++; strlen(keyBuff) > 0 && url[i] != '&' && url[i] != '\0' && i < urlLength; ++i)
+            valBuff[j++] = url[i];
+        valBuff[j] = '\0';
+        if(strlen(valBuff) > 0 && strlen(keyBuff) > 0){
+            /* Place values into table */
+            if(sm_put(table, keyBuff, valBuff) == 0)
+                fprintf(stderr, "Failed to copy parameters into hash table while parsing url\n");
+            else
+                pairCounter++;
+        }
+        /* reset the buffers */
+        bzero(keyBuff,sizeof keyBuff);
+        bzero(valBuff,sizeof valBuff);
+        
+    }
+    return pairCounter;
 }
 
 /*Create a HTTP response with the buff as content and sent out with the
