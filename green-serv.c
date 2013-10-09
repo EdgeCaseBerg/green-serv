@@ -24,28 +24,28 @@ void parseArgs(int argc, const char * argv[], struct gs_scope * campaign, MYSQL 
 
 int main(int argc, const char* argv[]) {
 	MYSQL * conn;
-   	struct gs_scope campaign;
-   	
-   	char json[512];
-   	bzero(json,512);
+	struct gs_scope campaign;
+	
+	char json[512];
+	bzero(json,512);
 
-   	conn = _getMySQLConnection();
-   	if(!conn){
-	  	fprintf(stderr, "%s\n", "Could not connect to mySQL");
-	  	return 1;
-   	}
+	conn = _getMySQLConnection();
+	if(!conn){
+		fprintf(stderr, "%s\n", "Could not connect to mySQL");
+		return 1;
+	}
 
-   	/* Setup Campaign for all querying. */
-   	db_getScopeById(CAMPAIGN_ID, &campaign, conn);
-   	parseArgs(argc,argv,&campaign,conn);
+	/* Setup Campaign for all querying. */
+	db_getScopeById(CAMPAIGN_ID, &campaign, conn);
+	parseArgs(argc,argv,&campaign,conn);
 
 	gs_scopeToJSON(campaign,json);
-   	printf("%s\n", json);
+	printf("%s\n", json);
 
-   	char buff[1024];
-    bzero(buff,1024);
-    /*What a silly cast we have to make...*/
-    test_network(buff,1024,(void*(*)(void*))&doNetWork);
+	char buff[1024];
+	bzero(buff,1024);
+	/*What a silly cast we have to make...*/
+	test_network(buff,1024,(void*(*)(void*))&doNetWork);
 
 	/*Clean Up database connection*/
 	mysql_close(conn);
