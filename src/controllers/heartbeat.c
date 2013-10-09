@@ -1,5 +1,12 @@
 #include "controllers/heartbeat.h"
 
+
+int heartbeat_controller(/*On other controllers we'd take the url and data*/ char * stringToReturn, int strLength){
+	if( heartbeat_get(stringToReturn,strLength) > strLength)
+		fprintf(stderr, "Probably trashed the stack in heartbeat controller\n");
+	return 200;
+}
+
 /*Respond to a Get Request. 
  * Takes the string to fill with the response
  * and the length of allocation

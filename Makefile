@@ -52,7 +52,7 @@ decimal.o: src/helpers/decimal.c
 heartbeatC.o: src/controllers/heartbeat.c
 	$(CC) $(gflags) -c src/controllers/heartbeat.c -o obj/heartbeatC.o
 
-network.o: src/network/net.c router.o strmap.o
+network.o: src/network/net.c router.o strmap.o heartbeatC.o
 	$(CC) $(gflags) -c src/network/net.c -o obj/network.o
 
 router.o: src/network/router.c

@@ -10,7 +10,11 @@ void* doNetWork(struct threadData* td) {
     int bytesSent;
     int controller;
     int status;
+    char response[2056];
+    bzero(response, sizeof response);
 
+    /*Blank JSON response for no control*/
+    response[0]='{'; response[1]='}'; response[2]='\0';
     status = 200;
     parseRequest(&request, td->msg);
 
@@ -18,7 +22,19 @@ void* doNetWork(struct threadData* td) {
     controller = determineController(request.url);
     /* Determine method and call. */
     if(controller != INVALID_CONTROLLER){
-
+        switch(controller){
+            case HEARTBEAT_CONTROLLER :
+                status = heartbeat_controller(response,sizeof response);
+                break;
+            case COMMENTS_CONTROLLER :
+                break;
+            case HEATMAP_CONTROLLER :
+                break;
+            case MARKER_CONTROLLER :
+                break;
+            case REPORT_CONTROLLER :
+                break;
+        }
     }else{
         /* We have no clue what the client is talking about with their url */
         status = 404;
@@ -32,7 +48,7 @@ void* doNetWork(struct threadData* td) {
         free(request.data);
 
 
-    createResponse("{}",td->msg,status);
+    createResponse(response,td->msg,status);
     td->msg[strlen(td->msg)] = '\0';
     
     bytesSent = send(td->clientfd,td->msg,strlen(td->msg),0);  

@@ -38,6 +38,7 @@
 	#include "config.h"
 	#include "network/router.h"
 	#include "helpers/strmap.h"
+	#include "controllers/heartbeat.h"
 
 
 
