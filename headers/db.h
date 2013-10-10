@@ -15,8 +15,12 @@
 	#include "config.h"
 	#include <string.h>
 	
-	/* How many of an entity per page*/
-	#define RESULTS_PER_PAGE 20
+	/* How many of an entity per page
+	 * +1 more than actually returned because we can test for a next page
+	 * that way.
+	*/
+	#define RESULTS_PER_PAGE (21)
+	#define RESULTS_RETURNED (RESULTS_PER_PAGE-1)
 	/* Gets it's own results because it's more likely we'll want more
 	 * heatmap data than something like comments
 	*/

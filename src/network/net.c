@@ -27,6 +27,7 @@ void* doNetWork(struct threadData* td) {
                 status = heartbeat_controller(response,sizeof response);
                 break;
             case COMMENTS_CONTROLLER :
+                status = comment_controller(&request, response, sizeof response);
                 break;
             case HEATMAP_CONTROLLER :
                 break;
@@ -59,49 +60,6 @@ void* doNetWork(struct threadData* td) {
     return NULL;
 }
 
-/*
- * Parse the url and store values into the hash table
- * returns the number of values successfully placed into the hashtable
-*/
-int parseURL(char * url, int urlLength, StrMap * table){
-    int i;
-    int j;
-    int pairCounter;
-    char keyBuff[256];
-    char valBuff[256];
-    bzero(keyBuff,sizeof keyBuff);
-    bzero(valBuff,sizeof valBuff);
-
-    if(url == NULL)
-        return 0;
-    if(table == NULL)
-        return -1; /* Err ... */
-    pairCounter = 0;
-    /* Find ? */
-    for(i=0; url[i] != '\0' && i < urlLength; ++i)
-        if(url[i] == '?')
-            break;
-    while(url[i] != '\0' && i < urlLength){
-        for(j=0,i++; url[i] != '=' && url[i] != '\0' && i < urlLength; ++i)
-            keyBuff[j++] = url[i];
-        keyBuff[j] = '\0';
-        for(j=0,i++; strlen(keyBuff) > 0 && url[i] != '&' && url[i] != '\0' && i < urlLength; ++i)
-            valBuff[j++] = url[i];
-        valBuff[j] = '\0';
-        if(strlen(valBuff) > 0 && strlen(keyBuff) > 0){
-            /* Place values into table */
-            if(sm_put(table, keyBuff, valBuff) == 0)
-                fprintf(stderr, "Failed to copy parameters into hash table while parsing url\n");
-            else
-                pairCounter++;
-        }
-        /* reset the buffers */
-        bzero(keyBuff,sizeof keyBuff);
-        bzero(valBuff,sizeof valBuff);
-        
-    }
-    return pairCounter;
-}
 
 /*Create a HTTP response with the buff as content and sent out with the
  *response code of status. This function call is not safe.
