@@ -66,6 +66,11 @@ int comment_controller(const struct http_request * request, char * stringToRetur
 		}
 	}
 	
+	/* For the client we start numbering from 1, for interal use we need to use
+	 * page-1 because the page is part of the calculation of the limit term in
+	 * the query. So to get the first page it needs to be 0.
+	*/
+	page -=1;
 
 	switch(request->method){
 		case GET:
@@ -127,9 +132,6 @@ int comments_get(char * buffer, int buffSize,int page,char * cType){
 	char json[COMMENT_JSON_LENGTH];
 	char commentBuffer[buffSize];
 	int i;
-	
-
-	fprintf(stderr, "Called Comment Get with: B:%s L:%d P:%p\n", buffer, buffSize ,cType);
 
 	/*Parse */
 	commentPage = malloc(RESULTS_PER_PAGE * sizeof(struct gs_comment));
@@ -194,7 +196,7 @@ int comments_get(char * buffer, int buffSize,int page,char * cType){
 	}
 
 	free(commentPage);
-	snprintf(buffer,buffSize, COMMENT_PAGE_STR, 200, commentBuffer, min(numComments,RESULTS_RETURNED), page, nextStr,prevStr);
+	snprintf(buffer,buffSize, COMMENT_PAGE_STR, 200, commentBuffer, min(numComments,RESULTS_RETURNED), page+1, nextStr,prevStr);
 	
 	mysql_close(conn);
 	mysql_thread_end();

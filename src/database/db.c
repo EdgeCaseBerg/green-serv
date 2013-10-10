@@ -54,10 +54,21 @@ int db_getComments(int page, long scopeId, struct gs_comment * gsc, MYSQL * conn
 	MYSQL_RES * result;
 	MYSQL_ROW row; 
 	int i;
+	int limit;
 	char query[110];
 
 	bzero(query,110);
-	sprintf(query, GS_COMMENT_GET_ALL, scopeId, page*RESULTS_PER_PAGE);
+	/* In order to return the correct paginated results we have the following
+	 * strategy: Retrieve the results per page, this is +1 more than we will
+	 * be sending to the client. This is to make the 'nextUrl' without having
+	 * to check the database for the total number of comments.
+	 * To avoid losing that last telltale comment (since we discard it and it's
+	 * not sent to the client) the limit offset has to be reduced by 1 if we're
+	 * asking for more than one page.  
+	*/
+	limit = page*RESULTS_PER_PAGE;
+	limit = limit > 0 ? limit-(page) : limit;
+	sprintf(query, GS_COMMENT_GET_ALL, scopeId, limit);
 
 	if(0 != mysql_query(conn, query) ){
 		fprintf(stderr, "%s\n", query);
