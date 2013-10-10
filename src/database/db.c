@@ -65,6 +65,7 @@ int db_getComments(int page, long scopeId, struct gs_comment * gsc, MYSQL * conn
 	 * To avoid losing that last telltale comment (since we discard it and it's
 	 * not sent to the client) the limit offset has to be reduced by 1 if we're
 	 * asking for more than one page.  
+	 * For more detail and some math, see 6aa7d80
 	*/
 	limit = page*RESULTS_PER_PAGE;
 	limit = limit > 0 ? limit-(page) : limit;

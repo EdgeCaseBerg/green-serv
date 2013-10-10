@@ -52,6 +52,25 @@ you'd like.
         */
         #define RETURN_ON_JSON_RISK return -1;
         #undef RETURN_ON_JSON_RISK
+
+        /*Define that the database connection will be threaded.
+         *The only time this should be undef-ed is if you're just
+         *doing some simple testing for unit tests.
+        */
+        #define THREADED_DB 1
+
+        /*This is a global variable declaration.
+         *The main driving file will define this variable. Calling
+         *parties may use this variable as a read-only variable.
+         *attempts to change the value of this variable while from a
+         *worker thread is undefined behavior and I won't be held responsible.
+         *The main driving file must define GREENSERV and NO OTHER files may
+        */
+        #ifdef GREENSERV
+            int _shared_campaign_id;
+        #else
+            extern int _shared_campaign_id;
+        #endif
 	
 	#endif
 
