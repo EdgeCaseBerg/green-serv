@@ -115,7 +115,7 @@ int gs_scopeNToJSON(const struct gs_scope gss, char * jsonOutput, int jsonOutput
 int gs_scopeToJSON(const struct gs_scope gss, char * jsonOutput){
 	char * json;
     char escaped[33];
-    bzero(escaped,33);
+    bzero(escaped,sizeof escaped);
     
 	json = "{\"id\" : %ld , \"description\" : \"%s\" }";
 	/* The most important part is escaping the text*/
@@ -128,39 +128,43 @@ int gs_scopeToJSON(const struct gs_scope gss, char * jsonOutput){
 int gs_commentToJSON(const struct gs_comment gsc, char * jsonOutput){
     char * json;
     char escaped[GS_COMMENT_MAX_LENGTH*3];
-    bzero(escaped,GS_COMMENT_MAX_LENGTH*3);
+    bzero(escaped,sizeof escaped);
 
-    json = "{\"id\" : %ld, \"message\" : \"%s\", \"timestamp\" : \"%s\" }";
+    json = "{\"id\" : %ld, \"pin\" : %ld,\"message\" : \"%s\", \"timestamp\" : \"%s\" }";
     _escapeJSON(gsc.content, strlen(gsc.content), escaped);
 
-    return sprintf(jsonOutput, json, gsc.id, escaped, gsc.createdTime);
+    return sprintf(jsonOutput, json, gsc.id, gsc.pinId ,escaped, gsc.createdTime);
 }
 
 int gs_commentToNJSON(const struct gs_comment gsc, char * jsonOutput, int jsonOutputAllocatedSize){
     char jsonId[15+sizeof(long)]; /*{\"id\" : %ld, */
+    char jsonPinId[10+sizeof(long)]; /*"pinId" : %ld, */
     char jsonMessage[23+(GS_COMMENT_MAX_LENGTH*4)+1];/* \"message\" : \"%s\", */
     char jsonTimestamp[25+GS_COMMENT_CREATED_TIME_LENGTH+1];/* \"timestamp\" : \"%s\" }*/
     char escaped[GS_COMMENT_MAX_LENGTH*4+1];
     int jsonIdWritten;
+    int jsonPidIdWritten;
     int jsonMessageWritten;
     int jsonTimestampWritten;
-    bzero(jsonId,15+sizeof(long));
-    bzero(jsonMessage,23+(GS_COMMENT_MAX_LENGTH*4));
-    bzero(jsonTimestamp,25+GS_COMMENT_CREATED_TIME_LENGTH+1);
+    bzero(jsonId, sizeof jsonId);
+    bzero(jsonPinId, sizeof jsonPinId);
+    bzero(jsonMessage,sizeof jsonMessage);
+    bzero(jsonTimestamp,sizeof jsonTimestamp);
     
-    jsonIdWritten = snprintf(jsonId,15+sizeof(long),"{\"id\" : %ld, ", gsc.id);
+    jsonIdWritten = snprintf(jsonId,sizeof jsonId,"{\"id\" : %ld, ", gsc.id);
+    jsonPidIdWritten = snprintf(jsonPinId, sizeof jsonPinId, "\"pin\" : %ld,", gsc.pinId);
     jsonTimestampWritten = snprintf(jsonTimestamp,25+GS_COMMENT_CREATED_TIME_LENGTH+1," \"timestamp\" : \"%s\" }",gsc.createdTime);
 
     _escapeJSON(gsc.content, strlen(gsc.content), escaped);
     jsonMessageWritten = snprintf(jsonMessage,23+(GS_COMMENT_MAX_LENGTH*4)," \"message\" : \"%s\", ",escaped);
     
-    if(jsonTimestampWritten + jsonIdWritten + jsonMessageWritten > jsonOutputAllocatedSize-1){
+    if(jsonTimestampWritten + jsonPidIdWritten + jsonIdWritten + jsonMessageWritten > jsonOutputAllocatedSize-1){
         fprintf(stderr, "%s\n", "gs_commentNToJSON may have returned partial JSON output due to not allocating enough memory");
         #ifdef RETURN_ON_JSON_RISK
             RETURN_ON_JSON_RISK;
         #endif
     }
-    return snprintf(jsonOutput,jsonOutputAllocatedSize-1, "%s%s%s", jsonId,jsonMessage,jsonTimestamp);
+    return snprintf(jsonOutput,jsonOutputAllocatedSize-1, "%s%s%s%s", jsonId,jsonPinId,jsonMessage,jsonTimestamp);
 
 }
 

@@ -99,6 +99,7 @@ SQL to create database structure:
     #Cache table for fast pagination
     CREATE TABLE cacheComments (
         id INT(12) NOT NULL auto_increment PRIMARY KEY,
+        pin_id INT(12) NULL,
         content VARCHAR(140) NOT NULL,
         scope_id INT(12) NOT NULL, -- this is an ancestor style query
         created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
@@ -107,6 +108,7 @@ SQL to create database structure:
 
     CREATE TABLE comments (
         id INT(12) NOT NULL auto_increment PRIMARY KEY,
+        pin_id INT(12) NULL,
         content VARCHAR(140),
         scope_id INT(12) NOT NULL, -- this is an ancestor style query
         created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -121,8 +123,7 @@ SQL to create database structure:
         scope_id INT(12), -- this is an ancestor style query
         created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
         latitude DECIMAL(10, 8) NOT NULL,
-        longitude DECIMAL(11, 8) NOT NULL,
-        INDEX (`id`)
+        longitude DECIMAL(11, 8) NOT NULL
     ) ENGINE Memory;
 
 
@@ -160,6 +161,16 @@ SQL to create database structure:
         INDEX(`scope_id`),
         CONSTRAINT FOREIGN KEY (`scope_id`) REFERENCES `scope` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
     ) ENGINE InnoDB;
+
+    delimiter //
+    CREATE TRIGGER comment_marker_ref AFTER INSERT ON markers 
+        FOR EACH ROW
+        BEGIN
+            IF NEW.comment_id IS NOT NULL THEN
+                UPDATE comments SET pin_id = NEW.id WHERE comments.id = NEW.comment_id;
+            END IF;
+        END;//
+    delimiter ;
 
 
 Example Compilation and Verification:

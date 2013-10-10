@@ -58,7 +58,7 @@ commentC.o: src/controllers/comments.c strmap.o comment.o router.o
 network.o: src/network/net.c router.o heartbeatC.o commentC.o
 	$(CC) $(gflags) -c src/network/net.c -o obj/network.o
 
-router.o: src/network/router.c
+router.o: src/network/router.c strmap.o
 	$(CC) $(gflags) -c src/network/router.c -o obj/router.o
 
 strmap.o: src/helpers/strmap.c
@@ -102,11 +102,11 @@ test-heatmap: tests/unit/heatmap-test.c heatmap.o json.o db.o decimal.o
 test-heartbeat: tests/unit/heartbeat-test.c json.o decimal.o
 	$(CC) $(gflags) tests/unit/heartbeat-test.c obj/json.o obj/decimal.o -o tests/bin/heartbeat.out 
 
-test-router: tests/unit/router-test.c router.o 
-	$(CC) $(gflags) tests/unit/router-test.c obj/router.o -o tests/bin/router.out
+test-router: tests/unit/router-test.c router.o strmap.o
+	$(CC) $(gflags) tests/unit/router-test.c obj/router.o obj/strmap.o -o tests/bin/router.out
 
-test-network: tests/unit/network-test.c router.o  strmap.o network.o
-	$(CC) $(gflags) tests/unit/network-test.c obj/router.o obj/network.o obj/strmap.o -o tests/bin/network.out -lpthread
+test-network: tests/unit/network-test.c router.o  strmap.o network.o commentC.o heartbeatC.o db.o comment.o report.o marker.o scope.o heatmap.o
+	$(CC) $(mysqlflags) $(gflags) tests/unit/network-test.c $(unittestobj) obj/router.o obj/network.o obj/strmap.o obj/commentC.o obj/db.o  obj/heartbeatC.o -o tests/bin/network.out -lpthread $(mysqllibs) -lcrypto
 
 #Controller Tests
 

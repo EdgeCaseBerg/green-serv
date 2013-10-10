@@ -55,9 +55,9 @@ int db_getComments(int page, long scopeId, struct gs_comment * gsc, MYSQL * conn
 	MYSQL_ROW row; 
 	int i;
 	int limit;
-	char query[110];
+	char query[sizeof GS_COMMENT_GET_ALL];
 
-	bzero(query,110);
+	bzero(query,sizeof query);
 	/* In order to return the correct paginated results we have the following
 	 * strategy: Retrieve the results per page, this is +1 more than we will
 	 * be sending to the client. This is to make the 'nextUrl' without having
@@ -84,9 +84,11 @@ int db_getComments(int page, long scopeId, struct gs_comment * gsc, MYSQL * conn
 		gs_comment_ZeroStruct(&gsc[i]);
 
 		gs_comment_setId( atol(row[0]), &gsc[i]);
-		gs_comment_setContent( row[1], &gsc[i]);
-		gs_comment_setScopeId( atol(row[2]), &gsc[i]);
-		gs_comment_setCreatedTime( row[3], &gsc[i]);
+		fprintf(stderr, "%s\n", row[1]);
+		gs_comment_setPinId(row[1] == NULL ? -1 : atol(row[1]), &gsc[i]);
+		gs_comment_setContent( row[2], &gsc[i]);
+		gs_comment_setScopeId( atol(row[3]), &gsc[i]);
+		gs_comment_setCreatedTime( row[4], &gsc[i]);
 		i++;
 	}
 	mysql_free_result(result);  
@@ -96,12 +98,12 @@ int db_getComments(int page, long scopeId, struct gs_comment * gsc, MYSQL * conn
 void db_getCommentById(long id, struct gs_comment * gsc, MYSQL * conn){
 	MYSQL_RES * result;
 	MYSQL_ROW row; 
-	char query[80]; /* 72 for query, 8 for padding and null char*/
+	char query[sizeof GS_COMMENT_GET_BY_ID]; /* 72 for query, 8 for padding and null char*/
 
 	/*Zero the scope structure */
 	gs_comment_ZeroStruct(gsc);
 
-	bzero(query,80);
+	bzero(query,sizeof query);
 	sprintf(query, GS_COMMENT_GET_BY_ID, id);
 
 	if(0 != mysql_query(conn, query) ){
@@ -118,9 +120,10 @@ void db_getCommentById(long id, struct gs_comment * gsc, MYSQL * conn){
 
 	/* Make sure id is integer */
 	gs_comment_setId( atol(row[0]), gsc);
-	gs_comment_setContent( row[1], gsc);
-	gs_comment_setScopeId( atol(row[2]), gsc);
-	gs_comment_setCreatedTime( row[3], gsc);
+	gs_comment_setPinId(row[1] == NULL ? -1 : atol(row[1]), gsc);
+	gs_comment_setContent( row[2], gsc);
+	gs_comment_setScopeId( atol(row[3]), gsc);
+	gs_comment_setCreatedTime( row[4], gsc);
 
 	mysql_free_result(result);  
 }
@@ -139,7 +142,7 @@ void db_insertComment(struct gs_comment * gsc, MYSQL * conn){
 		return; /* Return if scope is invalid that we can tell*/
 
 	bzero(query,DB_INSERT_COMMENT_QUERY_SIZE);
-	sprintf(query, GS_COMMENT_INSERT, gsc->content, gsc->scopeId);
+	sprintf(query, GS_COMMENT_INSERT, gsc->content, gsc->scopeId, gsc->pinId);
 
 	if(0 != mysql_query(conn, query) ){
 		fprintf(stderr, "%s\n", mysql_error(conn));
@@ -176,9 +179,10 @@ void db_insertComment(struct gs_comment * gsc, MYSQL * conn){
 
 	/* Fill er up */
 	gs_comment_setId( atol(row[0]), gsc);
-	gs_comment_setContent( row[1], gsc);
-	gs_comment_setScopeId( atol(row[2]), gsc);
-	gs_comment_setCreatedTime( row[3], gsc);
+	gs_comment_setPinId(row[1] == NULL ? -1 : atol(row[1]), gsc);
+	gs_comment_setContent( row[2], gsc);
+	gs_comment_setScopeId( atol(row[3]), gsc);
+	gs_comment_setCreatedTime( row[4], gsc);
 
 	mysql_free_result(result);
    
@@ -190,9 +194,9 @@ int db_getMarkers(int page, long scopeId, struct gs_marker * gsm, MYSQL * conn){
 	Decimal latitude;
 	Decimal longitude;
 	int i;
-	char query[140];
+	char query[sizeof GS_MARKER_GET_ALL];
 
-	bzero(query,140);
+	bzero(query,sizeof query);
 	sprintf(query, GS_MARKER_GET_ALL, scopeId, page*RESULTS_PER_PAGE);
 
 	if(0 != mysql_query(conn, query) ){

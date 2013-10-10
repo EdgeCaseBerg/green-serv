@@ -36,7 +36,7 @@ int main(){
    
 	gs_marker_ZeroStruct(&testMarker);
 
-	gs_marker_setCommentId(testComment.id, &testMarker);
+	gs_marker_setCommentId(1, &testMarker);
 	gs_marker_setScopeId(CAMPAIGN_ID, &testMarker);
 	gs_marker_setLongitude(longitude, &testMarker);
 	gs_marker_setLatitude(latitude, &testMarker);
