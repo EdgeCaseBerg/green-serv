@@ -3,6 +3,7 @@
 	/* Fun Fact: GS stands for green-serv*/
 
 	#include "flags.h"
+	#include "config.h"
 	#define GS_COMMENT_MAX_LENGTH 140
 	#define GS_COMMENT_CREATED_TIME_LENGTH 19
 	

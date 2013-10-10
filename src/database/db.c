@@ -7,9 +7,10 @@ MYSQL * _getMySQLConnection(){
 	char *user = USERNAME;
 	char *password = PASSWORD; /* set me first */
 	char *database = DATABASE;
-   
-	/* Call to init for multi-threading later on */
+	#ifndef THREADED_DB
+	/* If the connections are threaded this will be called in the main */
 	mysql_library_init(0, NULL, NULL);
+	#endif
 
 	conn = mysql_init(NULL);
 	return mysql_real_connect(conn, server, user, password, database, 0, NULL, 0);

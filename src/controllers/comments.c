@@ -71,7 +71,8 @@ int comment_controller(const struct http_request * request, char * stringToRetur
 			cType[0] = '\0';
 		}
 	}
-
+	
+	
 	switch(request->method){
 		case GET:
 			if(cType[0] == '\0' )
@@ -80,6 +81,7 @@ int comment_controller(const struct http_request * request, char * stringToRetur
 				comments_get(buffer, sizeof buffer ,page,cType);
 			break;
 		case POST:
+				comment_post(buffer,sizeof buffer,request);
 			break;
 		default:
 			/*Invalid Method Err*/
