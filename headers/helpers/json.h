@@ -21,4 +21,7 @@
 	int gs_reportNToJSON(const struct gs_report gsr, char * jsonOutput, int jsonOutputAllocatedSize);
 	int gs_heartbeatNToJSON(char * jsonOutput, int jsonOutputAllocatedSize);
 
+	#define COMMENT_JSON_LENGTH 512
+
+
 #endif

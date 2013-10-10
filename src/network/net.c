@@ -10,13 +10,15 @@ void* doNetWork(struct threadData* td) {
     int bytesSent;
     int controller;
     int status;
-    char response[2056];
+    char response[10000];
     bzero(response, sizeof response);
 
     /*Blank JSON response for no control*/
     response[0]='{'; response[1]='}'; response[2]='\0';
     status = 200;
     parseRequest(&request, td->msg);
+
+    fprintf(stderr, "Before: %d\n", td->clientfd);
 
     /* Pass the request off to a handler */
     controller = determineController(request.url);
@@ -41,6 +43,8 @@ void* doNetWork(struct threadData* td) {
         status = 404;
     }
 
+    fprintf(stderr, "After: %d\n", td->clientfd);
+
     /* Log and clean up. */
     printf("url: %s\n", request.url);
     if(request.contentLength > 0)
@@ -51,7 +55,7 @@ void* doNetWork(struct threadData* td) {
 
     createResponse(response,td->msg,status);
     td->msg[strlen(td->msg)] = '\0';
-    
+
     bytesSent = send(td->clientfd,td->msg,strlen(td->msg),0);  
     printf("Sent %d bytes to the client : %s\n",bytesSent,strerror(errno));
 

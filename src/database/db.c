@@ -1,5 +1,8 @@
 #include "db.h"
 
+/* _shared_campaign_id is declared in config.h and is a global
+ * readonly variable to be used for scoping purposes
+*/
 
 MYSQL * _getMySQLConnection(){
 	MYSQL *conn;
@@ -57,6 +60,7 @@ int db_getComments(int page, long scopeId, struct gs_comment * gsc, MYSQL * conn
 	sprintf(query, GS_COMMENT_GET_ALL, scopeId, page*RESULTS_PER_PAGE);
 
 	if(0 != mysql_query(conn, query) ){
+		fprintf(stderr, "%s\n", query);
 		fprintf(stderr, "%s\n", mysql_error(conn));
 		return 0;
 	}

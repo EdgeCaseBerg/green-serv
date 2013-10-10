@@ -9,7 +9,7 @@
 	#undef DETACHED_THREADS
 	/* Simple struct to contain data to be sent to worker threads */
 	struct threadData{
-	    char msg[1024];
+	    char msg[16384];
 	    int clientfd;
 	};
 

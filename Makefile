@@ -8,7 +8,7 @@ CC=cc
 #a few handy defines to make our compilation lines not so long:
 gflags = -I./headers -std=gnu99 -pedantic -Wall -Wextra -Werror -g
 mysqlflags = -I/usr/include/mysql -DBIG_JOINS=1 -fno-strict-aliasing
-mysqllibs  = -L/usr/lib/x86_64-linux-gnu -lmysqlclient -lpthread -lz -lm -lrt -ldl
+mysqllibs  = -L/usr/lib/x86_64-linux-gnu -lmysqlclient_r -lpthread -lz -lm -lrt -ldl 
 valgrind = valgrind --tool=memcheck --leak-check=yes --show-reachable=yes --num-callers=20 --track-fds=yes
 unittests = test-decimal test-comment test-scope test-marker test-report test-heatmap test-heartbeat test-router test-network
 unittestobj = obj/comment.o  obj/db.o  obj/decimal.o  obj/heatmap.o  obj/json.o obj/marker.o  obj/report.o  obj/scope.o  obj/sha256.o
