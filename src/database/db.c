@@ -27,7 +27,7 @@ void db_getScopeById(long id, struct gs_scope * gss, MYSQL * conn){
 	/*Zero the scope structure */
 	gs_scope_ZeroStruct(gss);
 
-	bzero(query,64);
+	bzero(query,sizeof query);
 	sprintf(query, GS_SCOPE_GET_BY_ID, id);
 
 	if(0 != mysql_query(conn, query) ){
@@ -141,7 +141,7 @@ void db_insertComment(struct gs_comment * gsc, MYSQL * conn){
 	if(gsc->scopeId == GS_SCOPE_INVALID_ID)
 		return; /* Return if scope is invalid that we can tell*/
 
-	bzero(query,DB_INSERT_COMMENT_QUERY_SIZE);
+	bzero(query,sizeof query);
 	sprintf(query, GS_COMMENT_INSERT, gsc->content, gsc->scopeId, gsc->pinId);
 
 	if(0 != mysql_query(conn, query) ){
@@ -159,7 +159,7 @@ void db_insertComment(struct gs_comment * gsc, MYSQL * conn){
 	gsc->id = affected;
 
 	/* Now we could either compute the time stamp or ask the db for it. */
-	bzero(query,DB_INSERT_COMMENT_QUERY_SIZE);
+	bzero(query,sizeof query);
 	sprintf(query,GS_COMMENT_GET_BY_ID, affected);
    
 	/* Fresh Start and we want to return to the user EXACTLY what's in the db */
@@ -236,7 +236,7 @@ void db_insertMarker(struct gs_marker * gsm, MYSQL * conn){
 	if(gsm->scopeId == GS_SCOPE_INVALID_ID)
 		return; /* Return if scope is invalid that we can tell*/
 
-	bzero(query,DB_INSERT_MARKER_QUERY_SIZE);
+	bzero(query,sizeof query);
 	sprintf(query, GS_MARKER_INSERT, gsm->commentId, gsm->scopeId, gsm->latitude.left, gsm->latitude.right, gsm->longitude.left, gsm->longitude.right);
 
 	if(0 != mysql_query(conn, query) ){
@@ -254,7 +254,7 @@ void db_insertMarker(struct gs_marker * gsm, MYSQL * conn){
 	gsm->id = affected;
 
 	/* Now we could either compute the time stamp or ask the db for it. */
-	bzero(query,DB_INSERT_MARKER_QUERY_SIZE);
+	bzero(query,sizeof query);
 	sprintf(query,GS_MARKER_GET_BY_ID, affected);
 
 	/* Fresh Start and we want to return to the user EXACTLY what's in the db */
@@ -295,7 +295,7 @@ void db_getMarkerById(long id, struct gs_marker * gsm, MYSQL * conn){
 	/*Zero the scope structure */
 	gs_marker_ZeroStruct(gsm);
 
-	bzero(query,95+5);
+	bzero(query,sizeof query);
 	sprintf(query, GS_MARKER_GET_BY_ID, id);
 
 	if(0 != mysql_query(conn, query) ){
@@ -339,7 +339,7 @@ void db_insertHeatmap(struct gs_heatmap * gsh, MYSQL * conn){
 		return; /* Return if scope is invalid that we can tell*/
 
 	/* Check for possible merges */
-	bzero(query,DB_INSERT_HEATMAP_QUERY_SIZE);
+	bzero(query,sizeof query);
 	sprintf(query, GS_HEATMAP_FIND_MATCH, gsh->scopeId, gsh->latitude.left, gsh->latitude.right, gsh->longitude.left, gsh->longitude.right);
 
 	if(0 != mysql_query(conn, query) ){
@@ -350,7 +350,7 @@ void db_insertHeatmap(struct gs_heatmap * gsh, MYSQL * conn){
 
 	result = mysql_use_result(conn);
 	row = mysql_fetch_row(result);
-	bzero(query, DB_INSERT_HEATMAP_QUERY_SIZE);
+	bzero(query, sizeof query);
 	updated = 0;
 	if(row == NULL){
 		mysql_free_result(result);
@@ -393,7 +393,7 @@ void db_insertHeatmap(struct gs_heatmap * gsh, MYSQL * conn){
 	}
 	
 	/* Now we could either compute the time stamp or ask the db for it. */
-	bzero(query,DB_INSERT_HEATMAP_QUERY_SIZE);
+	bzero(query,sizeof query);
 	sprintf(query,GS_HEATMAP_GET_BY_ID, gsh->id);
 
 	/* Fresh Start and we want to return to the user EXACTLY what's in the db */
@@ -436,7 +436,7 @@ int db_getHeatmap(int page, long scopeId, long precision, Decimal lowerLatBound,
 	int i;
 	char query[HEATMAP_PAGE_QUERY_SIZE];
 
-	bzero(query,HEATMAP_PAGE_QUERY_SIZE);
+	bzero(query,sizeof query);
 	sprintf(query, 	GS_HEATMAP_GET_ALL, 
 				   	precision, 	/* Latitude precision */
 				   	precision, 	/* Longitude precision */
@@ -484,7 +484,7 @@ void db_insertReport(struct gs_report * gsr, MYSQL * conn){
 	if(gsr->scopeId == GS_SCOPE_INVALID_ID)
 		return; /* Return if scope is invalid that we can tell*/
 
-	bzero(query,DB_INSERT_REPORT_QUERY_SIZE);
+	bzero(query,sizeof query);
 	sprintf(query, GS_REPORT_INSERT, gsr->content, gsr->scopeId, gsr->origin, gsr->authorize);
 
 	if(0 != mysql_query(conn, query) ){
@@ -502,7 +502,7 @@ void db_insertReport(struct gs_report * gsr, MYSQL * conn){
 	gsr->id = affected;
 
 	/* Now we could either compute the time stamp or ask the db for it. */
-	bzero(query,DB_INSERT_REPORT_QUERY_SIZE);
+	bzero(query,sizeof query);
 	sprintf(query,GS_REPORT_GET_BY_AUTH, gsr->authorize);
 
 	/* Fresh Start and we want to return to the user EXACTLY what's in the db */
@@ -540,7 +540,7 @@ void db_getReportByAuth(char * auth, struct gs_report * gsr, MYSQL * conn){
 	char query[99+65+4]; /* 99 for query, 65 for auth hash, 4 for safety*/
 
 	gs_report_ZeroStruct(gsr);
-	bzero(query,99+65+4);
+	bzero(query,sizeof query);
 	
 	sprintf(query, GS_REPORT_GET_BY_AUTH, auth);
 
@@ -569,7 +569,7 @@ void db_getReportByAuth(char * auth, struct gs_report * gsr, MYSQL * conn){
 int db_deleteReport(struct gs_report * gsr, MYSQL * conn){
 	char query[99+(64*2)+5]; /* 61 for query, 64*2+1 for hashes, 4 for safety*/
 
-	bzero(query,99+(64*2)+5);
+	bzero(query,sizeof query);
 	sprintf(query, GS_REPORT_DELETE, gsr->origin,gsr->authorize);
 
 	if(0 != mysql_query(conn, query) ){
@@ -588,7 +588,7 @@ int db_getReports(int page, long scopeId, struct gs_report * gsr, MYSQL * conn){
 	MYSQL_ROW row; 
 	int i;
 	char query[REPORT_PAGE_QUERY_SIZE];
-	bzero(query,REPORT_PAGE_QUERY_SIZE);
+	bzero(query,sizeof query);
 	sprintf(query,GS_REPORT_GET_ALL,scopeId, page);
 
 	if(0 != mysql_query(conn, query) ){

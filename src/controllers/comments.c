@@ -74,7 +74,6 @@ int comment_controller(const struct http_request * request, char * stringToRetur
 
 	switch(request->method){
 		case GET:
-			printf("Campaign id: %d\n",_shared_campaign_id );
 			if(cType[0] == '\0' ){
 				if( comments_get(buffer, sizeof buffer ,page,NULL) == -1 )
 					goto cc_nomem;

@@ -1,7 +1,11 @@
+#define GREENSERV 1
+#include "config.h"
 #include "network/net.h"
 #include "helpers/strmap.h"
 #include <stdlib.h>
 #include <stdio.h>
+
+
 
 void testURL(char * url, StrMap * sm, int passed){
 	int params;
@@ -14,12 +18,15 @@ int main(){
 	StrMap * sm;
 	char buff[200];
 	bzero(buff, sizeof buff);
+	
 
 	sm = sm_new(HASH_TABLE_CAPACITY);
 	if (sm == NULL) {
 		fprintf(stderr, "Cannot allocate space for hash table\n");
 		return 1;
 	}
+
+	_shared_campaign_id = CAMPAIGN_ID;
 
 	testURL("http://www.bob.com/", sm, 0);
 
