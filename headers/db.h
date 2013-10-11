@@ -36,7 +36,7 @@
 	#define GS_COMMENT_GET_ALL "SELECT id, pin_id, content, scope_id, created_time FROM comments WHERE scope_id = %ld ORDER BY created_time DESC LIMIT %d, " STRINGIFY(RESULTS_PER_PAGE) ";"
 	#define GS_COMMENT_GET_BY_ID "SELECT id, pin_id, content, scope_id, created_time FROM comments WHERE id = %ld;"
 	#define GS_COMMENT_INSERT "INSERT INTO comments (content, scope_id, pin_id) VALUES (\"%s\", %ld, %ld);" 
-	#define GS_COMMENT_GET_BY_TYPE "SELECT id, pin_id, content, scope_id, created_time FROM comments WHERE scope_id = %ld AND comment_type = \"%s\" ORDER BY created_time DESC LIMIT %d, " STRINGIFY(RESULTS_PER_PAGE) ";"
+	#define GS_COMMENT_GET_BY_TYPE "SELECT id, pin_id, content, scope_id, created_time FROM comments WHERE scope_id = %ld AND comment_type = UPPER(\"%s\") ORDER BY created_time DESC LIMIT %d, " STRINGIFY(RESULTS_PER_PAGE) ";"
 
 	#define GS_MARKER_GET_ALL "SELECT id, comment_id, scope_id, created_time, latitude, longitude FROM markers WHERE scope_id = %ld ORDER BY created_time DESC LIMIT %d, " STRINGIFY(RESULTS_PER_PAGE) ";"
 	#define GS_MARKER_GET_BY_ID "SELECT id, comment_id, scope_id, created_time, latitude, longitude FROM markers WHERE id = %ld;"
