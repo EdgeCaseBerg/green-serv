@@ -6,11 +6,13 @@
 	#include "config.h"
 	#define GS_COMMENT_MAX_LENGTH 140
 	#define GS_COMMENT_CREATED_TIME_LENGTH 19
+	#define GS_COMMENT_TYPE_LENGTH 10
 	
 	struct gs_comment {
 		long id;
 		long pinId; /*May be NULL */
 		char content[GS_COMMENT_MAX_LENGTH+1]; /* 140 chars + \0 = 141 */
+		char cType[GS_COMMENT_TYPE_LENGTH+1];
 		long scopeId;
 		char createdTime[GS_COMMENT_CREATED_TIME_LENGTH+1];  /* YYYY-MM-DD HH:MM:SS + \0 = 20*/
 	};

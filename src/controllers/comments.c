@@ -153,7 +153,7 @@ int comments_get(char * buffer, int buffSize,int page,char * cType){
 	if(cType == NULL)
 		numComments = db_getComments(page, _shared_campaign_id ,commentPage, conn);
 	else
-		numComments=0;/*numComments = db_getCommentsByType(page, _shared_campaign_id, commentPage, cType, conn);*/
+		numComments = db_getCommentsByType(page, _shared_campaign_id, commentPage, cType, conn);
 
 	if( numComments > RESULTS_RETURNED ){
 		nextPage = page+1;

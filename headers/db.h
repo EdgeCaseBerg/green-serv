@@ -36,7 +36,7 @@
 	#define GS_COMMENT_GET_ALL "SELECT id, pin_id, content, scope_id, created_time FROM comments WHERE scope_id = %ld ORDER BY created_time DESC LIMIT %d, " STRINGIFY(RESULTS_PER_PAGE) ";"
 	#define GS_COMMENT_GET_BY_ID "SELECT id, pin_id, content, scope_id, created_time FROM comments WHERE id = %ld;"
 	#define GS_COMMENT_INSERT "INSERT INTO comments (content, scope_id, pin_id) VALUES (\"%s\", %ld, %ld);" 
-	#define GS_COMMENT_GET_BY_TYPE "SELECT id, pin_id, content, scope_id, created_time FROM comments WHERE WHERE scope_id = %ld AND c_type = \"%s\" ORDER BY created_time DESC LIMIT %d, " STRINGIFY(RESULTS_PER_PAGE) ";"
+	#define GS_COMMENT_GET_BY_TYPE "SELECT id, pin_id, content, scope_id, created_time FROM comments WHERE scope_id = %ld AND comment_type = \"%s\" ORDER BY created_time DESC LIMIT %d, " STRINGIFY(RESULTS_PER_PAGE) ";"
 
 	#define GS_MARKER_GET_ALL "SELECT id, comment_id, scope_id, created_time, latitude, longitude FROM markers WHERE scope_id = %ld ORDER BY created_time DESC LIMIT %d, " STRINGIFY(RESULTS_PER_PAGE) ";"
 	#define GS_MARKER_GET_BY_ID "SELECT id, comment_id, scope_id, created_time, latitude, longitude FROM markers WHERE id = %ld;"
@@ -72,6 +72,11 @@
 	 * scope will be used instead.
 	*/
 	int db_getComments(int page, long scopeId, struct gs_comment * gsc, MYSQL * conn);
+
+	/* Same as db_getComments except for taking an additional parameter of cType to
+	 * filter the results from the database based on comment_type.
+	*/
+	int db_getCommentsByType(int page, long scopeId, struct gs_comment * gsc, char * cType, MYSQL * conn);
 
 	/*Same warning for getComments, you need to make sure there is enough space.
 	 *

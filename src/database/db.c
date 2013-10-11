@@ -95,6 +95,45 @@ int db_getComments(int page, long scopeId, struct gs_comment * gsc, MYSQL * conn
 	return i;
 }
 
+int db_getCommentsByType(int page, long scopeId, struct gs_comment * gsc, char * cType, MYSQL * conn){
+	MYSQL_RES * result;
+	MYSQL_ROW row; 
+	int i;
+	int limit;
+	char query[sizeof GS_COMMENT_GET_BY_TYPE + GS_COMMENT_TYPE_LENGTH];
+
+	bzero(query,sizeof query);
+	/* For reasoning on the limit calculations:
+	 * see 6aa7d80
+	*/
+	limit = page*RESULTS_PER_PAGE;
+	limit = limit > 0 ? limit-(page) : limit;
+	sprintf(query, GS_COMMENT_GET_BY_TYPE, scopeId, cType,limit);
+
+	if(0 != mysql_query(conn, query) ){
+		fprintf(stderr, "%s\n", query);
+		fprintf(stderr, "%s\n", mysql_error(conn));
+		return 0;
+	}
+
+	i=0;
+	result = mysql_use_result(conn);
+	while( (row=mysql_fetch_row(result)) != NULL ){
+		/* Initialize */
+		gs_comment_ZeroStruct(&gsc[i]);
+
+		gs_comment_setId( atol(row[0]), &gsc[i]);
+		fprintf(stderr, "%s\n", row[1]);
+		gs_comment_setPinId(row[1] == NULL ? -1 : atol(row[1]), &gsc[i]);
+		gs_comment_setContent( row[2], &gsc[i]);
+		gs_comment_setScopeId( atol(row[3]), &gsc[i]);
+		gs_comment_setCreatedTime( row[4], &gsc[i]);
+		i++;
+	}
+	mysql_free_result(result);  
+	return i;
+}
+
 void db_getCommentById(long id, struct gs_comment * gsc, MYSQL * conn){
 	MYSQL_RES * result;
 	MYSQL_ROW row; 
