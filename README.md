@@ -100,6 +100,7 @@ SQL to create database structure:
     CREATE TABLE cacheComments (
         id INT(12) NOT NULL auto_increment PRIMARY KEY,
         pin_id INT(12) NULL,
+        comment_type VARCHAR(10) DEFAULT "COMMENT",
         content VARCHAR(140) NOT NULL,
         scope_id INT(12) NOT NULL, -- this is an ancestor style query
         created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
@@ -109,6 +110,7 @@ SQL to create database structure:
     CREATE TABLE comments (
         id INT(12) NOT NULL auto_increment PRIMARY KEY,
         pin_id INT(12) NULL,
+        comment_type VARCHAR(10) DEFAULT "COMMENT",
         content VARCHAR(140),
         scope_id INT(12) NOT NULL, -- this is an ancestor style query
         created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -169,6 +171,14 @@ SQL to create database structure:
             IF NEW.comment_id IS NOT NULL THEN
                 UPDATE comments SET pin_id = NEW.id WHERE comments.id = NEW.comment_id;
             END IF;
+        END;//
+    delimiter ;
+
+    delimiter //
+    CREATE TRIGGER comment_type_to_upper BEFORE INSERT on comments
+        FOR EACH ROW
+        BEGIN
+            SET NEW.comment_type = UPPER(NEW.comment_type);
         END;//
     delimiter ;
 
