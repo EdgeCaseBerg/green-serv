@@ -2,26 +2,14 @@
 	#define __NET_H__
 
 	#define METHOD_LENGTH 7
-	#define HASH_TABLE_CAPACITY 15
-	#define MAX_URL_LENGTH 100
+	
 	#define FIRSTLINEBUFFSIZE 256
-	#define GET 2
-	#define POST 4
-	#define PUT 8
-	#define DELETE 16
-	#define UNKNOWN_METHOD 32
 	#define NUMTHREADS 1/*00*/
 	#define DETACHED_THREADS
 	#undef DETACHED_THREADS
-	struct http_request{
-		int method;
-		char url[MAX_URL_LENGTH]; /* The request URL to determine the controller */
-		int contentLength; /* The length of the content coming in */
-		char * data; /* This must be malloced for data */
-	};
 	/* Simple struct to contain data to be sent to worker threads */
 	struct threadData{
-	    char msg[1024];
+	    char msg[16384];
 	    int clientfd;
 	};
 
@@ -37,11 +25,9 @@
 	#include <pthread.h>
 	#include "config.h"
 	#include "network/router.h"
-	#include "helpers/strmap.h"
+	#include "controllers/comments.h"
 	#include "controllers/heartbeat.h"
-
-
-
+	
 
 	/*Create an HTTP Json response
 	*/
@@ -75,7 +61,6 @@
 	/* This function is unlikely to live beyond testing things */
 	int test_network(char * buffer, int bufferLength, void*( *func )(void*) );
 
-	/* Parse a url and return the number of parameters begotten from it */
-	int parseURL(char * url, int urlLength, StrMap * table);
+
 
 #endif 

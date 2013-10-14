@@ -8,7 +8,7 @@ CC=cc
 #a few handy defines to make our compilation lines not so long:
 gflags = -I./headers -std=gnu99 -pedantic -Wall -Wextra -Werror -g
 mysqlflags = -I/usr/include/mysql -DBIG_JOINS=1 -fno-strict-aliasing
-mysqllibs  = -L/usr/lib/x86_64-linux-gnu -lmysqlclient -lpthread -lz -lm -lrt -ldl
+mysqllibs  = -L/usr/lib/x86_64-linux-gnu -lmysqlclient_r -lpthread -lz -lm -lrt -ldl 
 valgrind = valgrind --tool=memcheck --leak-check=yes --show-reachable=yes --num-callers=20 --track-fds=yes
 unittests = test-decimal test-comment test-scope test-marker test-report test-heatmap test-heartbeat test-router test-network
 unittestobj = obj/comment.o  obj/db.o  obj/decimal.o  obj/heatmap.o  obj/json.o obj/marker.o  obj/report.o  obj/scope.o  obj/sha256.o
@@ -52,10 +52,13 @@ decimal.o: src/helpers/decimal.c
 heartbeatC.o: src/controllers/heartbeat.c
 	$(CC) $(gflags) -c src/controllers/heartbeat.c -o obj/heartbeatC.o
 
-network.o: src/network/net.c router.o strmap.o heartbeatC.o
+commentC.o: src/controllers/comments.c strmap.o comment.o router.o
+	$(CC) $(gflags) -c src/controllers/comments.c -o obj/commentC.o
+
+network.o: src/network/net.c router.o heartbeatC.o commentC.o
 	$(CC) $(gflags) -c src/network/net.c -o obj/network.o
 
-router.o: src/network/router.c
+router.o: src/network/router.c strmap.o
 	$(CC) $(gflags) -c src/network/router.c -o obj/router.o
 
 strmap.o: src/helpers/strmap.c
@@ -99,11 +102,11 @@ test-heatmap: tests/unit/heatmap-test.c heatmap.o json.o db.o decimal.o
 test-heartbeat: tests/unit/heartbeat-test.c json.o decimal.o
 	$(CC) $(gflags) tests/unit/heartbeat-test.c obj/json.o obj/decimal.o -o tests/bin/heartbeat.out 
 
-test-router: tests/unit/router-test.c router.o 
-	$(CC) $(gflags) tests/unit/router-test.c obj/router.o -o tests/bin/router.out
+test-router: tests/unit/router-test.c router.o strmap.o
+	$(CC) $(gflags) tests/unit/router-test.c obj/router.o obj/strmap.o -o tests/bin/router.out
 
-test-network: tests/unit/network-test.c router.o  strmap.o network.o
-	$(CC) $(gflags) tests/unit/network-test.c obj/router.o obj/network.o obj/strmap.o -o tests/bin/network.out -lpthread
+test-network: tests/unit/network-test.c router.o  strmap.o network.o commentC.o heartbeatC.o db.o comment.o report.o marker.o scope.o heatmap.o
+	$(CC) $(mysqlflags) $(gflags) tests/unit/network-test.c $(unittestobj) obj/router.o obj/network.o obj/strmap.o obj/commentC.o  obj/heartbeatC.o -o tests/bin/network.out -lpthread $(mysqllibs) -lcrypto
 
 #Controller Tests
 

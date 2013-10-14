@@ -1,5 +1,8 @@
 #include "db.h"
 
+/* _shared_campaign_id is declared in config.h and is a global
+ * readonly variable to be used for scoping purposes
+*/
 
 MYSQL * _getMySQLConnection(){
 	MYSQL *conn;
@@ -7,9 +10,10 @@ MYSQL * _getMySQLConnection(){
 	char *user = USERNAME;
 	char *password = PASSWORD; /* set me first */
 	char *database = DATABASE;
-   
-	/* Call to init for multi-threading later on */
+	#ifndef THREADED_DB
+	/* If the connections are threaded this will be called in the main */
 	mysql_library_init(0, NULL, NULL);
+	#endif
 
 	conn = mysql_init(NULL);
 	return mysql_real_connect(conn, server, user, password, database, 0, NULL, 0);
@@ -23,7 +27,7 @@ void db_getScopeById(long id, struct gs_scope * gss, MYSQL * conn){
 	/*Zero the scope structure */
 	gs_scope_ZeroStruct(gss);
 
-	bzero(query,64);
+	bzero(query,sizeof query);
 	sprintf(query, GS_SCOPE_GET_BY_ID, id);
 
 	if(0 != mysql_query(conn, query) ){
@@ -50,12 +54,25 @@ int db_getComments(int page, long scopeId, struct gs_comment * gsc, MYSQL * conn
 	MYSQL_RES * result;
 	MYSQL_ROW row; 
 	int i;
-	char query[110];
+	int limit;
+	char query[sizeof GS_COMMENT_GET_ALL];
 
-	bzero(query,110);
-	sprintf(query, GS_COMMENT_GET_ALL, scopeId, page*RESULTS_PER_PAGE);
+	bzero(query,sizeof query);
+	/* In order to return the correct paginated results we have the following
+	 * strategy: Retrieve the results per page, this is +1 more than we will
+	 * be sending to the client. This is to make the 'nextUrl' without having
+	 * to check the database for the total number of comments.
+	 * To avoid losing that last telltale comment (since we discard it and it's
+	 * not sent to the client) the limit offset has to be reduced by 1 if we're
+	 * asking for more than one page.  
+	 * For more detail and some math, see 6aa7d80
+	*/
+	limit = page*RESULTS_PER_PAGE;
+	limit = limit > 0 ? limit-(page) : limit;
+	sprintf(query, GS_COMMENT_GET_ALL, scopeId, limit);
 
 	if(0 != mysql_query(conn, query) ){
+		fprintf(stderr, "%s\n", query);
 		fprintf(stderr, "%s\n", mysql_error(conn));
 		return 0;
 	}
@@ -67,9 +84,52 @@ int db_getComments(int page, long scopeId, struct gs_comment * gsc, MYSQL * conn
 		gs_comment_ZeroStruct(&gsc[i]);
 
 		gs_comment_setId( atol(row[0]), &gsc[i]);
-		gs_comment_setContent( row[1], &gsc[i]);
-		gs_comment_setScopeId( atol(row[2]), &gsc[i]);
-		gs_comment_setCreatedTime( row[3], &gsc[i]);
+		fprintf(stderr, "%s\n", row[1]);
+		gs_comment_setPinId(row[1] == NULL ? -1 : atol(row[1]), &gsc[i]);
+		gs_comment_setContent( row[2], &gsc[i]);
+		gs_comment_setScopeId( atol(row[3]), &gsc[i]);
+		gs_comment_setCreatedTime( row[4], &gsc[i]);
+		gs_comment_setCommentType(row[5], &gsc[i]);
+		i++;
+	}
+	mysql_free_result(result);  
+	return i;
+}
+
+int db_getCommentsByType(int page, long scopeId, struct gs_comment * gsc, char * cType, MYSQL * conn){
+	MYSQL_RES * result;
+	MYSQL_ROW row; 
+	int i;
+	int limit;
+	char query[sizeof GS_COMMENT_GET_BY_TYPE + GS_COMMENT_TYPE_LENGTH];
+
+	bzero(query,sizeof query);
+	/* For reasoning on the limit calculations:
+	 * see 6aa7d80
+	*/
+	limit = page*RESULTS_PER_PAGE;
+	limit = limit > 0 ? limit-(page) : limit;
+	sprintf(query, GS_COMMENT_GET_BY_TYPE, scopeId, cType,limit);
+
+	if(0 != mysql_query(conn, query) ){
+		fprintf(stderr, "%s\n", query);
+		fprintf(stderr, "%s\n", mysql_error(conn));
+		return 0;
+	}
+
+	i=0;
+	result = mysql_use_result(conn);
+	while( (row=mysql_fetch_row(result)) != NULL ){
+		/* Initialize */
+		gs_comment_ZeroStruct(&gsc[i]);
+
+		gs_comment_setId( atol(row[0]), &gsc[i]);
+		fprintf(stderr, "%s\n", row[1]);
+		gs_comment_setPinId(row[1] == NULL ? -1 : atol(row[1]), &gsc[i]);
+		gs_comment_setContent( row[2], &gsc[i]);
+		gs_comment_setScopeId( atol(row[3]), &gsc[i]);
+		gs_comment_setCreatedTime( row[4], &gsc[i]);
+		gs_comment_setCommentType( row[5], &gsc[i]);
 		i++;
 	}
 	mysql_free_result(result);  
@@ -79,12 +139,12 @@ int db_getComments(int page, long scopeId, struct gs_comment * gsc, MYSQL * conn
 void db_getCommentById(long id, struct gs_comment * gsc, MYSQL * conn){
 	MYSQL_RES * result;
 	MYSQL_ROW row; 
-	char query[80]; /* 72 for query, 8 for padding and null char*/
+	char query[sizeof GS_COMMENT_GET_BY_ID]; /* 72 for query, 8 for padding and null char*/
 
 	/*Zero the scope structure */
 	gs_comment_ZeroStruct(gsc);
 
-	bzero(query,80);
+	bzero(query,sizeof query);
 	sprintf(query, GS_COMMENT_GET_BY_ID, id);
 
 	if(0 != mysql_query(conn, query) ){
@@ -101,9 +161,11 @@ void db_getCommentById(long id, struct gs_comment * gsc, MYSQL * conn){
 
 	/* Make sure id is integer */
 	gs_comment_setId( atol(row[0]), gsc);
-	gs_comment_setContent( row[1], gsc);
-	gs_comment_setScopeId( atol(row[2]), gsc);
-	gs_comment_setCreatedTime( row[3], gsc);
+	gs_comment_setPinId(row[1] == NULL ? -1 : atol(row[1]), gsc);
+	gs_comment_setContent( row[2], gsc);
+	gs_comment_setScopeId( atol(row[3]), gsc);
+	gs_comment_setCreatedTime( row[4], gsc);
+	gs_comment_setCommentType(row[5], gsc);
 
 	mysql_free_result(result);  
 }
@@ -121,8 +183,8 @@ void db_insertComment(struct gs_comment * gsc, MYSQL * conn){
 	if(gsc->scopeId == GS_SCOPE_INVALID_ID)
 		return; /* Return if scope is invalid that we can tell*/
 
-	bzero(query,DB_INSERT_COMMENT_QUERY_SIZE);
-	sprintf(query, GS_COMMENT_INSERT, gsc->content, gsc->scopeId);
+	bzero(query,sizeof query);
+	sprintf(query, GS_COMMENT_INSERT, gsc->content, gsc->scopeId, gsc->pinId,gsc->cType);
 
 	if(0 != mysql_query(conn, query) ){
 		fprintf(stderr, "%s\n", mysql_error(conn));
@@ -139,7 +201,7 @@ void db_insertComment(struct gs_comment * gsc, MYSQL * conn){
 	gsc->id = affected;
 
 	/* Now we could either compute the time stamp or ask the db for it. */
-	bzero(query,DB_INSERT_COMMENT_QUERY_SIZE);
+	bzero(query,sizeof query);
 	sprintf(query,GS_COMMENT_GET_BY_ID, affected);
    
 	/* Fresh Start and we want to return to the user EXACTLY what's in the db */
@@ -159,9 +221,11 @@ void db_insertComment(struct gs_comment * gsc, MYSQL * conn){
 
 	/* Fill er up */
 	gs_comment_setId( atol(row[0]), gsc);
-	gs_comment_setContent( row[1], gsc);
-	gs_comment_setScopeId( atol(row[2]), gsc);
-	gs_comment_setCreatedTime( row[3], gsc);
+	gs_comment_setPinId(row[1] == NULL ? -1 : atol(row[1]), gsc);
+	gs_comment_setContent( row[2], gsc);
+	gs_comment_setScopeId( atol(row[3]), gsc);
+	gs_comment_setCreatedTime( row[4], gsc);
+	gs_comment_setCommentType( row[5], gsc);
 
 	mysql_free_result(result);
    
@@ -173,9 +237,9 @@ int db_getMarkers(int page, long scopeId, struct gs_marker * gsm, MYSQL * conn){
 	Decimal latitude;
 	Decimal longitude;
 	int i;
-	char query[140];
+	char query[sizeof GS_MARKER_GET_ALL];
 
-	bzero(query,140);
+	bzero(query,sizeof query);
 	sprintf(query, GS_MARKER_GET_ALL, scopeId, page*RESULTS_PER_PAGE);
 
 	if(0 != mysql_query(conn, query) ){
@@ -215,7 +279,7 @@ void db_insertMarker(struct gs_marker * gsm, MYSQL * conn){
 	if(gsm->scopeId == GS_SCOPE_INVALID_ID)
 		return; /* Return if scope is invalid that we can tell*/
 
-	bzero(query,DB_INSERT_MARKER_QUERY_SIZE);
+	bzero(query,sizeof query);
 	sprintf(query, GS_MARKER_INSERT, gsm->commentId, gsm->scopeId, gsm->latitude.left, gsm->latitude.right, gsm->longitude.left, gsm->longitude.right);
 
 	if(0 != mysql_query(conn, query) ){
@@ -233,7 +297,7 @@ void db_insertMarker(struct gs_marker * gsm, MYSQL * conn){
 	gsm->id = affected;
 
 	/* Now we could either compute the time stamp or ask the db for it. */
-	bzero(query,DB_INSERT_MARKER_QUERY_SIZE);
+	bzero(query,sizeof query);
 	sprintf(query,GS_MARKER_GET_BY_ID, affected);
 
 	/* Fresh Start and we want to return to the user EXACTLY what's in the db */
@@ -274,7 +338,7 @@ void db_getMarkerById(long id, struct gs_marker * gsm, MYSQL * conn){
 	/*Zero the scope structure */
 	gs_marker_ZeroStruct(gsm);
 
-	bzero(query,95+5);
+	bzero(query,sizeof query);
 	sprintf(query, GS_MARKER_GET_BY_ID, id);
 
 	if(0 != mysql_query(conn, query) ){
@@ -318,7 +382,7 @@ void db_insertHeatmap(struct gs_heatmap * gsh, MYSQL * conn){
 		return; /* Return if scope is invalid that we can tell*/
 
 	/* Check for possible merges */
-	bzero(query,DB_INSERT_HEATMAP_QUERY_SIZE);
+	bzero(query,sizeof query);
 	sprintf(query, GS_HEATMAP_FIND_MATCH, gsh->scopeId, gsh->latitude.left, gsh->latitude.right, gsh->longitude.left, gsh->longitude.right);
 
 	if(0 != mysql_query(conn, query) ){
@@ -329,7 +393,7 @@ void db_insertHeatmap(struct gs_heatmap * gsh, MYSQL * conn){
 
 	result = mysql_use_result(conn);
 	row = mysql_fetch_row(result);
-	bzero(query, DB_INSERT_HEATMAP_QUERY_SIZE);
+	bzero(query, sizeof query);
 	updated = 0;
 	if(row == NULL){
 		mysql_free_result(result);
@@ -372,7 +436,7 @@ void db_insertHeatmap(struct gs_heatmap * gsh, MYSQL * conn){
 	}
 	
 	/* Now we could either compute the time stamp or ask the db for it. */
-	bzero(query,DB_INSERT_HEATMAP_QUERY_SIZE);
+	bzero(query,sizeof query);
 	sprintf(query,GS_HEATMAP_GET_BY_ID, gsh->id);
 
 	/* Fresh Start and we want to return to the user EXACTLY what's in the db */
@@ -415,7 +479,7 @@ int db_getHeatmap(int page, long scopeId, long precision, Decimal lowerLatBound,
 	int i;
 	char query[HEATMAP_PAGE_QUERY_SIZE];
 
-	bzero(query,HEATMAP_PAGE_QUERY_SIZE);
+	bzero(query,sizeof query);
 	sprintf(query, 	GS_HEATMAP_GET_ALL, 
 				   	precision, 	/* Latitude precision */
 				   	precision, 	/* Longitude precision */
@@ -463,7 +527,7 @@ void db_insertReport(struct gs_report * gsr, MYSQL * conn){
 	if(gsr->scopeId == GS_SCOPE_INVALID_ID)
 		return; /* Return if scope is invalid that we can tell*/
 
-	bzero(query,DB_INSERT_REPORT_QUERY_SIZE);
+	bzero(query,sizeof query);
 	sprintf(query, GS_REPORT_INSERT, gsr->content, gsr->scopeId, gsr->origin, gsr->authorize);
 
 	if(0 != mysql_query(conn, query) ){
@@ -481,7 +545,7 @@ void db_insertReport(struct gs_report * gsr, MYSQL * conn){
 	gsr->id = affected;
 
 	/* Now we could either compute the time stamp or ask the db for it. */
-	bzero(query,DB_INSERT_REPORT_QUERY_SIZE);
+	bzero(query,sizeof query);
 	sprintf(query,GS_REPORT_GET_BY_AUTH, gsr->authorize);
 
 	/* Fresh Start and we want to return to the user EXACTLY what's in the db */
@@ -519,7 +583,7 @@ void db_getReportByAuth(char * auth, struct gs_report * gsr, MYSQL * conn){
 	char query[99+65+4]; /* 99 for query, 65 for auth hash, 4 for safety*/
 
 	gs_report_ZeroStruct(gsr);
-	bzero(query,99+65+4);
+	bzero(query,sizeof query);
 	
 	sprintf(query, GS_REPORT_GET_BY_AUTH, auth);
 
@@ -548,7 +612,7 @@ void db_getReportByAuth(char * auth, struct gs_report * gsr, MYSQL * conn){
 int db_deleteReport(struct gs_report * gsr, MYSQL * conn){
 	char query[99+(64*2)+5]; /* 61 for query, 64*2+1 for hashes, 4 for safety*/
 
-	bzero(query,99+(64*2)+5);
+	bzero(query,sizeof query);
 	sprintf(query, GS_REPORT_DELETE, gsr->origin,gsr->authorize);
 
 	if(0 != mysql_query(conn, query) ){
@@ -567,7 +631,7 @@ int db_getReports(int page, long scopeId, struct gs_report * gsr, MYSQL * conn){
 	MYSQL_ROW row; 
 	int i;
 	char query[REPORT_PAGE_QUERY_SIZE];
-	bzero(query,REPORT_PAGE_QUERY_SIZE);
+	bzero(query,sizeof query);
 	sprintf(query,GS_REPORT_GET_ALL,scopeId, page);
 
 	if(0 != mysql_query(conn, query) ){

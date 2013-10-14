@@ -52,6 +52,25 @@ you'd like.
         */
         #define RETURN_ON_JSON_RISK return -1;
         #undef RETURN_ON_JSON_RISK
+
+        /*Define that the database connection will be threaded.
+         *The only time this should be undef-ed is if you're just
+         *doing some simple testing for unit tests.
+        */
+        #define THREADED_DB 1
+
+        /*This is a global variable declaration.
+         *The main driving file will define this variable. Calling
+         *parties may use this variable as a read-only variable.
+         *attempts to change the value of this variable while from a
+         *worker thread is undefined behavior and I won't be held responsible.
+         *The main driving file must define GREENSERV and NO OTHER files may
+        */
+        #ifdef GREENSERV
+            int _shared_campaign_id;
+        #else
+            extern int _shared_campaign_id;
+        #endif
 	
 	#endif
 
@@ -80,6 +99,8 @@ SQL to create database structure:
     #Cache table for fast pagination
     CREATE TABLE cacheComments (
         id INT(12) NOT NULL auto_increment PRIMARY KEY,
+        pin_id INT(12) NULL,
+        comment_type VARCHAR(10) DEFAULT "COMMENT",
         content VARCHAR(140) NOT NULL,
         scope_id INT(12) NOT NULL, -- this is an ancestor style query
         created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
@@ -88,6 +109,8 @@ SQL to create database structure:
 
     CREATE TABLE comments (
         id INT(12) NOT NULL auto_increment PRIMARY KEY,
+        pin_id INT(12) NULL,
+        comment_type VARCHAR(10) DEFAULT "COMMENT",
         content VARCHAR(140),
         scope_id INT(12) NOT NULL, -- this is an ancestor style query
         created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -102,8 +125,7 @@ SQL to create database structure:
         scope_id INT(12), -- this is an ancestor style query
         created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
         latitude DECIMAL(10, 8) NOT NULL,
-        longitude DECIMAL(11, 8) NOT NULL,
-        INDEX (`id`)
+        longitude DECIMAL(11, 8) NOT NULL
     ) ENGINE Memory;
 
 
@@ -141,6 +163,24 @@ SQL to create database structure:
         INDEX(`scope_id`),
         CONSTRAINT FOREIGN KEY (`scope_id`) REFERENCES `scope` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
     ) ENGINE InnoDB;
+
+    delimiter //
+    CREATE TRIGGER comment_marker_ref AFTER INSERT ON markers 
+        FOR EACH ROW
+        BEGIN
+            IF NEW.comment_id IS NOT NULL THEN
+                UPDATE comments SET pin_id = NEW.id WHERE comments.id = NEW.comment_id;
+            END IF;
+        END;//
+    delimiter ;
+
+    delimiter //
+    CREATE TRIGGER comment_type_to_upper BEFORE INSERT on comments
+        FOR EACH ROW
+        BEGIN
+            SET NEW.comment_type = UPPER(NEW.comment_type);
+        END;//
+    delimiter ;
 
 
 Example Compilation and Verification:

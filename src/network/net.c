@@ -10,13 +10,15 @@ void* doNetWork(struct threadData* td) {
     int bytesSent;
     int controller;
     int status;
-    char response[2056];
+    char response[10000];
     bzero(response, sizeof response);
 
     /*Blank JSON response for no control*/
     response[0]='{'; response[1]='}'; response[2]='\0';
     status = 200;
     parseRequest(&request, td->msg);
+
+    fprintf(stderr, "Before: %d\n", td->clientfd);
 
     /* Pass the request off to a handler */
     controller = determineController(request.url);
@@ -27,6 +29,7 @@ void* doNetWork(struct threadData* td) {
                 status = heartbeat_controller(response,sizeof response);
                 break;
             case COMMENTS_CONTROLLER :
+                status = comment_controller(&request, response, sizeof response);
                 break;
             case HEATMAP_CONTROLLER :
                 break;
@@ -40,6 +43,8 @@ void* doNetWork(struct threadData* td) {
         status = 404;
     }
 
+    fprintf(stderr, "After: %d\n", td->clientfd);
+
     /* Log and clean up. */
     printf("url: %s\n", request.url);
     if(request.contentLength > 0)
@@ -50,7 +55,7 @@ void* doNetWork(struct threadData* td) {
 
     createResponse(response,td->msg,status);
     td->msg[strlen(td->msg)] = '\0';
-    
+
     bytesSent = send(td->clientfd,td->msg,strlen(td->msg),0);  
     printf("Sent %d bytes to the client : %s\n",bytesSent,strerror(errno));
 
@@ -59,49 +64,6 @@ void* doNetWork(struct threadData* td) {
     return NULL;
 }
 
-/*
- * Parse the url and store values into the hash table
- * returns the number of values successfully placed into the hashtable
-*/
-int parseURL(char * url, int urlLength, StrMap * table){
-    int i;
-    int j;
-    int pairCounter;
-    char keyBuff[256];
-    char valBuff[256];
-    bzero(keyBuff,sizeof keyBuff);
-    bzero(valBuff,sizeof valBuff);
-
-    if(url == NULL)
-        return 0;
-    if(table == NULL)
-        return -1; /* Err ... */
-    pairCounter = 0;
-    /* Find ? */
-    for(i=0; url[i] != '\0' && i < urlLength; ++i)
-        if(url[i] == '?')
-            break;
-    while(url[i] != '\0' && i < urlLength){
-        for(j=0,i++; url[i] != '=' && url[i] != '\0' && i < urlLength; ++i)
-            keyBuff[j++] = url[i];
-        keyBuff[j] = '\0';
-        for(j=0,i++; strlen(keyBuff) > 0 && url[i] != '&' && url[i] != '\0' && i < urlLength; ++i)
-            valBuff[j++] = url[i];
-        valBuff[j] = '\0';
-        if(strlen(valBuff) > 0 && strlen(keyBuff) > 0){
-            /* Place values into table */
-            if(sm_put(table, keyBuff, valBuff) == 0)
-                fprintf(stderr, "Failed to copy parameters into hash table while parsing url\n");
-            else
-                pairCounter++;
-        }
-        /* reset the buffers */
-        bzero(keyBuff,sizeof keyBuff);
-        bzero(valBuff,sizeof valBuff);
-        
-    }
-    return pairCounter;
-}
 
 /*Create a HTTP response with the buff as content and sent out with the
  *response code of status. This function call is not safe.

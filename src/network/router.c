@@ -32,3 +32,48 @@ int determineController(char * url){
 	}/* No Route matches. */
 	return INVALID_CONTROLLER;
 }
+
+/*
+ * Parse the url and store values into the hash table
+ * returns the number of values successfully placed into the hashtable
+*/
+int parseURL(const char * url, int urlLength, StrMap * table){
+    int i;
+    int j;
+    int pairCounter;
+    char keyBuff[256];
+    char valBuff[256];
+    bzero(keyBuff,sizeof keyBuff);
+    bzero(valBuff,sizeof valBuff);
+
+    if(url == NULL)
+        return 0;
+    if(table == NULL)
+        return -1; /* Err ... */
+    pairCounter = 0;
+    /* Find ? */
+    for(i=0; url[i] != '\0' && i < urlLength; ++i)
+        if(url[i] == '?')
+            break;
+    while(url[i] != '\0' && i < urlLength){
+        for(j=0,i++; url[i] != '=' && url[i] != '\0' && i < urlLength; ++i)
+            keyBuff[j++] = (int)url[i] > 64 && url[i] < 91 ? url[i] + 32 : url[i];
+            /* Store the case as all LOWERCASE */
+        keyBuff[j] = '\0';
+        for(j=0,i++; strlen(keyBuff) > 0 && url[i] != '&' && url[i] != '\0' && i < urlLength; ++i)
+            valBuff[j++] = url[i];
+        valBuff[j] = '\0';
+        if(strlen(valBuff) > 0 && strlen(keyBuff) > 0){
+            /* Place values into table */
+            if(sm_put(table, keyBuff, valBuff) == 0)
+                fprintf(stderr, "Failed to copy parameters into hash table while parsing url\n");
+            else
+                pairCounter++;
+        }
+        /* reset the buffers */
+        bzero(keyBuff,sizeof keyBuff);
+        bzero(valBuff,sizeof valBuff);
+        
+    }
+    return pairCounter;
+}
