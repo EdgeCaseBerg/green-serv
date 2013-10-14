@@ -24,6 +24,7 @@
 	void gs_comment_setScopeId(long ScopeId, struct gs_comment * gsc);
 	void gs_comment_setCreatedTime(char * createdTime, struct gs_comment * gsc); /* Contemplate long for epoch time? */
 	void gs_comment_setPinId(long id, struct gs_comment * gsc);
+	void gs_comment_setCommentType(char * cType, struct gs_comment * gsc);
 	
 
 	/* Empties a comment structure of data and sets flag values */
