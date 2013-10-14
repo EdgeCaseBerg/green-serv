@@ -75,18 +75,33 @@ int comment_controller(const struct http_request * request, char * stringToRetur
 	switch(request->method){
 		case GET:
 			if(cType[0] == '\0' ){
-				if( comments_get(buffer, sizeof buffer ,page,NULL) == -1 )
+				if( comments_get(buffer, sizeof buffer ,page,NULL) == -1 ){
+					sm_delete(sm);
 					goto cc_nomem;
+				}
 			} else {
-				if( comments_get(buffer, sizeof buffer ,page,cType) == -1 )
+				if( comments_get(buffer, sizeof buffer ,page,cType) == -1 ){
+					sm_delete(sm);
 					goto cc_nomem;
+				}
 			}
 			/* Process results of comments_get */
 			snprintf(stringToReturn,strLength,"%s",buffer);
 			status = 200;
 			break;
 		case POST:
-				comment_post(buffer,sizeof buffer,request);
+			status = comment_post(buffer,sizeof buffer,request);
+			if( status == -1 ){
+				sm_delete(sm);
+				goto cc_nomem;
+			} else if(status == 400) {
+				sm_delete(sm);
+				goto cc_badtype;
+			} else if(status == -400) {
+				sm_delete(sm);
+				goto cc_missing;
+			}
+			snprintf(stringToReturn,strLength,"%s",buffer);
 			break;
 		default:
 			/*Invalid Method Err*/
@@ -115,6 +130,10 @@ int comment_controller(const struct http_request * request, char * stringToRetur
 		snprintf(stringToReturn, strLength, ERROR_STR_FORMAT, status, BAD_METHOD_ERR);
 		return status;			
 
+	cc_missing:/* Comment controller missing required keys */
+		snprintf(stringToReturn, strLength, ERROR_STR_FORMAT, status, MISSING_KEY_ERR);
+		return status;					
+
 }
 
 /*Accepts NULL for cType if no filter
@@ -142,6 +161,7 @@ int comments_get(char * buffer, int buffSize,int page,char * cType){
 	conn = _getMySQLConnection();
 	if(!conn){
 		free(commentPage);
+		mysql_thread_end();
 		fprintf(stderr, "%s\n", "Could not connect to mySQL on worker thread");
 		return -1;
 	}
@@ -203,6 +223,118 @@ int comments_get(char * buffer, int buffSize,int page,char * cType){
 }
 
 int comment_post(char * buffer, int buffSize, const struct http_request * request){
+	MYSQL *conn;
+	struct gs_comment insComment;
+	StrMap * sm;
+	int i;
+	int j;
+	int strFlag;
+	char keyBuffer[GS_COMMENT_MAX_LENGTH+1];
+	char valBuffer[GS_COMMENT_MAX_LENGTH+1];
+
+
+	bzero(keyBuffer,sizeof keyBuffer);
+	gs_comment_ZeroStruct(&insComment);
+	strFlag = 0;
+
 	fprintf(stderr, "Called Comment Post with: B:%s L:%d P:%p\n", buffer, buffSize, request->data );
-	return -1;
+
+	sm = sm_new(HASH_TABLE_CAPACITY);
+	if(sm == NULL){
+		fprintf(stderr, "sm err\n");
+		return -1;
+	}
+
+	/*Parse the JSON for the information we desire */
+	for(i=0; i < buffSize && request->data[i] != '\0'; ++i){
+		/*We're at the start of a string*/
+		if(request->data[i] == '"'){
+			/*Go until we hit the closing qoute*/
+			i++;
+			for(j=0; i < buffSize && request->data[i] != '\0' && request->data[i] != '"' && (unsigned int)j < sizeof keyBuffer; ++j,++i){
+				keyBuffer[j] = (int)request->data[i] > 64 && request->data[i] < 91 ? request->data[i] + 32 : request->data[i];
+			}
+			keyBuffer[j] = '\0';
+			/*find the beginning of the value
+			 *which is either a " or a number. So skip spaces and commas
+			*/
+			for(i++; i < buffSize && request->data[i] != '\0' && (request->data[i] == ',' || request->data[i] == ' ' || request->data[i] == ':'); ++i)
+				;
+			/*Skip any opening qoute */
+			if(request->data[i] != '\0' && request->data[i] == '"'){
+				i++;
+				strFlag = 1;
+			}
+			for(j=0; i < buffSize && request->data[i] != '\0'; ++j,++i){
+				if(strFlag == 0){
+					if(request->data[i] == ' ')
+						break; /*break out if num data*/
+				}else{
+					if(request->data[i] == '"' && request->data[i-1] != '\\')
+						break;
+				}
+				valBuffer[j] = request->data[i];
+			}
+			valBuffer[j] = '\0';
+			/* Skip any closing paren. */
+			if(request->data[i] == '"')
+				i++;
+			if(strlen(keyBuffer) > 0 && strlen(valBuffer) > 0)
+				if(sm_put(sm, keyBuffer, valBuffer) == 0)
+                	fprintf(stderr, "Failed to copy parameters into hash table while parsing url\n");
+		}
+		strFlag = 0;
+	}
+
+	/* Determine if the request is valid or not */
+	if(sm_exists(sm, "type") !=1 || sm_exists(sm, "message") !=1){
+		sm_delete(sm);
+		fprintf(stderr, "required keys not found\n");
+		return -400;		
+	}else{
+		if(sm_exists(sm, "type") ==1){
+			if(sm_get(sm,"type", valBuffer, sizeof valBuffer) == 1){
+				/* Verify that it is a correct type */
+				if(strncasecmp(valBuffer, CTYPE_1,COMMENTS_CTYPE_SIZE) != 0)
+					if(strncasecmp(valBuffer, CTYPE_2,COMMENTS_CTYPE_SIZE) != 0)
+						if(strncasecmp(valBuffer, CTYPE_3,COMMENTS_CTYPE_SIZE) != 0){				
+							sm_delete(sm);
+							return 400;
+						}
+
+			}
+		}
+	}
+
+	/* valid, cary on and copy over */
+	gs_comment_setScopeId(_shared_campaign_id, &insComment);
+	sm_get(sm, "message",valBuffer, sizeof valBuffer);
+	gs_comment_setContent(valBuffer, &insComment);
+	if(sm_exists(sm, "pin")){
+		sm_get(sm, "pin",keyBuffer,sizeof keyBuffer);
+		gs_comment_setPinId(atol(keyBuffer),&insComment);
+	}
+	sm_get(sm, "type", insComment.cType, sizeof insComment.cType);
+	sm_delete(sm);
+
+
+
+	mysql_thread_init();
+	conn = _getMySQLConnection();
+	if(!conn){
+		mysql_thread_end();
+		fprintf(stderr, "%s\n", "Could not connect to mySQL on worker thread");
+		return -1;
+	}
+
+	/* Insert the comment */
+	db_insertComment(&insComment, conn);
+
+	mysql_close(conn);
+	mysql_thread_end();
+
+	/* populate the response */
+	snprintf(buffer,buffSize,"{\"status_code\" : 200,\"message\" : \"Succesfully submited new comment\"}");
+
+	return 200;
 }
