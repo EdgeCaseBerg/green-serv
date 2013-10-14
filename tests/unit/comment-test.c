@@ -21,6 +21,7 @@ int main(){
 
    	gs_comment_ZeroStruct(&testComment);
    	gs_comment_setContent("Test Comment", &testComment);
+   	gs_comment_setCommentType("COMMENT", &testComment);
    	gs_comment_setScopeId(CAMPAIGN_ID, &testComment);
 	   
    	db_insertComment(&testComment,conn);

@@ -89,6 +89,7 @@ int db_getComments(int page, long scopeId, struct gs_comment * gsc, MYSQL * conn
 		gs_comment_setContent( row[2], &gsc[i]);
 		gs_comment_setScopeId( atol(row[3]), &gsc[i]);
 		gs_comment_setCreatedTime( row[4], &gsc[i]);
+		gs_comment_setCommentType(row[5], &gsc[i]);
 		i++;
 	}
 	mysql_free_result(result);  
@@ -128,6 +129,7 @@ int db_getCommentsByType(int page, long scopeId, struct gs_comment * gsc, char *
 		gs_comment_setContent( row[2], &gsc[i]);
 		gs_comment_setScopeId( atol(row[3]), &gsc[i]);
 		gs_comment_setCreatedTime( row[4], &gsc[i]);
+		gs_comment_setCommentType( row[5], &gsc[i]);
 		i++;
 	}
 	mysql_free_result(result);  
@@ -163,6 +165,7 @@ void db_getCommentById(long id, struct gs_comment * gsc, MYSQL * conn){
 	gs_comment_setContent( row[2], gsc);
 	gs_comment_setScopeId( atol(row[3]), gsc);
 	gs_comment_setCreatedTime( row[4], gsc);
+	gs_comment_setCommentType(row[5], gsc);
 
 	mysql_free_result(result);  
 }
@@ -181,7 +184,7 @@ void db_insertComment(struct gs_comment * gsc, MYSQL * conn){
 		return; /* Return if scope is invalid that we can tell*/
 
 	bzero(query,sizeof query);
-	sprintf(query, GS_COMMENT_INSERT, gsc->content, gsc->scopeId, gsc->pinId);
+	sprintf(query, GS_COMMENT_INSERT, gsc->content, gsc->scopeId, gsc->pinId,gsc->cType);
 
 	if(0 != mysql_query(conn, query) ){
 		fprintf(stderr, "%s\n", mysql_error(conn));
@@ -222,6 +225,7 @@ void db_insertComment(struct gs_comment * gsc, MYSQL * conn){
 	gs_comment_setContent( row[2], gsc);
 	gs_comment_setScopeId( atol(row[3]), gsc);
 	gs_comment_setCreatedTime( row[4], gsc);
+	gs_comment_setCommentType( row[5], gsc);
 
 	mysql_free_result(result);
    
