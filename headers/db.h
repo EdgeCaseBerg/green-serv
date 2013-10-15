@@ -37,6 +37,7 @@
 	#define GS_COMMENT_GET_BY_ID "SELECT id, pin_id, content, scope_id, created_time,comment_type FROM comments WHERE id = %ld;"
 	#define GS_COMMENT_INSERT "INSERT INTO comments (content, scope_id, pin_id,comment_type) VALUES (\"%s\", %ld, %ld,\"%s\");" 
 	#define GS_COMMENT_GET_BY_TYPE "SELECT id, pin_id, content, scope_id, created_time,comment_type FROM comments WHERE scope_id = %ld AND comment_type = UPPER(\"%s\") ORDER BY created_time DESC LIMIT %d, " STRINGIFY(RESULTS_PER_PAGE) ";"
+	#define GS_COMMENT_DELETE "DELETE FROM comments WHERE id=%ld"
 
 	#define GS_MARKER_GET_ALL "SELECT id, comment_id, scope_id, created_time, latitude, longitude FROM markers WHERE scope_id = %ld ORDER BY created_time DESC LIMIT %d, " STRINGIFY(RESULTS_PER_PAGE) ";"
 	#define GS_MARKER_GET_BY_ID "SELECT id, comment_id, scope_id, created_time, latitude, longitude FROM markers WHERE id = %ld;"
@@ -50,8 +51,8 @@
 
 	#define GS_REPORT_GET_ALL "SELECT id, content, scope_id, origin, authorize, created_time FROM report WHERE scope_id = %ld ORDER BY created_time DESC LIMIT %d, " STRINGIFY(RESULTS_PER_PAGE) ";" 
 	#define GS_REPORT_GET_BY_AUTH "SELECT id, content, scope_id, origin, authorize, created_time FROM report WHERE authorize = \"%s\";"
-	#define GS_REPORT_INSERT "INSERT INTO report (content, scope_id, origin, authorize) VALUES (\"%s\", %ld, \"%s\", \"%s\");"
-	#define GS_REPORT_DELETE "DELETE FROM report WHERE origin =\"%s\" AND authorize=\"%s\";"
+	#define GS_REPORT_INSERT "INSERT INTO report (content, scope_id, origin, authorize) VALUES (\"%s\", %ld, \"%s\", \"%s\")"
+	#define GS_REPORT_DELETE "DELETE FROM report WHERE origin =\"%s\" AND authorize=\"%s\""
 
 
 	/*Returns a connection to the mySQL database.*/
@@ -77,6 +78,10 @@
 	 * filter the results from the database based on comment_type.
 	*/
 	int db_getCommentsByType(int page, long scopeId, struct gs_comment * gsc, char * cType, MYSQL * conn);
+
+	/*Delete a comment and returns the number of rows deleted from the database.
+	*/
+	int db_deleteComment(long id, MYSQL * conn);
 
 	/*Same warning for getComments, you need to make sure there is enough space.
 	 *
