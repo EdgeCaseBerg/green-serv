@@ -21,12 +21,15 @@
 	#define BAD_TYPE_ERR "Type must be of " CTYPE_1 "," CTYPE_2 ", or " CTYPE_3
 	#define BAD_METHOD_ERR "Request method not supported"
 	#define MISSING_KEY_ERR "Request body does not have all required keys of type and message"
+	#define MISSING_ID_KEY "Required key id not found"
 
 	int comment_controller(const struct http_request * request, char * stringToReturn, int strLength);
 
 	int comments_get(char * buffer, int buffSize,int page,char * cType);
 
 	int comment_post(char * buffer, int buffSize, const struct http_request * request);
+
+	int comment_delete(char * buffer, int buffSize, long id);
 
 	#define COMMENT_PAGE_STR	"{" \
 									"\"status_code\" : %d ,"\

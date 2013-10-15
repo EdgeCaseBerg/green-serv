@@ -1,4 +1,4 @@
-#include "db.h"
+	#include "db.h"
 
 /* _shared_campaign_id is declared in config.h and is a global
  * readonly variable to be used for scoping purposes
@@ -614,6 +614,20 @@ int db_deleteReport(struct gs_report * gsr, MYSQL * conn){
 
 	bzero(query,sizeof query);
 	sprintf(query, GS_REPORT_DELETE, gsr->origin,gsr->authorize);
+
+	if(0 != mysql_query(conn, query) ){
+		fprintf(stderr, "%s\n", mysql_error(conn));
+		return 0;
+	}
+
+	return mysql_affected_rows(conn);  
+}
+
+int db_deleteComment( long id, MYSQL * conn){
+	char query[128]; /* 61 for query, 64*2+1 for hashes, 4 for safety*/
+
+	bzero(query, sizeof query);
+	sprintf(query, GS_COMMENT_DELETE, id);
 
 	if(0 != mysql_query(conn, query) ){
 		fprintf(stderr, "%s\n", mysql_error(conn));

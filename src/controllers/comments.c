@@ -18,6 +18,7 @@ int comment_controller(const struct http_request * request, char * stringToRetur
 	int page;
 	int status;
 	int numParams;
+	int id;
 	StrMap * sm;
 
 	page=1;
@@ -103,6 +104,17 @@ int comment_controller(const struct http_request * request, char * stringToRetur
 			}
 			snprintf(stringToReturn,strLength,"%s",buffer);
 			break;
+		case DELETE:
+			if(sm_exists(sm,"id")!=1){
+				status = 400;
+				sm_delete(sm);
+				goto cc_missing_key;
+			}
+			sm_get(sm, "id", buffer, sizeof buffer);
+			id = atol(buffer);
+			status = comment_delete(buffer, sizeof buffer, id);
+			snprintf(stringToReturn,strLength,"%s",buffer);
+			break;
 		default:
 			/*Invalid Method Err*/
 			status = 501;	
@@ -133,6 +145,10 @@ int comment_controller(const struct http_request * request, char * stringToRetur
 	cc_missing:/* Comment controller missing required keys */
 		snprintf(stringToReturn, strLength, ERROR_STR_FORMAT, status, MISSING_KEY_ERR);
 		return status;					
+	
+	cc_missing_key:
+		snprintf(stringToReturn, strLength, ERROR_STR_FORMAT, status, MISSING_ID_KEY);
+		return status;							
 
 }
 
@@ -337,4 +353,31 @@ int comment_post(char * buffer, int buffSize, const struct http_request * reques
 	snprintf(buffer,buffSize,"{\"status_code\" : 200,\"message\" : \"Succesfully submited new comment\"}");
 
 	return 200;
+}
+
+
+int comment_delete(char * buffer, int buffSize, long id){
+	MYSQL *conn;
+	long affected; 
+
+	mysql_thread_init();
+	conn = _getMySQLConnection();
+	if(!conn){
+		mysql_thread_end();
+		fprintf(stderr, "%s\n", "Could not connect to mySQL on worker thread");
+		return -1;
+	}	
+
+	affected = db_deleteComment(id,conn);
+
+	mysql_close(conn);
+	mysql_thread_end();
+
+	if(affected > 0){
+		snprintf(buffer,buffSize,"{\"status_code\" : 204,\"message\" : \"Successfuly deleted comment\"}");
+		return 204;
+	} else {
+		snprintf(buffer,buffSize,"{\"status_code\" : 404,\"message\" : \"Could not find comment with given id\"}");
+		return 404;
+	}
 }
