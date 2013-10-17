@@ -12,14 +12,24 @@
 	#include <stdio.h>
 	#include <stdlib.h>
 	
-	#define CTYPE_1 "COMMENT"
-	#define CTYPE_2 "ADMIN"
-	#define CTYPE_3 "MARKER"
-
-	#define NOMEM_ERROR "Request could not be processed due to memory allocation failure"
-	#define BAD_PAGE_ERR "Page must be a non zero, positive integral value"
-	#define BAD_TYPE_ERR "Type must be of " CTYPE_1 "," CTYPE_2 ", or " CTYPE_3
-	#define BAD_METHOD_ERR "Request method not supported"
+	#ifndef CTYPE_1
+		#define CTYPE_1 "COMMENT"
+		#define CTYPE_2 "ADMIN"
+		#define CTYPE_3 "MARKER"
+	#endif
+	
+	#ifndef NOMEM_ERROR
+		#define NOMEM_ERROR "Request could not be processed due to memory allocation failure"
+	#endif
+	#ifndef BAD_PAGE_ERR
+		#define BAD_PAGE_ERR "Page must be a non zero, positive integral value"
+	#endif
+	#ifndef BAD_TYPE_ERR
+		#define BAD_TYPE_ERR "Type must be of " CTYPE_1 "," CTYPE_2 ", or " CTYPE_3
+	#endif
+	#ifndef BAD_METHOD_ERR
+		#define BAD_METHOD_ERR "Request method not supported"
+	#endif
 	#define MISSING_KEY_ERR "Request body does not have all required keys of type and message"
 	#define MISSING_ID_KEY "Required key id not found"
 

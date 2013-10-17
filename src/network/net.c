@@ -34,6 +34,7 @@ void* doNetWork(struct threadData* td) {
             case HEATMAP_CONTROLLER :
                 break;
             case MARKER_CONTROLLER :
+                status = marker_controller(&request, response, sizeof response);
                 break;
             case REPORT_CONTROLLER :
                 break;

@@ -27,6 +27,7 @@
 	#include "network/router.h"
 	#include "controllers/comments.h"
 	#include "controllers/heartbeat.h"
+	#include "controllers/markers.h"
 	
 
 	/*Create an HTTP Json response
