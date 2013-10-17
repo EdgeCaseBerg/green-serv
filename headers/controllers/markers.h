@@ -6,6 +6,8 @@
 
 	#include "helpers/strmap.h"
 	#include "network/router.h"
+	#include "db.h"
+	#include "models/marker.h"
 	
 	#ifndef CTYPE_1
 		#define CTYPE_1 "COMMENT"

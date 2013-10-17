@@ -18,33 +18,29 @@ void* doNetWork(struct threadData* td) {
     status = 200;
     parseRequest(&request, td->msg);
 
-    fprintf(stderr, "Before: %d\n", td->clientfd);
-
     /* Pass the request off to a handler */
     controller = determineController(request.url);
     /* Determine method and call. */
-    if(controller != INVALID_CONTROLLER){
-        switch(controller){
-            case HEARTBEAT_CONTROLLER :
-                status = heartbeat_controller(response,sizeof response);
-                break;
-            case COMMENTS_CONTROLLER :
-                status = comment_controller(&request, response, sizeof response);
-                break;
-            case HEATMAP_CONTROLLER :
-                break;
-            case MARKER_CONTROLLER :
-                status = marker_controller(&request, response, sizeof response);
-                break;
-            case REPORT_CONTROLLER :
-                break;
-        }
-    }else{
-        /* We have no clue what the client is talking about with their url */
-        status = 404;
+    switch(controller){
+        case HEARTBEAT_CONTROLLER :
+            status = heartbeat_controller(response,sizeof response);
+            break;
+        case COMMENTS_CONTROLLER :
+            status = comment_controller(&request, response, sizeof response);
+            break;
+        case HEATMAP_CONTROLLER :
+            break;
+        case MARKER_CONTROLLER :
+            status = marker_controller(&request, response, sizeof response);
+            break;
+        case REPORT_CONTROLLER :
+            break;
+        default:
+            /* We have no clue what the client is talking about with their url */
+            status = 404;
+            break;
     }
-
-    fprintf(stderr, "After: %d\n", td->clientfd);
+    
 
     /* Log and clean up. */
     printf("url: %s\n", request.url);

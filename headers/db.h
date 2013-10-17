@@ -27,6 +27,11 @@
 	#define HEATMAP_RESULTS_PER_PAGE 50
 	#define TOSTR(x) #x
 	#define STRINGIFY(x) TOSTR(x)
+	/* How many markers to retrieve at most. We use lat-lon to regulate
+	 * the number of points but this define is the hard limit to how 
+	 * many we're willing to return. 
+	*/
+	 #define MARKER_LIMIT 120
 
 	/* SQL Queries for entities */	
 	#define GS_SCOPE_GET_ALL "SELECT id, description FROM scope LIMIT %d;"
