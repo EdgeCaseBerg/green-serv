@@ -47,6 +47,7 @@
 	#define GS_MARKER_GET_ALL "SELECT id, comment_id, scope_id, created_time, latitude, longitude FROM markers WHERE scope_id = %ld ORDER BY created_time DESC LIMIT %d, " STRINGIFY(RESULTS_PER_PAGE) ";"
 	#define GS_MARKER_GET_BY_ID "SELECT id, comment_id, scope_id, created_time, latitude, longitude FROM markers WHERE id = %ld;"
 	#define GS_MARKER_INSERT "INSERT INTO markers (comment_id, scope_id, latitude, longitude) VALUES (%ld, %ld, %ld.%08lu, %ld.%08lu);"
+	#define GS_MARKER_DELETE "DELETE FROM markers where id=%ld"
 
 	#define GS_HEATMAP_GET_ALL "SELECT SUM(intensity), TIMESTAMP(AVG(created_time)) ,TRUNCATE(latitude,%ld), TRUNCATE(longitude,%ld) FROM heatmap WHERE scope_id = %ld AND latitude BETWEEN %ld.%08lu AND %ld.%08lu AND longitude BETWEEN %ld.%08lu AND %ld.%08lu GROUP BY latitude ORDER BY created_time DESC LIMIT %d, " STRINGIFY(HEATMAP_RESULTS_PER_PAGE) ";"
 	#define GS_HEATMAP_GET_BY_ID "SELECT id, intensity, scope_id, created_time, latitude, longitude FROM heatmap WHERE id = %ld;"
@@ -101,6 +102,11 @@
 
 	/* Insert a single heatmap point into the database */
 	void db_insertHeatmap(struct gs_heatmap * gsh, MYSQL * conn);
+
+	/* The mysql connection must be initialized already and if calling
+	 * a thread then mysql_thread_init should have been called already
+	 */
+	int db_deleteMarker(long id, MYSQL * conn);
 
 	/* Returns a page from the heatmap. Some important notes:  
 	 * - The id's for the heatmap structs returned will be the same as the page! 

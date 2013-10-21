@@ -31,7 +31,9 @@
 		#define BAD_METHOD_ERR "Request method not supported"
 	#endif
 	#define MISSING_KEY_ERR "Request body does not have all required keys of type and message"
-	#define MISSING_ID_KEY "Required key id not found"
+	#ifndef MISSING_ID_KEY
+		#define MISSING_ID_KEY "Required key id not found"
+	#endif
 
 	int comment_controller(const struct http_request * request, char * stringToReturn, int strLength);
 

@@ -18,7 +18,7 @@ int comment_controller(const struct http_request * request, char * stringToRetur
 	int page;
 	int status;
 	int numParams;
-	int id;
+	long id;
 	StrMap * sm;
 
 	page=1;

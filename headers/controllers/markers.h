@@ -14,6 +14,9 @@
 		#define CTYPE_2 "ADMIN"
 		#define CTYPE_3 "MARKER"
 	#endif
+	
+	/* The default offset for lat and lon */
+	#define DEFAULT_OFFSET "0.5"
 
 	#ifndef NOMEM_ERROR
 		#define NOMEM_ERROR "Request could not be processed due to memory allocation failure"
@@ -27,8 +30,16 @@
 	#ifndef BAD_METHOD_ERR
 		#define BAD_METHOD_ERR "Request method not supported"
 	#endif
+	#ifndef MISSING_ID_KEY
+		#define MISSING_ID_KEY "Required key or value for id not present"
+	#endif
+
+	#define BAD_LON_OFFSET "Longitude offset must be numeric"
+	#define BAD_LAT_OFFSET "Latitude offset must be numeric"
 
 	int marker_controller(const struct http_request * request, char * stringToReturn, int strLength);
+
+	int marker_delete(char * buffer, int buffSize, long id);
 
 	#define MARKER_PAGE_STR	"{" \
 								"\"status_code\" : %d ,"\
