@@ -213,19 +213,19 @@ int gs_markerNToJSON(const struct gs_marker gsm, char * jsonOutput, int jsonOutp
     bzero(jsonId, sizeof jsonId );
     bzero(jsonCommId, sizeof jsonCommId );
     bzero(jsonTimestamp, sizeof jsonTimestamp );
-    bzero(jsonLat, 21+16);
-    bzero(jsonLon, 21+16 );   
+    bzero(jsonLat, sizeof jsonLat);
+    bzero(jsonLon, sizeof jsonLon );   
     bzero(addressed, sizeof addressed);
     formatDecimal(gsm.latitude,latitude);
     formatDecimal(gsm.longitude,longitude);
 
 
     
-    jsonIdWritten = snprintf(jsonId, 21+sizeof(long), "{\"id\" : %ld, ", gsm.id);
-    jsonCommIdWritten = snprintf(jsonCommId, 21+sizeof(long), "\"commentId\" : %ld, ", gsm.commentId);
-    jsonTimestampWritten = snprintf(jsonTimestamp, 21+GS_MARKER_CREATED_TIME_LENGTH, " \"timestamp\" : \"%s\", ", gsm.createdTime);
-    jsonLatWritten = snprintf(jsonLat, 21+15, " \"latitude\" : %s, ", latitude);
-    jsonLonWritten = snprintf(jsonLon, 21+15, " \"longitude\" : %s,", longitude);
+    jsonIdWritten = snprintf(jsonId, sizeof jsonId, "{\"id\" : %ld, ", gsm.id);
+    jsonCommIdWritten = snprintf(jsonCommId, sizeof jsonCommId, "\"commentId\" : %ld, ", gsm.commentId);
+    jsonTimestampWritten = snprintf(jsonTimestamp, sizeof jsonTimestamp, " \"timestamp\" : \"%s\", ", gsm.createdTime);
+    jsonLatWritten = snprintf(jsonLat, sizeof jsonLat, " \"latitude\" : %s, ", latitude);
+    jsonLonWritten = snprintf(jsonLon, sizeof jsonLon, " \"longitude\" : %s,", longitude);
     jsonAddressedWritten = snprintf(addressed, sizeof addressed, "\"addressed\" : %s}", gsm.addressed == ADDRESSED_TRUE ? "true" : "false");
 
     if(jsonIdWritten + jsonCommIdWritten + jsonTimestampWritten + jsonLonWritten + jsonLatWritten + jsonAddressedWritten > jsonOutputAllocatedSize-1){
