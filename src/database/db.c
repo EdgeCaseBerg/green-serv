@@ -261,6 +261,7 @@ int db_getMarkers(int page, long scopeId, struct gs_marker * gsm, MYSQL * conn){
 		gs_marker_setLatitude(latitude,&gsm[i]);
 		createDecimalFromString(&longitude,row[5]);
 		gs_marker_setLongitude(longitude,&gsm[i]);
+		gs_marker_setAddressed(atoi(row[6]), &gsm[i]);
 		i++;
 	}
 	mysql_free_result(result);  
@@ -268,7 +269,7 @@ int db_getMarkers(int page, long scopeId, struct gs_marker * gsm, MYSQL * conn){
 }
 
 #ifndef DB_INSERT_MARKER_QUERY_SIZE
-	#define DB_INSERT_MARKER_QUERY_SIZE 84 + 32 /* 84 for Query, 32 for safety */
+	#define DB_INSERT_MARKER_QUERY_SIZE 128
 #endif
 void db_insertMarker(struct gs_marker * gsm, MYSQL * conn){
 	MYSQL_RES * result;
@@ -280,7 +281,7 @@ void db_insertMarker(struct gs_marker * gsm, MYSQL * conn){
 		return; /* Return if scope is invalid that we can tell*/
 
 	bzero(query,sizeof query);
-	sprintf(query, GS_MARKER_INSERT, gsm->commentId, gsm->scopeId, gsm->latitude.left, gsm->latitude.right, gsm->longitude.left, gsm->longitude.right);
+	sprintf(query, GS_MARKER_INSERT, gsm->commentId, gsm->scopeId, gsm->latitude.left, gsm->latitude.right, gsm->longitude.left, gsm->longitude.right, gsm->addressed);
 
 	if(0 != mysql_query(conn, query) ){
 		fprintf(stderr, "%s\n", mysql_error(conn));
@@ -323,6 +324,7 @@ void db_insertMarker(struct gs_marker * gsm, MYSQL * conn){
 	gs_marker_setCreatedTime( row[3], gsm);
 	createDecimalFromString(&gsm->latitude,row[4]);
 	createDecimalFromString(&gsm->longitude,row[5]);
+	gs_marker_setAddressed(atoi(row[6]), gsm);
 	
 
 	mysql_free_result(result);
@@ -333,7 +335,7 @@ void db_insertMarker(struct gs_marker * gsm, MYSQL * conn){
 void db_getMarkerById(long id, struct gs_marker * gsm, MYSQL * conn){
 	MYSQL_RES * result;
 	MYSQL_ROW row; 
-	char query[95+5]; /* 95 for query, 5 for padding and null char*/
+	char query[128]; /* 128 For safety. */
 
 	/*Zero the scope structure */
 	gs_marker_ZeroStruct(gsm);
@@ -360,6 +362,7 @@ void db_getMarkerById(long id, struct gs_marker * gsm, MYSQL * conn){
 	gs_marker_setCreatedTime( row[3], gsm);
 	createDecimalFromString(&gsm->latitude,row[4]);
 	createDecimalFromString(&gsm->longitude,row[5]);
+	gs_marker_setAddressed(atoi(row[6]), gsm);
 	
 
 
@@ -369,7 +372,7 @@ void db_getMarkerById(long id, struct gs_marker * gsm, MYSQL * conn){
 
 
 #ifndef DB_INSERT_HEATMAP_QUERY_SIZE
-	#define DB_INSERT_HEATMAP_QUERY_SIZE 144/* 144 for safety */
+	#define DB_INSERT_HEATMAP_QUERY_SIZE 198/* 198 for safety */
 #endif
 void db_insertHeatmap(struct gs_heatmap * gsh, MYSQL * conn){
 	MYSQL_RES * result;

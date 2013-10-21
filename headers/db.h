@@ -44,9 +44,9 @@
 	#define GS_COMMENT_GET_BY_TYPE "SELECT id, pin_id, content, scope_id, created_time,comment_type FROM comments WHERE scope_id = %ld AND comment_type = UPPER(\"%s\") ORDER BY created_time DESC LIMIT %d, " STRINGIFY(RESULTS_PER_PAGE) ";"
 	#define GS_COMMENT_DELETE "DELETE FROM comments WHERE id=%ld"
 
-	#define GS_MARKER_GET_ALL "SELECT id, comment_id, scope_id, created_time, latitude, longitude FROM markers WHERE scope_id = %ld ORDER BY created_time DESC LIMIT %d, " STRINGIFY(RESULTS_PER_PAGE) ";"
-	#define GS_MARKER_GET_BY_ID "SELECT id, comment_id, scope_id, created_time, latitude, longitude FROM markers WHERE id = %ld;"
-	#define GS_MARKER_INSERT "INSERT INTO markers (comment_id, scope_id, latitude, longitude) VALUES (%ld, %ld, %ld.%08lu, %ld.%08lu);"
+	#define GS_MARKER_GET_ALL "SELECT id, comment_id, scope_id, created_time, latitude, longitude, addressed FROM markers WHERE scope_id = %ld ORDER BY created_time DESC LIMIT %d, " STRINGIFY(RESULTS_PER_PAGE) ";"
+	#define GS_MARKER_GET_BY_ID "SELECT id, comment_id, scope_id, created_time, latitude, longitude, addressed FROM markers WHERE id = %ld;"
+	#define GS_MARKER_INSERT "INSERT INTO markers (comment_id, scope_id, latitude, longitude, addressed) VALUES (%ld, %ld, %ld.%08lu, %ld.%08lu, %d);"
 	#define GS_MARKER_DELETE "DELETE FROM markers where id=%ld"
 
 	#define GS_HEATMAP_GET_ALL "SELECT SUM(intensity), TIMESTAMP(AVG(created_time)) ,TRUNCATE(latitude,%ld), TRUNCATE(longitude,%ld) FROM heatmap WHERE scope_id = %ld AND latitude BETWEEN %ld.%08lu AND %ld.%08lu AND longitude BETWEEN %ld.%08lu AND %ld.%08lu GROUP BY latitude ORDER BY created_time DESC LIMIT %d, " STRINGIFY(HEATMAP_RESULTS_PER_PAGE) ";"
