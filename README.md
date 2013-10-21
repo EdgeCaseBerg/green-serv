@@ -122,6 +122,7 @@ SQL to create database structure:
     CREATE TABLE cacheMarkers (
         id INT(12) NOT NULL auto_increment PRIMARY KEY,
         comment_id INT(12) NULL,
+        addressed INT(1) DEFAULT 0 NOT NULL,
         scope_id INT(12), -- this is an ancestor style query
         created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
         latitude DECIMAL(10, 8) NOT NULL,
@@ -132,6 +133,7 @@ SQL to create database structure:
     CREATE TABLE markers (
         id INT(12) NOT NULL auto_increment PRIMARY KEY,
         comment_id INT(12) NULL,
+        addressed INT(1) DEFAULT 0 NOT NULL,
         scope_id INT(12), -- this is an ancestor style query
         created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
         latitude DECIMAL(10, 8) NOT NULL,

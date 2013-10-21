@@ -89,8 +89,9 @@ int marker_controller(const struct http_request * request, char * stringToReturn
 				createDecimalFromString(latOffset,DEFAULT_OFFSET);
 			}
 		} else{
-			/* Sensible default for latdegrees is... 
-			 *
+			/* Sensible default for latdegrees is... to become NULL 
+			 * so that we can handle using a different query without 
+			 * relying on magic numbers of any kind. 
 			*/
 			free(latDegrees);
 			latDegrees = NULL;
