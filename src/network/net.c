@@ -91,7 +91,13 @@ int createResponse(char * content, char * buff, int status){
 */
 int createSocket(){
     /* perhaps SOCK_NONBLOCK one day... */
-    return socket(AF_INET,SOCK_STREAM,0);   
+    int s;
+    int optval;
+    optval = 1;
+    s = socket(AF_INET,SOCK_STREAM,0);   
+    if(s != -1)
+        setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof optval);
+    return s;
 }
 
 /* Sets up a socket for use as a server socket on the designated port
