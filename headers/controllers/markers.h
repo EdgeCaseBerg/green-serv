@@ -33,13 +33,18 @@
 	#ifndef MISSING_ID_KEY
 		#define MISSING_ID_KEY "Required key or value for id not present"
 	#endif
-
+	#ifndef NO_PUT_DATA
+		#define NO_PUT_DATA "No data sent with request."
+	#endif
 	#define BAD_LON_OFFSET "Longitude offset must be numeric"
 	#define BAD_LAT_OFFSET "Latitude offset must be numeric"
+	#define NO_ADDRESSED_KEY "Required key or value for addressed not present"
 
 	int marker_controller(const struct http_request * request, char * stringToReturn, int strLength);
 
 	int marker_delete(char * buffer, int buffSize, long id);
+
+	int marker_address(char * buffer, int buffSize, long id, const struct http_request * request);
 
 	#define MARKER_PAGE_STR	"{" \
 								"\"status_code\" : %d ,"\

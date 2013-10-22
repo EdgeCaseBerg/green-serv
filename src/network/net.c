@@ -302,7 +302,10 @@ int test_network(char * buffer, int bufferLength, void*(*func)(void*)){
     #ifdef DETACHED_THREADS
     pthread_attr_destroy(&attr);
     #endif
-    close(socketfd);
+    if(shutdown(socketfd,2) <0)
+        fprintf(stderr, "%s\n", "Problem shutting down socket descriptor");
+    if(close(socketfd) < 0)
+        fprintf(stderr, "%s\n", "Problem closing socket descriptor");
     /* Sleep a moment to hope that any running threads will finish */
     fprintf(stdout, "%s\n", "Exiting Server...");
     sleep(2);

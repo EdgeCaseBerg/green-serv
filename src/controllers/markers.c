@@ -125,6 +125,15 @@ int marker_controller(const struct http_request * request, char * stringToReturn
 		case POST:
 			break;
 		case PUT:
+			if(sm_exists(sm,"id")!=1){
+				status = 400;
+				sm_delete(sm);
+				free(buffer); free(latDegrees); free(lonDegrees); free(latOffset); free(lonOffset);
+				goto mc_missing_key;
+			}
+			sm_get(sm, "id", tempBuf, sizeof tempBuf);
+			id = atol(tempBuf);
+			status = marker_address(buffer,buffSize,id,request);
 			break;
 		case DELETE:
 			if(sm_exists(sm,"id")!=1){
@@ -136,6 +145,11 @@ int marker_controller(const struct http_request * request, char * stringToReturn
 			sm_get(sm, "id", tempBuf, sizeof tempBuf);
 			id = atol(tempBuf);
 			status = marker_delete(buffer, buffSize, id);
+			if(status == -1){
+				sm_delete(sm);
+				free(buffer); free(latDegrees); free(lonDegrees); free(latOffset); free(lonOffset);
+				goto mc_nomem;	
+			}
 			break;
 		default:
 			status = 501;	
@@ -200,4 +214,69 @@ int marker_delete(char * buffer, int buffSize, long id){
 		snprintf(buffer,buffSize,"{\"status_code\" : 404,\"message\" : \"Could not find marker with given id\"}");
 		return 404;
 	}
+}
+
+int marker_address(char * buffer, int buffSize, long id, const struct http_request * request){
+	MYSQL *conn;
+	long affected; 
+	int addressed;
+	char * charP; 
+	char * boolVal;
+
+	affected = addressed =  0;
+	fprintf(stderr, "%ld %ld\n", affected, id);
+
+	/* Retrieve the put data first */
+	if(request->contentLength > 0){
+		charP = strstr(request->data, "addressed");
+		if(charP == NULL){
+			snprintf(buffer, buffSize,ERROR_STR_FORMAT,422,NO_ADDRESSED_KEY);
+			return 422;
+		} else {
+			/* Key was found, skip the field name and find the value*/
+			fprintf(stderr, "%s\n", charP);
+			charP+=9;
+			fprintf(stderr, "%s\n", charP);
+			boolVal = strstr(charP, "true");
+			if(boolVal == NULL){
+				boolVal = strstr(charP, "false");
+				if(boolVal == NULL){
+					snprintf(buffer, buffSize,ERROR_STR_FORMAT,422,NO_ADDRESSED_KEY);
+					return 422;	
+				}else{
+					addressed = ADDRESSED_FALSE;
+				}	
+			}else{
+				addressed = ADDRESSED_TRUE;
+			}
+		}
+	}else{
+		/* No put data bad request */
+		snprintf(buffer, buffSize, ERROR_STR_FORMAT,400, NO_PUT_DATA);
+		return 400;
+	}
+	
+
+	mysql_thread_init();
+	conn = _getMySQLConnection();
+	if(!conn){
+		mysql_thread_end();
+		fprintf(stderr, "%s\n", "Could not connect to mySQL on worker thread");
+		return -1;
+	}	
+
+	/* Mark addressed */	
+	affected = db_addressMarker(id, addressed, conn);	
+
+	mysql_close(conn);
+	mysql_thread_end();
+
+	if(affected > 0){
+		snprintf(buffer, buffSize, "\"status_code\" : 200,\"message\":\"successful update\"");
+	}else{
+		snprintf(buffer,buffSize,"{\"status_code\" : 404,\"message\" : \"Could not find marker with given id\"}");
+		return 404;
+	}
+
+	return 200;
 }

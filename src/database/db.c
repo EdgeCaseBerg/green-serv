@@ -640,6 +640,21 @@ int db_deleteComment( long id, MYSQL * conn){
 	return mysql_affected_rows(conn);  
 }
 
+
+int db_addressMarker(long id, int addressed, MYSQL * conn){
+	char query[sizeof GS_MARKER_ADDRESS]; 
+
+	bzero(query, sizeof query);
+	sprintf(query, GS_MARKER_ADDRESS, addressed,id);
+
+	if(0 != mysql_query(conn, query) ){
+		fprintf(stderr, "%s\n", mysql_error(conn));
+		return 0;
+	}
+
+	return mysql_affected_rows(conn);  
+}
+
 int db_deleteMarker(long id, MYSQL * conn){
 	char query[128]; 
 

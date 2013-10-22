@@ -48,6 +48,7 @@
 	#define GS_MARKER_GET_BY_ID "SELECT id, comment_id, scope_id, created_time, latitude, longitude, addressed FROM markers WHERE id = %ld;"
 	#define GS_MARKER_INSERT "INSERT INTO markers (comment_id, scope_id, latitude, longitude, addressed) VALUES (%ld, %ld, %ld.%08lu, %ld.%08lu, %d);"
 	#define GS_MARKER_DELETE "DELETE FROM markers where id=%ld"
+	#define GS_MARKER_ADDRESS "UPDATE markers SET addressed=%d WHERE id=%ld"
 
 	#define GS_HEATMAP_GET_ALL "SELECT SUM(intensity), TIMESTAMP(AVG(created_time)) ,TRUNCATE(latitude,%ld), TRUNCATE(longitude,%ld) FROM heatmap WHERE scope_id = %ld AND latitude BETWEEN %ld.%08lu AND %ld.%08lu AND longitude BETWEEN %ld.%08lu AND %ld.%08lu GROUP BY latitude ORDER BY created_time DESC LIMIT %d, " STRINGIFY(HEATMAP_RESULTS_PER_PAGE) ";"
 	#define GS_HEATMAP_GET_BY_ID "SELECT id, intensity, scope_id, created_time, latitude, longitude FROM heatmap WHERE id = %ld;"
@@ -99,6 +100,11 @@
 
 	/* Retrieve a single marker by it's id */
 	void db_getMarkerById(long id, struct gs_marker * gsm, MYSQL * conn);
+
+	/* Update a marker to be addressed or not, should take 1 or 0 for addressed
+	 * but it would be better to use the constants defined in models/marker
+	*/
+	int db_addressMarker(long id, int addressed, MYSQL * conn);
 
 	/* Insert a single heatmap point into the database */
 	void db_insertHeatmap(struct gs_heatmap * gsh, MYSQL * conn);
