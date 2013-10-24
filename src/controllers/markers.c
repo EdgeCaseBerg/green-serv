@@ -123,6 +123,14 @@ int marker_controller(const struct http_request * request, char * stringToReturn
 		case GET:
 			break;
 		case POST:
+			fprintf(stderr, "%s\n", "processing as post");
+			status = marker_post(buffer,buffSize,request);
+			if(status == -1){
+				/* Something went terribly wrong */
+				sm_delete(sm);
+				free(buffer); free(latDegrees); free(lonDegrees); free(latOffset); free(lonOffset);
+				goto mc_nomem;
+			}
 			break;
 		case PUT:
 			if(sm_exists(sm,"id")!=1){
@@ -279,4 +287,168 @@ int marker_address(char * buffer, int buffSize, long id, const struct http_reque
 	}
 
 	return 200;
+}
+
+int marker_post(char * buffer, int buffSize, const struct http_request * request){
+	MYSQL *conn;
+	struct gs_marker marker;
+	struct gs_comment assocComment;
+	StrMap * sm;
+	int i;
+	int j;
+	int strFlag;
+	char keyBuffer[GS_COMMENT_MAX_LENGTH+1];
+	char valBuffer[GS_COMMENT_MAX_LENGTH+1];
+	Decimal longitude;
+	Decimal latitude;
+
+
+	bzero(keyBuffer,sizeof keyBuffer);
+	gs_marker_ZeroStruct(&marker);
+	gs_comment_ZeroStruct(&assocComment);
+	strFlag = 0;
+
+	sm = sm_new(HASH_TABLE_CAPACITY);
+	if(sm == NULL){
+		fprintf(stderr, "sm err\n");
+		return -1;
+	}
+
+	/*Parse the JSON for the information we desire */
+	for(i=0; i < request->contentLength && request->data[i] != '\0'; ++i){
+		/*We're at the start of a string*/
+		if(request->data[i] == '"'){
+			/*Go until we hit the closing qoute*/
+			i++;
+			for(j=0; i < request->contentLength && request->data[i] != '\0' && request->data[i] != '"' && (unsigned int)j < sizeof keyBuffer; ++j,++i){
+				keyBuffer[j] = (int)request->data[i] > 64 && request->data[i] < 91 ? request->data[i] + 32 : request->data[i];
+			}
+			keyBuffer[j] = '\0';
+			/*find the beginning of the value
+			 *which is either a " or a number. So skip spaces and commas
+			*/
+			for(i++; i < request->contentLength && request->data[i] != '\0' && (request->data[i] == ',' || request->data[i] == ' ' || request->data[i] == ':' || request->data[i] == '\n'); ++i)
+				;
+			/*Skip any opening qoute */
+			if(request->data[i] != '\0' && request->data[i] == '"'){
+				i++;
+				strFlag = 1;
+			}
+			for(j=0; i < request->contentLength && request->data[i] != '\0'; ++j,++i){
+				if(strFlag == 0){
+					if(request->data[i] == ' ' || request->data[i] == '\n')
+						break; /*break out if num data*/
+				}else{
+					if(request->data[i] == '"' && request->data[i-1] != '\\')
+						break;
+				}
+				valBuffer[j] = request->data[i];
+			}
+			valBuffer[j] = '\0';
+			/* Skip any closing paren. */
+			if(request->data[i] == '"')
+				i++;
+			if(strlen(keyBuffer) > 0 && strlen(valBuffer) > 0)
+				if(sm_put(sm, keyBuffer, valBuffer) == 0)
+                	fprintf(stderr, "Failed to copy parameters into hash table while parsing url\n");
+		}
+		strFlag = 0;
+	}
+
+	/* Verify that the data is valid */
+	if(	sm_exists(sm, "type") 		!=1 || 
+		sm_exists(sm, "message") 	!=1 ||
+		sm_exists(sm, "latdegrees") !=1 ||
+		sm_exists(sm, "londegrees") !=1 ||
+		sm_exists(sm, "addressed" ) !=1	){
+
+		sm_delete(sm);
+		snprintf(buffer,buffSize,ERROR_STR_FORMAT,400,KEYS_MISSING);
+		return 400;		
+	}else{
+		/* Extract and create the two structs */
+		if(sm_get(sm,"type", valBuffer, sizeof valBuffer) == 1){
+			/* Verify that it is a correct type */
+			if(strncasecmp(valBuffer, CTYPE_1,COMMENTS_CTYPE_SIZE) != 0)
+				if(strncasecmp(valBuffer, CTYPE_2,COMMENTS_CTYPE_SIZE) != 0)
+					if(strncasecmp(valBuffer, CTYPE_3,COMMENTS_CTYPE_SIZE) != 0){				
+						sm_delete(sm);
+						snprintf(buffer,buffSize,ERROR_STR_FORMAT,400,BAD_TYPE_ERR);
+						return 400;
+					}
+		}
+		/* _shared_campaign_id is a global inherited from green-serv.c */
+		gs_comment_setScopeId(_shared_campaign_id, &assocComment);
+		gs_marker_setScopeId(_shared_campaign_id, &marker);
+		gs_comment_setCommentType(valBuffer,&assocComment);
+
+		sm_get(sm,"message",valBuffer, sizeof valBuffer);
+		gs_comment_setContent(valBuffer,&assocComment);
+
+		sm_get(sm,"londegrees",valBuffer,sizeof valBuffer);
+		createDecimalFromString(&longitude, valBuffer);
+		gs_marker_setLongitude(longitude, &marker);
+
+		sm_get(sm,"latdegrees",valBuffer,sizeof valBuffer);
+		createDecimalFromString(&latitude, valBuffer);
+		gs_marker_setLatitude(latitude, &marker);
+
+		sm_get(sm,"addressed", valBuffer, sizeof valBuffer);
+		fprintf(stderr, "valbuff:%s\n", valBuffer);
+		if(strncasecmp(valBuffer,"true", sizeof valBuffer) == 0)
+			gs_marker_setAddressed(ADDRESSED_TRUE,&marker);
+		else if(strncasecmp(valBuffer,"false",sizeof valBuffer) == 0)
+			gs_marker_setAddressed(ADDRESSED_FALSE,&marker);
+		else{
+			sm_delete(sm);
+			snprintf(buffer,buffSize,ERROR_STR_FORMAT,400,NO_ADDRESSED_KEY);
+			return 400;
+		}
+			
+
+	
+	}
+
+	mysql_thread_init();
+	conn = _getMySQLConnection();
+	if(!conn){
+		mysql_thread_end();
+		fprintf(stderr, "%s\n", "Could not connect to mySQL on worker thread");
+		return -1;
+	}	
+
+	/* Insert comment first  because our mySQL trigger
+	 * will then handle updating the comment's pin id to match the new pin
+	 * that we'll submit after. If we didn't have this trigger we'd have
+	 * to do things  a bit differently.
+	*/
+	db_insertComment(&assocComment,conn);
+	if(assocComment.id == GS_COMMENT_INVALID_ID){
+		snprintf(buffer,buffSize,ERROR_STR_FORMAT,422,"Could not create pin because of invalid message or type");
+		goto cleanup_on_err;
+	}
+	gs_marker_setCommentId(assocComment.id, &marker);
+	db_insertMarker(&marker,conn);
+	if(marker.id == GS_MARKER_INVALID_ID){
+		snprintf(buffer,buffSize,ERROR_STR_FORMAT,422,"The pin was unprocessable and could not be created");
+		/* Clean up after ourselves */
+		db_deleteComment(assocComment.id,conn);
+		goto cleanup_on_err;
+	}
+
+	mysql_close(conn);
+	mysql_thread_end();
+	sm_delete(sm);
+
+	snprintf(buffer,buffSize,"{ \"status_code\" : 200, \"message\" : \"Successful submit\" }");
+
+	return 200;
+
+	cleanup_on_err:
+		mysql_close(conn);
+		mysql_thread_end();
+		sm_delete(sm);
+		return -1;
+
+
 }

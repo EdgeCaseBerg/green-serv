@@ -1,7 +1,9 @@
 #ifndef __COMMENTS_CONTROLLER_H__
 	#define __COMMENTS_CONTROLLER_H__
 	
+	#ifndef COMMENTS_CTYPE_SIZE
 	#define COMMENTS_CTYPE_SIZE 10
+	#endif
 	
 	#include "helpers/strmap.h"
 	#include "network/router.h"

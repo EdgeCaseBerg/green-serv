@@ -253,8 +253,6 @@ int comment_post(char * buffer, int buffSize, const struct http_request * reques
 	gs_comment_ZeroStruct(&insComment);
 	strFlag = 0;
 
-	fprintf(stderr, "Called Comment Post with: B:%s L:%d P:%p\n", buffer, buffSize, request->data );
-
 	sm = sm_new(HASH_TABLE_CAPACITY);
 	if(sm == NULL){
 		fprintf(stderr, "sm err\n");
@@ -262,28 +260,28 @@ int comment_post(char * buffer, int buffSize, const struct http_request * reques
 	}
 
 	/*Parse the JSON for the information we desire */
-	for(i=0; i < buffSize && request->data[i] != '\0'; ++i){
+	for(i=0; i < request->contentLength && request->data[i] != '\0'; ++i){
 		/*We're at the start of a string*/
 		if(request->data[i] == '"'){
 			/*Go until we hit the closing qoute*/
 			i++;
-			for(j=0; i < buffSize && request->data[i] != '\0' && request->data[i] != '"' && (unsigned int)j < sizeof keyBuffer; ++j,++i){
+			for(j=0; i < request->contentLength && request->data[i] != '\0' && request->data[i] != '"' && (unsigned int)j < sizeof keyBuffer; ++j,++i){
 				keyBuffer[j] = (int)request->data[i] > 64 && request->data[i] < 91 ? request->data[i] + 32 : request->data[i];
 			}
 			keyBuffer[j] = '\0';
 			/*find the beginning of the value
 			 *which is either a " or a number. So skip spaces and commas
 			*/
-			for(i++; i < buffSize && request->data[i] != '\0' && (request->data[i] == ',' || request->data[i] == ' ' || request->data[i] == ':'); ++i)
+			for(i++; i < request->contentLength && request->data[i] != '\0' && (request->data[i] == ',' || request->data[i] == ' ' || request->data[i] == ':'); ++i)
 				;
 			/*Skip any opening qoute */
 			if(request->data[i] != '\0' && request->data[i] == '"'){
 				i++;
 				strFlag = 1;
 			}
-			for(j=0; i < buffSize && request->data[i] != '\0'; ++j,++i){
+			for(j=0; i < request->contentLength && request->data[i] != '\0'; ++j,++i){
 				if(strFlag == 0){
-					if(request->data[i] == ' ')
+					if(request->data[i] == ' ' || request->data[i] == '\n')
 						break; /*break out if num data*/
 				}else{
 					if(request->data[i] == '"' && request->data[i-1] != '\\')

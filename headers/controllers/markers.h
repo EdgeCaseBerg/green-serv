@@ -8,7 +8,12 @@
 	#include "network/router.h"
 	#include "db.h"
 	#include "models/marker.h"
+	#include "models/comment.h"
 	
+	#ifndef COMMENTS_CTYPE_SIZE
+	#define COMMENTS_CTYPE_SIZE 10
+	#endif
+
 	#ifndef CTYPE_1
 		#define CTYPE_1 "COMMENT"
 		#define CTYPE_2 "ADMIN"
@@ -39,12 +44,15 @@
 	#define BAD_LON_OFFSET "Longitude offset must be numeric"
 	#define BAD_LAT_OFFSET "Latitude offset must be numeric"
 	#define NO_ADDRESSED_KEY "Required key or value for addressed not present"
+	#define KEYS_MISSING "Could not process request due to required keys not being found in data"
 
 	int marker_controller(const struct http_request * request, char * stringToReturn, int strLength);
 
 	int marker_delete(char * buffer, int buffSize, long id);
 
 	int marker_address(char * buffer, int buffSize, long id, const struct http_request * request);
+
+	int marker_post(char * buffer, int buffSize, const struct http_request * request);
 
 	#define MARKER_PAGE_STR	"{" \
 								"\"status_code\" : %d ,"\
