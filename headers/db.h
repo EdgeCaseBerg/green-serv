@@ -154,5 +154,6 @@
 
 	/* Allocate enough room for marker limit sizes for gsm and gsc */
 	int db_getMarkerComments(int page, long scopeId, struct gs_marker * gsm, struct gs_comment * gsc, MYSQL * conn);
+	int db_getMarkerCommentsLatitude(int page, long scopeId, struct gs_marker * gsm, struct gs_comment * gsc, MYSQL * conn,Decimal * center, Decimal * latOffset);
 
 #endif

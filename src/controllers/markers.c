@@ -569,7 +569,11 @@ int marker_get(char * buffer,int buffSize,Decimal * latDegrees, Decimal * lonDeg
 		 * Negative 1 on the page because we need to start the offset at 0
 		*/
 		numMarkers = db_getMarkerComments(page-1, _shared_campaign_id , markers, comments, conn);
-	}else{
+	} else if ( lonDegrees == NULL && latDegrees != NULL) {
+		/* Only caring about latdegrees */
+		numMarkers = db_getMarkerCommentsLatitude(page-1, _shared_campaign_id, markers, comments, conn, latDegrees, latOffset);
+		fprintf(stderr, "number of markers returned %d\n", numMarkers);
+	} else {
 		fprintf(stderr, "%s\n", "Not implemented yet");
 	}
 
