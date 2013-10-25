@@ -1,10 +1,15 @@
 #include "controllers/markers.h"
 
+static inline int min(const int a, const int b){
+	return a < b ? a : b;
+}
+
 int marker_controller(const struct http_request * request, char * stringToReturn, int strLength){
 	fprintf(stderr, "Working with %p %s %d", (void*)request, stringToReturn, strLength);
 	int status;
 	int buffSize;
 	int numParams;
+	int page;
 	long id; 
 	char * buffer; 
 	char tempBuf[40];
@@ -19,6 +24,7 @@ int marker_controller(const struct http_request * request, char * stringToReturn
 	convertSuccess = NULL;
 	buffSize = (MARKER_LIMIT * sizeof(struct gs_marker))*4+1+(2*MAX_URL_LENGTH);
 	bzero(tempBuf, sizeof tempBuf);
+	page = 1;
 
 	/*Buffer up a good size that will probably not get filled (hopefully)*/
 	buffer = malloc(buffSize);
@@ -116,11 +122,61 @@ int marker_controller(const struct http_request * request, char * stringToReturn
 			lonDegrees = NULL;
 		}
 
+		if(sm_exists(sm, "page") == 1)
+			if(sm_get(sm, "page", tempBuf, sizeof tempBuf) == 1){
+				page = atoi(tempBuf);
+				if(page <= 0){
+					status = 400;		
+					sm_delete(sm);
+					free(buffer); free(latDegrees); free(lonDegrees); free(latOffset); free(lonOffset);	
+					goto mc_badpage;
+				}
 
+			}
+
+	}else{
+		/* We've got no parameters so free up the memory we don't need */\
+		free(latDegrees);
+		free(lonDegrees);
+		free(latOffset);
+		free(lonOffset);
+		latDegrees = NULL;
+		lonDegrees = NULL;
+		latOffset  = NULL;
+		lonOffset  = NULL;
 	}
 	/* Check Method and fly off the handle */
 	switch(request->method){
 		case GET:
+			/* GET is the painful one for this controller:
+			 * It takes _optional_ parameters, which means modifying our querying
+			 * based on the parameters we have. 
+			*/
+			if((sm_exists(sm,"latoffset")==1) ^ (sm_exists(sm,"lonoffset")==1)){
+				/*Err! if one is used, both must be used! */
+				sm_delete(sm);
+				free(buffer); free(latDegrees); free(lonDegrees); free(latOffset); free(lonOffset);
+				status = 422;
+				goto mc_bothOffsets;
+			}
+			if(latDegrees != NULL)
+				/*Let the -90.1 slide by as ok...*/
+				if(latDegrees->left < -90L || latDegrees->left > 90L){
+					sm_delete(sm);
+					free(buffer); free(latDegrees); free(lonDegrees); free(latOffset); free(lonOffset);
+					status = 422;
+					goto mc_bothOffsets;		
+				}
+
+			if(lonDegrees != NULL)
+				if(lonDegrees->left < -180L || lonDegrees->left > 180L){
+					sm_delete(sm);
+					free(buffer); free(latDegrees); free(lonDegrees); free(latOffset); free(lonOffset);
+					status = 422;
+					goto mc_bothOffsets;			
+				}
+			status = marker_get(buffer,buffSize,latDegrees,lonDegrees,latOffset,lonOffset,page);
+
 			break;
 		case POST:
 			fprintf(stderr, "%s\n", "processing as post");
@@ -168,10 +224,14 @@ int marker_controller(const struct http_request * request, char * stringToReturn
 
 	snprintf(stringToReturn, strLength, "%s", buffer);
 	free(buffer); 
-	free(latDegrees); 
-	free(lonDegrees); 
-	free(latOffset); 
-	free(lonOffset);
+	if(latDegrees != NULL)
+		free(latDegrees); 
+	if(lonDegrees != NULL)
+		free(lonDegrees); 
+	if(latOffset != NULL)
+		free(latOffset); 
+	if(lonOffset != NULL)
+		free(lonOffset);
 	sm_delete(sm);	
 	return status;
 
@@ -194,6 +254,14 @@ int marker_controller(const struct http_request * request, char * stringToReturn
 	mc_badLatOffset:
 		snprintf(stringToReturn, strLength, ERROR_STR_FORMAT, status, BAD_LAT_OFFSET);
 		return status;		
+
+	mc_bothOffsets:
+		snprintf(stringToReturn, strLength, ERROR_STR_FORMAT, status, BOTH_OFFSET_ERR);
+		return status;
+
+	mc_badpage:
+		snprintf(stringToReturn, strLength, ERROR_STR_FORMAT, status, BAD_PAGE_ERR);
+		return status;	
 
 
 }
@@ -449,6 +517,98 @@ int marker_post(char * buffer, int buffSize, const struct http_request * request
 		mysql_thread_end();
 		sm_delete(sm);
 		return -1;
+}
 
 
+int marker_get(char * buffer,int buffSize,Decimal * latDegrees, Decimal * lonDegrees, Decimal * latOffset,Decimal * lonOffset,int page){
+	MYSQL * conn;
+	struct gs_comment * comments;
+	struct gs_marker * markers; 
+	int numMarkers;
+	int nextPage;
+	char nextStr[MAX_URL_LENGTH];
+	char prevStr[MAX_URL_LENGTH];
+	char hybridBuffer[buffSize];
+	char json[512]; /*Some large enough number to hold all the info*/
+	int i;
+
+
+	comments = malloc(MARKER_LIMIT * sizeof(struct gs_comment));
+	if(comments == NULL){
+		return -1; /* Return flag to send self to cc_nomem */
+	}
+	memset(comments,0,MARKER_LIMIT * sizeof(struct gs_comment));
+
+	markers = malloc(MARKER_LIMIT * sizeof(struct gs_marker));
+	if(markers == NULL){
+		free(comments);
+		return -1;
+	}
+	memset(markers,0,MARKER_LIMIT * sizeof(struct gs_marker));
+
+
+	fprintf(stderr, "%s buff: %s buffsize %d lad%plod%p lao%ploo%p %d\n", "Called market get",buffer,buffSize,(void*)latDegrees,(void*)lonDegrees,(void*)latOffset,(void*)lonOffset,page);
+	
+	mysql_thread_init();
+	conn = _getMySQLConnection();
+	if(!conn){
+		free(comments);
+		free(markers);
+		mysql_thread_end();
+		fprintf(stderr, "%s\n", "Could not connect to mySQL on worker thread");
+		return -1;
+	}
+
+	bzero(nextStr, sizeof nextStr);
+	bzero(prevStr, sizeof prevStr);
+	bzero(hybridBuffer,sizeof hybridBuffer);
+	numMarkers = 0;
+
+	if(latDegrees == NULL && lonDegrees == NULL){
+		/* Easy, do a query for all the points regardless of location 
+		 * Negative 1 on the page because we need to start the offset at 0
+		*/
+		numMarkers = db_getMarkerComments(page-1, _shared_campaign_id , markers, comments, conn);
+	}else{
+		fprintf(stderr, "%s\n", "Not implemented yet");
+	}
+
+	if( numMarkers > MARKER_RETURNED ){
+		nextPage = page+1;
+		/*Need to tack on url parameters if present*/
+		snprintf(nextStr,MAX_URL_LENGTH, "%spins?page=%d", BASE_API_URL, nextPage);
+	} else {
+		snprintf(nextStr,MAX_URL_LENGTH, "null");
+	}
+
+	if(page > 1)
+		snprintf(prevStr,MAX_URL_LENGTH,"%spins?page=%d",BASE_API_URL,page-1);
+	else
+		snprintf(prevStr,MAX_URL_LENGTH,"null");
+
+	/* Finally, create a hybrid json object and store it into the correct
+	 * format and return the buffer to the calling function.
+	*/
+	for(i=0; i < min(numMarkers,MARKER_RETURNED); ++i){
+		bzero(json,sizeof json);
+		/* Custom hyrbid json call
+		*/
+		gs_markerCommentNToJSON(&markers[i], &comments[i] ,json, sizeof json);
+		if(i==0)
+			snprintf(hybridBuffer,buffSize,"%s",json);
+		else{
+			strncat(hybridBuffer,",",buffSize);
+			strncat(hybridBuffer,json,buffSize);
+		}			
+	}
+
+	snprintf(buffer,buffSize, MARKER_PAGE_STR, 200, hybridBuffer, min(numMarkers,MARKER_RETURNED), page, nextStr,prevStr);
+	
+
+	free(comments);
+	free(markers);
+	mysql_close(conn);
+	mysql_thread_end();
+
+	return -1;
 }

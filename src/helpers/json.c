@@ -385,3 +385,57 @@ int gs_reportNToJSON(const struct gs_report gsr, char * jsonOutput, int jsonOutp
     return snprintf(jsonOutput,jsonOutputAllocatedSize-1, "%s", json);
 
  }
+
+/*
+{ "id" : 3324523452345, 
+  "latDegrees" : 24.53, 
+  "lonDegrees" : 43.2, 
+   "type" : "COMMENT", 
+   "message" : "I need help with the trash on Colchester ave", 
+   "addressed" : false }
+*/
+int gs_markerCommentNToJSON(const struct gs_marker * gsm, const struct gs_comment * gsc ,char * jsonOutput, int jsonOutputAllocatedSize){
+    char jsonMarkerId[16]; /*{"id":%ld,*/
+    char jsonLat[32]; /*"latDegrees":%s,*/
+    char jsonLon[32]; /*"lonDegrees":%s,*/
+    char jsonType[32]; /*"type":"%s",*/
+    char jsonMessage[32 + (GS_COMMENT_MAX_LENGTH*4)+1]; /*"message":"%s",*/
+    char jsonAddressed[32]; /*"addressed":%s}*/
+    char latlon[16];
+    char escaped[(GS_COMMENT_MAX_LENGTH*4)+1];
+    
+    int jsonMarkerIdWritten;
+    int jsonLatWritten;
+    int jsonLonWritten;
+    int jsonTypeWritten;
+    int jsonMessageWritten;
+    int jsonAddressedWritten;
+
+    bzero(jsonMarkerId,sizeof jsonMarkerId);
+    bzero(jsonLat,sizeof jsonLat);
+    bzero(jsonLon,sizeof jsonLon);
+    bzero(jsonType, sizeof jsonType);
+    bzero(jsonMessage, sizeof jsonMessage);
+    bzero(jsonAddressed, sizeof jsonAddressed);
+    bzero(latlon,sizeof latlon);
+    bzero(escaped, sizeof escaped);
+
+    jsonMarkerIdWritten = snprintf(jsonMarkerId,sizeof jsonMarkerId, "{\"id\":%ld,", gsm->id);
+    formatDecimal(gsm->latitude,latlon);
+    jsonLatWritten = snprintf(jsonLat, sizeof jsonLat,"\"latDegrees\":%s,", latlon);
+    formatDecimal(gsm->longitude,latlon);
+    jsonLonWritten = snprintf(jsonLon, sizeof jsonLat,"\"lonDegrees\":%s,", latlon);
+    jsonTypeWritten = snprintf(jsonType, sizeof jsonType,"\"type\":\"%s\",",gsc->cType);
+    _escapeJSON(gsc->content, strlen(gsc->content), escaped);
+    jsonMessageWritten = snprintf(jsonMessage, sizeof jsonMessage,"\"message\":\"%s\",",escaped);
+    jsonAddressedWritten  = snprintf(jsonAddressed, sizeof jsonAddressed,"\"addressed\":%s}",gsm->addressed == ADDRESSED_TRUE ? "true" : "false");
+
+    if(jsonMarkerIdWritten + jsonLatWritten + jsonLonWritten + jsonTypeWritten + jsonMessageWritten + jsonAddressedWritten > jsonOutputAllocatedSize){
+        fprintf(stderr, "%s\n", "gs_markerCommentNToJSON may have returned partial JSON output due to not allocating enough memory");
+        #ifdef RETURN_ON_JSON_RISK
+            RETURN_ON_JSON_RISK;
+        #endif
+    }
+    return snprintf(jsonOutput,jsonOutputAllocatedSize-1, "%s%s%s%s%s%s", jsonMarkerId,jsonLat,jsonLon,jsonType,jsonMessage,jsonAddressed);
+
+}

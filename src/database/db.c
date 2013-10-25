@@ -240,7 +240,7 @@ int db_getMarkers(int page, long scopeId, struct gs_marker * gsm, MYSQL * conn){
 	char query[sizeof GS_MARKER_GET_ALL];
 
 	bzero(query,sizeof query);
-	sprintf(query, GS_MARKER_GET_ALL, scopeId, page*RESULTS_PER_PAGE);
+	sprintf(query, GS_MARKER_GET_ALL, scopeId, page*MARKER_LIMIT);
 
 	if(0 != mysql_query(conn, query) ){
 		fprintf(stderr, "%s\n", mysql_error(conn));
@@ -697,6 +697,54 @@ int db_getReports(int page, long scopeId, struct gs_report * gsr, MYSQL * conn){
 		strncpy(gsr[i].origin,row[3], SHA_LENGTH);
 		strncpy(gsr[i].authorize, row[4], SHA_LENGTH);
 		gs_report_setCreatedTime( row[5], &gsr[i]);
+		i++;
+	}
+	mysql_free_result(result);  
+	return i;
+}
+
+
+/* This is the 'get all' queries functions for the hybrid 
+ * gsm and gsc have to be of the correct size for this function
+ * to work, they need to have MARKER_LIMIT sizes
+*/
+int db_getMarkerComments(int page, long scopeId, struct gs_marker * gsm, struct gs_comment * gsc, MYSQL * conn){
+	MYSQL_RES * result;
+	MYSQL_ROW row; 
+	Decimal latitude;
+	Decimal longitude;
+	int i;
+	char query[sizeof GS_MARKER_COMMENT_GET_ALL];
+
+	bzero(query,sizeof query);
+	sprintf(query, GS_MARKER_COMMENT_GET_ALL, scopeId, page*MARKER_LIMIT);
+
+	if(0 != mysql_query(conn, query) ){
+		fprintf(stderr, "%s\n", mysql_error(conn));
+		return 0;
+	}
+
+	i=0;
+	result = mysql_use_result(conn);
+	while( (row=mysql_fetch_row(result)) != NULL ){
+		/*  Fields:
+			pin_id, comment_id, content, comment_type, latitude, longitude, addressed
+		*/
+		gs_marker_ZeroStruct(&gsm[i]);
+		gs_comment_ZeroStruct(&gsc[i]);
+
+		gs_marker_setId( atol(row[0]), &gsm[i]);
+		gs_marker_setCommentId( atol(row[1]), &gsm[i]);
+		gs_comment_setId(atol(row[1]), &gsc[i]);
+		gs_comment_setContent(row[2], &gsc[i]);
+		gs_marker_setScopeId( scopeId, &gsm[i]);
+		gs_comment_setScopeId(scopeId, &gsc[i]);
+		gs_comment_setCommentType(row[3], &gsc[i]);
+		createDecimalFromString(&latitude,row[4]);
+		gs_marker_setLatitude(latitude,&gsm[i]);
+		createDecimalFromString(&longitude,row[5]);
+		gs_marker_setLongitude(longitude,&gsm[i]);
+		gs_marker_setAddressed(atoi(row[6]), &gsm[i]);
 		i++;
 	}
 	mysql_free_result(result);  

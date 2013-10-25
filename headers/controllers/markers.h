@@ -5,6 +5,7 @@
 	#include <stdlib.h>
 
 	#include "helpers/strmap.h"
+	#include "helpers/json.h"
 	#include "network/router.h"
 	#include "db.h"
 	#include "models/marker.h"
@@ -44,7 +45,8 @@
 	#define BAD_LON_OFFSET "Longitude offset must be numeric"
 	#define BAD_LAT_OFFSET "Latitude offset must be numeric"
 	#define NO_ADDRESSED_KEY "Required key or value for addressed not present"
-	#define KEYS_MISSING "Could not process request due to required keys not being found in data"
+	#define KEYS_MISSING "Could not process request due to required keys not being found in data."
+	#define BOTH_OFFSET_ERR "Both lonOffset and latOffset must be present if either is used"
 
 	int marker_controller(const struct http_request * request, char * stringToReturn, int strLength);
 
@@ -54,6 +56,12 @@
 
 	int marker_post(char * buffer, int buffSize, const struct http_request * request);
 
+	int marker_get(char * buffer,int buffSize,Decimal * latDegrees, Decimal * lonDegrees, Decimal * latOffset,Decimal * lonOffset,int page);
+
+	/* Although the version 3 API spec doesn't include the paging for pins
+	 * the C API will return paging information since we enforce the limit
+	 * on the pins through the MARKER_LIMIT constant defined in db.h
+	*/
 	#define MARKER_PAGE_STR	"{" \
 								"\"status_code\" : %d ,"\
 								"\"pins\" : ["\
