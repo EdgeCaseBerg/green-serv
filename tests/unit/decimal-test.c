@@ -111,6 +111,17 @@ void subtractDecimalsWithCarry(){
 	traceAndPrintDecimal(result);
 }
 
+void subtractPositiveFromNegative(){
+	Decimal oper1;
+	Decimal oper2;
+	Decimal result;
+	createDecimalFromString(&oper1, "-40.0");
+	createDecimalFromString(&oper2, "1.0");
+	subtract_decimals(&oper1, &oper2, &result);
+	printf("Subtracting %ld.%08lu from %ld.%08lu\n",oper2.left,oper2.right,oper1.left,oper1.right);
+	traceAndPrintDecimal(result);	
+}
+
 void negativeZeroValue(){
 	Decimal testDec;
 	createDecimalFromString(&testDec, "-0.1");
@@ -133,5 +144,6 @@ int main(){
 	subtractDecimals();
 	subtractDecimalsWithCarry();
 	negativeZeroValue();
+	subtractPositiveFromNegative();
 	return 0;
 }

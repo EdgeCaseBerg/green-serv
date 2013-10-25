@@ -18,32 +18,29 @@ void* doNetWork(struct threadData* td) {
     status = 200;
     parseRequest(&request, td->msg);
 
-    fprintf(stderr, "Before: %d\n", td->clientfd);
-
     /* Pass the request off to a handler */
     controller = determineController(request.url);
     /* Determine method and call. */
-    if(controller != INVALID_CONTROLLER){
-        switch(controller){
-            case HEARTBEAT_CONTROLLER :
-                status = heartbeat_controller(response,sizeof response);
-                break;
-            case COMMENTS_CONTROLLER :
-                status = comment_controller(&request, response, sizeof response);
-                break;
-            case HEATMAP_CONTROLLER :
-                break;
-            case MARKER_CONTROLLER :
-                break;
-            case REPORT_CONTROLLER :
-                break;
-        }
-    }else{
-        /* We have no clue what the client is talking about with their url */
-        status = 404;
+    switch(controller){
+        case HEARTBEAT_CONTROLLER :
+            status = heartbeat_controller(response,sizeof response);
+            break;
+        case COMMENTS_CONTROLLER :
+            status = comment_controller(&request, response, sizeof response);
+            break;
+        case HEATMAP_CONTROLLER :
+            break;
+        case MARKER_CONTROLLER :
+            status = marker_controller(&request, response, sizeof response);
+            break;
+        case REPORT_CONTROLLER :
+            break;
+        default:
+            /* We have no clue what the client is talking about with their url */
+            status = 404;
+            break;
     }
-
-    fprintf(stderr, "After: %d\n", td->clientfd);
+    
 
     /* Log and clean up. */
     printf("url: %s\n", request.url);
@@ -94,7 +91,13 @@ int createResponse(char * content, char * buff, int status){
 */
 int createSocket(){
     /* perhaps SOCK_NONBLOCK one day... */
-    return socket(AF_INET,SOCK_STREAM,0);   
+    int s;
+    int optval;
+    optval = 1;
+    s = socket(AF_INET,SOCK_STREAM,0);   
+    if(s != -1)
+        setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof optval);
+    return s;
 }
 
 /* Sets up a socket for use as a server socket on the designated port
@@ -305,7 +308,10 @@ int test_network(char * buffer, int bufferLength, void*(*func)(void*)){
     #ifdef DETACHED_THREADS
     pthread_attr_destroy(&attr);
     #endif
-    close(socketfd);
+    if(shutdown(socketfd,2) <0)
+        fprintf(stderr, "%s\n", "Problem shutting down socket descriptor");
+    if(close(socketfd) < 0)
+        fprintf(stderr, "%s\n", "Problem closing socket descriptor");
     /* Sleep a moment to hope that any running threads will finish */
     fprintf(stdout, "%s\n", "Exiting Server...");
     sleep(2);

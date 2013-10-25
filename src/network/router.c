@@ -36,6 +36,7 @@ int determineController(char * url){
 /*
  * Parse the url and store values into the hash table
  * returns the number of values successfully placed into the hashtable
+ * all key values are LOWERCASED upon return
 */
 int parseURL(const char * url, int urlLength, StrMap * table){
     int i;

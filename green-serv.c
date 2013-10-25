@@ -1,3 +1,4 @@
+/*Defined GREENSERV in order to initalize global in this file*/
 #define GREENSERV 1
 #include "config.h"
 #include "db.h"

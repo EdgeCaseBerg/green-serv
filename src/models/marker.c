@@ -14,6 +14,14 @@ void gs_marker_setScopeId(long scopeId, struct gs_marker * gsm){
 	gsm->scopeId = scopeId;
 }
 
+void gs_marker_setAddressed(int addressedState, struct gs_marker * gsm){
+	if(addressedState != ADDRESSED_TRUE && addressedState != ADDRESSED_FALSE){
+		fprintf(stderr, "%s\n", "Incorrect value for addressedState passed. Refusing to set.");
+		return;
+	}
+	gsm->addressed = addressedState;
+}
+
 /* Will truncate to 19 characters */
 void gs_marker_setCreatedTime(char * createdTime, struct gs_marker * gsm){
 	strncpy(gsm->createdTime, createdTime, GS_MARKER_CREATED_TIME_LENGTH);
@@ -33,6 +41,7 @@ void gs_marker_ZeroStruct(struct gs_marker * gsm){
 	bzero(gsm->createdTime, GS_MARKER_CREATED_TIME_LENGTH+1);
 	gsm->id = GS_MARKER_INVALID_ID;
 	gsm->commentId = GS_MARKER_INVALID_ID;
+	gsm->addressed = ADDRESSED_FALSE;
 	/* If anyone has a better idea for invalids I'm open to hearing it */
 	gsm->longitude.left = 0;  
 	gsm->longitude.right = 0;
