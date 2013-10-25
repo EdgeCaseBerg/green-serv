@@ -175,7 +175,15 @@ int marker_controller(const struct http_request * request, char * stringToReturn
 					status = 422;
 					goto mc_bothOffsets;			
 				}
-			status = marker_get(buffer,buffSize,latDegrees,lonDegrees,latOffset,lonOffset,page);
+			if(sm_exists(sm,"id")!=1){
+				/* Retrieve multiple markers */
+				status = marker_get(buffer,buffSize,latDegrees,lonDegrees,latOffset,lonOffset,page);
+			}else{
+				sm_get(sm, "id", tempBuf, sizeof tempBuf);
+				id = atol(tempBuf);	
+				status = marker_get_single(buffer, buffSize, id);
+			}
+			
 
 			break;
 		case POST:
@@ -619,4 +627,39 @@ int marker_get(char * buffer,int buffSize,Decimal * latDegrees, Decimal * lonDeg
 	mysql_thread_end();
 
 	return -1;
+}
+
+/* /api/pins?id=<pin id> */
+int marker_get_single(char * buffer,  int buffsize, long id){
+	MYSQL *conn;
+	struct gs_comment gsc;
+	struct gs_marker gsm;
+	char json[512];
+
+	mysql_thread_init();
+	conn = _getMySQLConnection();
+	if(!conn){
+		mysql_thread_end();
+		fprintf(stderr, "%s\n", "Could not connect to mySQL on worker thread");
+		return -1;
+	}	
+
+	db_getMarkerById(id, &gsm, conn);
+	if(gsm.id == GS_MARKER_INVALID_ID){
+		/* 404 */
+		mysql_close(conn);
+		mysql_thread_end();
+		snprintf(buffer, buffsize, ERROR_STR_FORMAT, 404, "Could not find pin with given id");
+		return 404;
+	}else{
+		db_getCommentById(gsm.commentId, &gsc, conn);
+	}
+
+	mysql_close(conn);
+	mysql_thread_end();
+
+	gs_markerCommentNToJSON(&gsm, &gsc ,json, sizeof json);
+
+	snprintf(buffer,buffsize,"{\"status_code\" : 200,\"pin\" : %s}",json);
+	return 200;
 }

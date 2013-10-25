@@ -58,6 +58,8 @@
 
 	int marker_get(char * buffer,int buffSize,Decimal * latDegrees, Decimal * lonDegrees, Decimal * latOffset,Decimal * lonOffset,int page);
 
+	int marker_get_single(char * buffer,  int buffsize, long id);
+
 	/* Although the version 3 API spec doesn't include the paging for pins
 	 * the C API will return paging information since we enforce the limit
 	 * on the pins through the MARKER_LIMIT constant defined in db.h
