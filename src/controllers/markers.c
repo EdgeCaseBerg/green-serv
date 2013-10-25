@@ -574,8 +574,11 @@ int marker_get(char * buffer,int buffSize,Decimal * latDegrees, Decimal * lonDeg
 		numMarkers = db_getMarkerCommentsLatitude(page-1, _shared_campaign_id, markers, comments, conn, latDegrees, latOffset);
 	} else if ( lonDegrees != NULL && latDegrees == NULL ) {
 		numMarkers = db_getMarkerCommentsLongitude(page-1, _shared_campaign_id, markers, comments, conn, lonDegrees, lonOffset);		
+	} else if ( lonDegrees != NULL && latDegrees != NULL) {
+		numMarkers = db_getMarkerCommentsFullFilter(page-1, _shared_campaign_id, markers, comments,  conn,latDegrees,latOffset, lonDegrees,  lonOffset);
 	} else {
-		fprintf(stderr, "%s\n", "Not implemented yet");
+		/* Bad Request? not sure if it's possible to even hit this case */
+		fprintf(stderr, "--%s\n", "Possible to hit here?");
 	}
 
 	if( numMarkers > MARKER_RETURNED ){
