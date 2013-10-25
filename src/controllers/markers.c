@@ -103,7 +103,7 @@ int marker_controller(const struct http_request * request, char * stringToReturn
 			latDegrees = NULL;
 		}
 		if (sm_exists(sm,"londegrees")==1) {
-			sm_get(sm,"lonDegrees",tempBuf,sizeof tempBuf);
+			sm_get(sm,"londegrees",tempBuf,sizeof tempBuf);
 			createDecimalFromString(lonDegrees, tempBuf);
 			if (sm_exists(sm,"lonoffset")==1) {
 				sm_get(sm,"lonoffset", tempBuf, sizeof tempBuf);
@@ -572,7 +572,8 @@ int marker_get(char * buffer,int buffSize,Decimal * latDegrees, Decimal * lonDeg
 	} else if ( lonDegrees == NULL && latDegrees != NULL) {
 		/* Only caring about latdegrees */
 		numMarkers = db_getMarkerCommentsLatitude(page-1, _shared_campaign_id, markers, comments, conn, latDegrees, latOffset);
-		fprintf(stderr, "number of markers returned %d\n", numMarkers);
+	} else if ( lonDegrees != NULL && latDegrees == NULL ) {
+		numMarkers = db_getMarkerCommentsLongitude(page-1, _shared_campaign_id, markers, comments, conn, lonDegrees, lonOffset);		
 	} else {
 		fprintf(stderr, "%s\n", "Not implemented yet");
 	}

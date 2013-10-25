@@ -808,3 +808,62 @@ int db_getMarkerCommentsLatitude(int page, long scopeId, struct gs_marker * gsm,
 	mysql_free_result(result);  
 	return i;
 }
+
+int db_getMarkerCommentsLongitude(int page, long scopeId, struct gs_marker * gsm, struct gs_comment * gsc, MYSQL * conn,Decimal * center, Decimal * lonOffset){
+	MYSQL_RES * result;
+	MYSQL_ROW row; 
+	Decimal latitude;
+	Decimal longitude;
+	Decimal lowDec;
+	Decimal upDec;
+	int i;
+	char query[sizeof GS_MARKER_COMMENT_GET_BY_LONGITUDE];
+	char lower[20];
+	char upper[16];
+
+	bzero(query,sizeof query);
+	bzero(lower,sizeof lower);
+	bzero(upper,sizeof upper);
+
+	/* Initialize */
+	createDecimalFromString(&lowDec,"0.0");
+	createDecimalFromString(&upDec, "0.0");
+
+	/* calculate the bounds via the center and offset */
+	add_decimals(center, lonOffset, &upDec); 	
+    subtract_decimals(center, lonOffset, &lowDec); 
+    formatDecimal(lowDec, lower);
+    formatDecimal(upDec, upper);
+
+	sprintf(query, GS_MARKER_COMMENT_GET_BY_LONGITUDE, scopeId, lower, upper ,page*MARKER_LIMIT);
+	if(0 != mysql_query(conn, query) ){
+		fprintf(stderr, "%s\n", mysql_error(conn));
+		return 0;
+	}
+
+	i=0;
+	result = mysql_use_result(conn);
+	while( (row=mysql_fetch_row(result)) != NULL ){
+		/*  Fields:
+			pin_id, comment_id, content, comment_type, latitude, longitude, addressed
+		*/
+		gs_marker_ZeroStruct(&gsm[i]);
+		gs_comment_ZeroStruct(&gsc[i]);
+
+		gs_marker_setId( atol(row[0]), &gsm[i]);
+		gs_marker_setCommentId( atol(row[1]), &gsm[i]);
+		gs_comment_setId(atol(row[1]), &gsc[i]);
+		gs_comment_setContent(row[2], &gsc[i]);
+		gs_marker_setScopeId( scopeId, &gsm[i]);
+		gs_comment_setScopeId(scopeId, &gsc[i]);
+		gs_comment_setCommentType(row[3], &gsc[i]);
+		createDecimalFromString(&latitude,row[4]);
+		gs_marker_setLatitude(latitude,&gsm[i]);
+		createDecimalFromString(&longitude,row[5]);
+		gs_marker_setLongitude(longitude,&gsm[i]);
+		gs_marker_setAddressed(atoi(row[6]), &gsm[i]);
+		i++;
+	}
+	mysql_free_result(result);  
+	return i;
+}
