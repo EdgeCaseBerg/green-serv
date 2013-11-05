@@ -43,12 +43,8 @@ void gs_marker_ZeroStruct(struct gs_marker * gsm){
 	gsm->commentId = GS_MARKER_INVALID_ID;
 	gsm->addressed = ADDRESSED_FALSE;
 	/* If anyone has a better idea for invalids I'm open to hearing it */
-	gsm->longitude.left = 0;  
-	gsm->longitude.right = 0;
-	gsm->latitude.left = 0;
-	gsm->latitude.right = 0;
-	gsm->latitude.signBit = POSITIVE_ZERO;
-	gsm->longitude.signBit = POSITIVE_ZERO;
+	gsm->longitude = 0;  
+	gsm->latitude  = 0;
 }
 
 

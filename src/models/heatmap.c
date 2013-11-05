@@ -39,10 +39,6 @@ void gs_heatmap_ZeroStruct(struct gs_heatmap * gsh){
 	 * parsing function and we only set the left, the right is 
 	 * still correct!
 	*/
-	gsh->longitude.left = 0;  
-	gsh->longitude.right = 0;
-	gsh->latitude.left = 0;
-	gsh->latitude.right = 0;
-	gsh->latitude.signBit = POSITIVE_ZERO;
-	gsh->longitude.signBit = POSITIVE_ZERO;
+	gsh->latitude = 0;  
+	gsh->longitude = 0;
 }

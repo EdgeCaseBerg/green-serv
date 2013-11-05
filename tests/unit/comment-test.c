@@ -3,7 +3,7 @@
 #include "config.h"
 #include "helpers/json.h"
 
-#define JSON_LENGTH 512
+#define JSON_LENGTH 1000
 int main(){
 	MYSQL * conn;
 	struct gs_comment testComment;
@@ -38,7 +38,6 @@ int main(){
 
 	commentPage = malloc(RESULTS_PER_PAGE * sizeof(struct gs_comment));
 	if(commentPage != NULL){
-
 	  	numComments = db_getComments(0, CAMPAIGN_ID,commentPage, conn);
 	  	for(i=0; i < numComments; ++i){
 		 	bzero(json,JSON_LENGTH);
