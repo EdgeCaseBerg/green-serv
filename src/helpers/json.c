@@ -176,10 +176,10 @@ int gs_commentToNJSON(const struct gs_comment gsc, char * jsonOutput, int jsonOu
 /* I'd recommend at least 110 bytes to be specified.  Probably 128 for safety*/
 int gs_markerToJSON(const struct gs_marker gsm, char * jsonOutput){
     char * json;
-    char latitude[16];
-    char longitude[16];
-    bzero(latitude,16);
-    bzero(longitude,16);
+    char latitude[DecimalWidth];
+    char longitude[DecimalWidth];
+    bzero(latitude,DecimalWidth);
+    bzero(longitude,DecimalWidth);
     formatDecimal(gsm.latitude,latitude);
     formatDecimal(gsm.longitude,longitude);
 
@@ -199,10 +199,10 @@ int gs_markerNToJSON(const struct gs_marker gsm, char * jsonOutput, int jsonOutp
     char jsonId[15+sizeof(long)]; /*{\"id\" : %ld, */
     char jsonCommId[21+sizeof(long)];/*\"commentId\" : %ld, */
     char jsonTimestamp[25+GS_MARKER_CREATED_TIME_LENGTH+1];/* \"timestamp\" : \"%s\", */
-    char jsonLat[21+16];/* \"latitude\" : %s, */
-    char jsonLon[21+16];/* \"longitude\" : %s }*/
-    char latitude[16];
-    char longitude[16];
+    char jsonLat[21+DecimalWidth];/* \"latitude\" : %s, */
+    char jsonLon[21+DecimalWidth];/* \"longitude\" : %s }*/
+    char latitude[DecimalWidth];
+    char longitude[DecimalWidth];
     char addressed[25]; 
     int jsonIdWritten;
     int jsonCommIdWritten;
@@ -216,10 +216,12 @@ int gs_markerNToJSON(const struct gs_marker gsm, char * jsonOutput, int jsonOutp
     bzero(jsonLat, sizeof jsonLat);
     bzero(jsonLon, sizeof jsonLon );   
     bzero(addressed, sizeof addressed);
+    bzero(latitude, sizeof latitude);
+    bzero(longitude, sizeof longitude);
     formatDecimal(gsm.latitude,latitude);
     formatDecimal(gsm.longitude,longitude);
 
-
+    printf(DecimalFormat "---%s\n", gsm.latitude ,latitude);
     
     jsonIdWritten = snprintf(jsonId, sizeof jsonId, "{\"id\" : %ld, ", gsm.id);
     jsonCommIdWritten = snprintf(jsonCommId, sizeof jsonCommId, "\"commentId\" : %ld, ", gsm.commentId);
@@ -242,10 +244,10 @@ int gs_markerNToJSON(const struct gs_marker gsm, char * jsonOutput, int jsonOutp
 /* Recommend at least 128 for safety*/ 
 int gs_heatmapToJSON(const struct gs_heatmap gsh, char * jsonOutput){
     char * json;
-    char latitude[16];
-    char longitude[16];
-    bzero(latitude,16);
-    bzero(longitude,16);
+    char latitude[DecimalWidth];
+    char longitude[DecimalWidth];
+    bzero(latitude,DecimalWidth);
+    bzero(longitude,DecimalWidth);
     formatDecimal(gsh.latitude,latitude);
     formatDecimal(gsh.longitude,longitude);
 
@@ -262,22 +264,22 @@ int gs_heatmapToJSON(const struct gs_heatmap gsh, char * jsonOutput){
 int gs_heatmapNToJSON(const struct gs_heatmap gsh, char * jsonOutput, int jsonOutputAllocatedSize){
     char jsonLat[21];
     char jsonLon[22];
-    char latitude[16];
-    char longitude[16];
+    char latitude[DecimalWidth];
+    char longitude[DecimalWidth];
     char jsonSeconds[27+sizeof(long)];
     int jsonLatWritten;
     int jsonLonWritten;
     int jsonSecondsWritten;
-    bzero(latitude,16);
-    bzero(longitude,16);
+    bzero(latitude,DecimalWidth);
+    bzero(longitude,DecimalWidth);
     bzero(jsonLat,21);
     bzero(jsonLon,21);
     bzero(jsonSeconds,27+sizeof(long));
     formatDecimal(gsh.latitude,latitude);
     formatDecimal(gsh.longitude,longitude);
 
-    jsonLatWritten = snprintf(jsonLat,21+16,"{\"latitude\" : %s", latitude);
-    jsonLonWritten = snprintf(jsonLon,22+16," \"longitude\" : %s,", longitude);
+    jsonLatWritten = snprintf(jsonLat,21+DecimalWidth,"{\"latitude\" : %s", latitude);
+    jsonLonWritten = snprintf(jsonLon,22+DecimalWidth," \"longitude\" : %s,", longitude);
     jsonSecondsWritten = snprintf(jsonSeconds,27+sizeof(long)," \"secondsWorked\" : %ld }",gsh.intensity);
 
     if(jsonLonWritten + jsonLatWritten + jsonSecondsWritten > jsonOutputAllocatedSize-1){
@@ -401,7 +403,7 @@ int gs_markerCommentNToJSON(const struct gs_marker * gsm, const struct gs_commen
     char jsonType[32]; /*"type":"%s",*/
     char jsonMessage[32 + (GS_COMMENT_MAX_LENGTH*4)+1]; /*"message":"%s",*/
     char jsonAddressed[32]; /*"addressed":%s}*/
-    char latlon[16];
+    char latlon[DecimalWidth];
     char escaped[(GS_COMMENT_MAX_LENGTH*4)+1];
     
     int jsonMarkerIdWritten;

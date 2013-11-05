@@ -79,20 +79,20 @@ int marker_controller(const struct http_request * request, char * stringToReturn
 		/* Collect any parameters and convert them to the proper types */
 		if (sm_exists(sm,"latdegrees")==1) {
 			sm_get(sm,"latdegrees",tempBuf,sizeof tempBuf);
-			createDecimalFromString(latDegrees, tempBuf);
+			(*latDegrees) = createDecimalFromString(tempBuf);
 			/* Offsets only make sense if their parent coordinate is existent */
 			if (sm_exists(sm,"latoffset")==1) {
 				sm_get(sm,"latoffset", tempBuf, sizeof tempBuf);
 				/* Validate the numericness of the offset */
 				if(strtod(tempBuf,convertSuccess) != 0 && convertSuccess == NULL)
-					createDecimalFromString(latOffset,tempBuf);
+					(*latOffset) = createDecimalFromString(tempBuf);
 				else{
 					sm_delete(sm);
 					free(buffer); free(latDegrees); free(lonDegrees); free(latOffset); free(lonOffset);
 					goto mc_badLatOffset;
 				} 
 			} else {
-				createDecimalFromString(latOffset,DEFAULT_OFFSET);
+				(*latOffset) = createDecimalFromString(DEFAULT_OFFSET);
 			}
 		} else{
 			/* Sensible default for latdegrees is... to become NULL 
@@ -104,18 +104,18 @@ int marker_controller(const struct http_request * request, char * stringToReturn
 		}
 		if (sm_exists(sm,"londegrees")==1) {
 			sm_get(sm,"londegrees",tempBuf,sizeof tempBuf);
-			createDecimalFromString(lonDegrees, tempBuf);
+			(*lonDegrees) = createDecimalFromString(tempBuf);
 			if (sm_exists(sm,"lonoffset")==1) {
 				sm_get(sm,"lonoffset", tempBuf, sizeof tempBuf);
 				if(strtod(tempBuf,convertSuccess) != 0 && convertSuccess == NULL)
-					createDecimalFromString(lonOffset,tempBuf);
+					(*lonOffset) = createDecimalFromString(tempBuf);
 				else{
 					sm_delete(sm);
 					free(buffer); free(latDegrees); free(lonDegrees); free(latOffset); free(lonOffset);
 					goto mc_badLonOffset;
 				} 
 			} else {
-				createDecimalFromString(lonOffset,DEFAULT_OFFSET);
+				(*lonOffset) = createDecimalFromString(DEFAULT_OFFSET);
 			}
 		} else {
 			free(lonDegrees);
@@ -161,7 +161,7 @@ int marker_controller(const struct http_request * request, char * stringToReturn
 			}
 			if(latDegrees != NULL)
 				/*Let the -90.1 slide by as ok...*/
-				if(latDegrees->left < -90L || latDegrees->left > 90L){
+				if(*latDegrees < -90L || *latDegrees > 90L){
 					sm_delete(sm);
 					free(buffer); free(latDegrees); free(lonDegrees); free(latOffset); free(lonOffset);
 					status = 422;
@@ -169,7 +169,7 @@ int marker_controller(const struct http_request * request, char * stringToReturn
 				}
 
 			if(lonDegrees != NULL)
-				if(lonDegrees->left < -180L || lonDegrees->left > 180L){
+				if(*lonDegrees < -180L || *lonDegrees > 180L){
 					sm_delete(sm);
 					free(buffer); free(latDegrees); free(lonDegrees); free(latOffset); free(lonOffset);
 					status = 422;
@@ -462,11 +462,11 @@ int marker_post(char * buffer, int buffSize, const struct http_request * request
 		gs_comment_setContent(valBuffer,&assocComment);
 
 		sm_get(sm,"londegrees",valBuffer,sizeof valBuffer);
-		createDecimalFromString(&longitude, valBuffer);
+		longitude = createDecimalFromString(valBuffer);
 		gs_marker_setLongitude(longitude, &marker);
 
 		sm_get(sm,"latdegrees",valBuffer,sizeof valBuffer);
-		createDecimalFromString(&latitude, valBuffer);
+		latitude = createDecimalFromString( valBuffer);
 		gs_marker_setLatitude(latitude, &marker);
 
 		sm_get(sm,"addressed", valBuffer, sizeof valBuffer);

@@ -39,7 +39,7 @@
 	#define GS_SCOPE_GET_BY_ID "SELECT id, description FROM scope WHERE id = %ld;"
 	#define GS_SCOPE_INSERT "INSERT INTO scope (description) VALUES (\"%s\");"
 
-	#define GS_COMMENT_GET_ALL "SELECT id, pin_id, content, scope_id, created_time,comment_type FROM comments WHERE scope_id = %ld ORDER BY created_time DESC LIMIT %d, " STRINGIFY(MARKER_LIMIT) ";"
+	#define GS_COMMENT_GET_ALL "SELECT id, pin_id, content, scope_id, created_time,comment_type FROM comments WHERE scope_id = %ld ORDER BY created_time DESC LIMIT %d, " STRINGIFY(RESULTS_PER_PAGE) ";"
 	#define GS_COMMENT_GET_BY_ID "SELECT id, pin_id, content, scope_id, created_time,comment_type FROM comments WHERE id = %ld;"
 	#define GS_COMMENT_INSERT "INSERT INTO comments (content, scope_id, pin_id,comment_type) VALUES (\"%s\", %ld, %ld,\"%s\");" 
 	#define GS_COMMENT_GET_BY_TYPE "SELECT id, pin_id, content, scope_id, created_time,comment_type FROM comments WHERE scope_id = %ld AND comment_type = UPPER(\"%s\") ORDER BY created_time DESC LIMIT %d, " STRINGIFY(RESULTS_PER_PAGE) ";"
@@ -47,7 +47,7 @@
 
 	#define GS_MARKER_GET_ALL "SELECT id, comment_id, scope_id, created_time, latitude, longitude, addressed FROM markers WHERE scope_id = %ld ORDER BY created_time DESC LIMIT %d, " STRINGIFY(RESULTS_PER_PAGE) ";"
 	#define GS_MARKER_GET_BY_ID "SELECT id, comment_id, scope_id, created_time, latitude, longitude, addressed FROM markers WHERE id = %ld;"
-	#define GS_MARKER_INSERT "INSERT INTO markers (comment_id, scope_id, latitude, longitude, addressed) VALUES (%ld, %ld, %ld.%08lu, %ld.%08lu, %d);"
+	#define GS_MARKER_INSERT "INSERT INTO markers (comment_id, scope_id, latitude, longitude, addressed) VALUES (%ld, %ld, " DecimalFormat ", " DecimalFormat ", %d);"
 	#define GS_MARKER_DELETE "DELETE FROM markers where id=%ld"
 	#define GS_MARKER_ADDRESS "UPDATE markers SET addressed=%d WHERE id=%ld"
 	/* Marker and Comment hybrid queries for marker controller" 
@@ -59,10 +59,10 @@
 	#define GS_MARKER_COMMENT_GET_BY_LONGITUDE "SELECT pin_id, comment_id, content, comment_type, latitude, longitude, addressed FROM comments INNER JOIN markers ON comment_id = comments.id WHERE markers.scope_id=%ld AND longitude BETWEEN %s AND %s ORDER BY markers.created_time DESC LIMIT %d, " STRINGIFY(MARKER_LIMIT)
 	#define GS_MARKER_COMMENT_GET_BY_BOTH "SELECT pin_id, comment_id, content, comment_type, latitude, longitude, addressed FROM comments INNER JOIN markers ON comment_id = comments.id WHERE markers.scope_id=%ld AND latitude BETWEEN %s AND %s AND longitude BETWEEN %s AND %s ORDER BY markers.created_time DESC LIMIT %d, " STRINGIFY(MARKER_LIMIT)
 
-	#define GS_HEATMAP_GET_ALL "SELECT SUM(intensity), TIMESTAMP(AVG(created_time)) ,TRUNCATE(latitude,%ld), TRUNCATE(longitude,%ld) FROM heatmap WHERE scope_id = %ld AND latitude BETWEEN %ld.%08lu AND %ld.%08lu AND longitude BETWEEN %ld.%08lu AND %ld.%08lu GROUP BY latitude ORDER BY created_time DESC LIMIT %d, " STRINGIFY(HEATMAP_RESULTS_PER_PAGE) ";"
+	#define GS_HEATMAP_GET_ALL "SELECT SUM(intensity), TIMESTAMP(AVG(created_time)) ,TRUNCATE(latitude,%ld), TRUNCATE(longitude,%ld) FROM heatmap WHERE scope_id = %ld AND latitude BETWEEN " DecimalFormat " AND " DecimalFormat " AND longitude BETWEEN " DecimalFormat " AND " DecimalFormat " GROUP BY latitude ORDER BY created_time DESC LIMIT %d, " STRINGIFY(HEATMAP_RESULTS_PER_PAGE) ";"
 	#define GS_HEATMAP_GET_BY_ID "SELECT id, intensity, scope_id, created_time, latitude, longitude FROM heatmap WHERE id = %ld;"
-	#define GS_HEATMAP_INSERT "INSERT INTO heatmap (scope_id, intensity, latitude, longitude) VALUES (%ld, %ld, %ld.%08lu, %ld.%08lu);"
-	#define GS_HEATMAP_FIND_MATCH "SELECT id, intensity FROM heatmap WHERE scope_id = %ld AND latitude = %ld.%08lu AND longitude = %ld.%08lu;"
+	#define GS_HEATMAP_INSERT "INSERT INTO heatmap (scope_id, intensity, latitude, longitude) VALUES (%ld, %ld, " DecimalFormat ", " DecimalFormat ");"
+	#define GS_HEATMAP_FIND_MATCH "SELECT id, intensity FROM heatmap WHERE scope_id = %ld AND latitude = " DecimalFormat " AND longitude = " DecimalFormat ";"
 	#define GS_HEATMAP_UPDATE_BY_ID "UPDATE heatmap SET intensity = %ld WHERE id = %ld;"
 
 	#define GS_REPORT_GET_ALL "SELECT id, content, scope_id, origin, authorize, created_time FROM report WHERE scope_id = %ld ORDER BY created_time DESC LIMIT %d, " STRINGIFY(RESULTS_PER_PAGE) ";" 

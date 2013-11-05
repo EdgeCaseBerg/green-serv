@@ -79,12 +79,11 @@ int db_getComments(int page, long scopeId, struct gs_comment * gsc, MYSQL * conn
 
 	i=0;
 	result = mysql_use_result(conn);
+	fprintf(stderr, "%s\n", query);
 	while( (row=mysql_fetch_row(result)) != NULL ){
 		/* Initialize */
 		gs_comment_ZeroStruct(&gsc[i]);
-
 		gs_comment_setId( atol(row[0]), &gsc[i]);
-		fprintf(stderr, "%s\n", row[1]);
 		gs_comment_setPinId(row[1] == NULL ? -1 : atol(row[1]), &gsc[i]);
 		gs_comment_setContent( row[2], &gsc[i]);
 		gs_comment_setScopeId( atol(row[3]), &gsc[i]);
@@ -257,9 +256,9 @@ int db_getMarkers(int page, long scopeId, struct gs_marker * gsm, MYSQL * conn){
 		gs_marker_setCommentId( atol(row[1]), &gsm[i]);
 		gs_marker_setScopeId( row[2] == NULL ?  GS_SCOPE_INVALID_ID : atol(row[2]), &gsm[i]);
 		gs_marker_setCreatedTime( row[3], &gsm[i]);
-		createDecimalFromString(&latitude,row[4]);
+		latitude = createDecimalFromString(row[4]);
 		gs_marker_setLatitude(latitude,&gsm[i]);
-		createDecimalFromString(&longitude,row[5]);
+		longitude = createDecimalFromString(row[5]);
 		gs_marker_setLongitude(longitude,&gsm[i]);
 		gs_marker_setAddressed(atoi(row[6]), &gsm[i]);
 		i++;
@@ -281,7 +280,7 @@ void db_insertMarker(struct gs_marker * gsm, MYSQL * conn){
 		return; /* Return if scope is invalid that we can tell*/
 
 	bzero(query,sizeof query);
-	sprintf(query, GS_MARKER_INSERT, gsm->commentId, gsm->scopeId, gsm->latitude.left, gsm->latitude.right, gsm->longitude.left, gsm->longitude.right, gsm->addressed);
+	sprintf(query, GS_MARKER_INSERT, gsm->commentId, gsm->scopeId, gsm->latitude,  gsm->longitude,  gsm->addressed);
 
 	if(0 != mysql_query(conn, query) ){
 		fprintf(stderr, "%s\n", mysql_error(conn));
@@ -322,8 +321,8 @@ void db_insertMarker(struct gs_marker * gsm, MYSQL * conn){
 	gs_marker_setCommentId( atol(row[1]), gsm);
 	gs_marker_setScopeId( row[2] == NULL ? GS_SCOPE_INVALID_ID : atol(row[2]), gsm);
 	gs_marker_setCreatedTime( row[3], gsm);
-	createDecimalFromString(&gsm->latitude,row[4]);
-	createDecimalFromString(&gsm->longitude,row[5]);
+	gsm->latitude = createDecimalFromString(row[4]);
+	gsm->longitude = createDecimalFromString(row[5]);
 	gs_marker_setAddressed(atoi(row[6]), gsm);
 	
 
@@ -360,8 +359,8 @@ void db_getMarkerById(long id, struct gs_marker * gsm, MYSQL * conn){
 	gs_marker_setCommentId( row[1] == NULL ? GS_COMMENT_INVALID_ID :  atol(row[1]), gsm);
 	gs_marker_setScopeId( row[2] == NULL ? GS_SCOPE_INVALID_ID : atol(row[2]), gsm);
 	gs_marker_setCreatedTime( row[3], gsm);
-	createDecimalFromString(&gsm->latitude,row[4]);
-	createDecimalFromString(&gsm->longitude,row[5]);
+	gsm->latitude = createDecimalFromString(row[4]);
+	gsm->longitude = createDecimalFromString(row[5]);
 	gs_marker_setAddressed(atoi(row[6]), gsm);
 	
 
@@ -386,7 +385,7 @@ void db_insertHeatmap(struct gs_heatmap * gsh, MYSQL * conn){
 
 	/* Check for possible merges */
 	bzero(query,sizeof query);
-	sprintf(query, GS_HEATMAP_FIND_MATCH, gsh->scopeId, gsh->latitude.left, gsh->latitude.right, gsh->longitude.left, gsh->longitude.right);
+	sprintf(query, GS_HEATMAP_FIND_MATCH, gsh->scopeId, gsh->latitude, gsh->longitude);
 
 	if(0 != mysql_query(conn, query) ){
 		fprintf(stderr, "%s\n", mysql_error(conn));
@@ -401,7 +400,7 @@ void db_insertHeatmap(struct gs_heatmap * gsh, MYSQL * conn){
 	if(row == NULL){
 		mysql_free_result(result);
 		/* This means we can insert a new one */
-		sprintf(query, GS_HEATMAP_INSERT, gsh->scopeId, gsh->intensity, gsh->latitude.left, gsh->latitude.right, gsh->longitude.left, gsh->longitude.right);
+		sprintf(query, GS_HEATMAP_INSERT, gsh->scopeId, gsh->intensity, gsh->latitude, gsh->longitude);
 	}else{
 		/* Time to merge! */
 		updated = 1;
@@ -463,8 +462,8 @@ void db_insertHeatmap(struct gs_heatmap * gsh, MYSQL * conn){
 	gs_heatmap_setIntensity( atol(row[1]), gsh);
 	gs_heatmap_setScopeId( row[2] == NULL ? GS_SCOPE_INVALID_ID : atol(row[2]), gsh);
 	gs_heatmap_setCreatedTime( row[3], gsh);
-	createDecimalFromString(&gsh->latitude,row[4]);
-	createDecimalFromString(&gsh->longitude,row[5]);
+	gsh->latitude = createDecimalFromString(row[4]);
+	gsh->longitude = createDecimalFromString(row[5]);
 	
 
 	mysql_free_result(result);
@@ -487,10 +486,10 @@ int db_getHeatmap(int page, long scopeId, long precision, Decimal lowerLatBound,
 				   	precision, 	/* Latitude precision */
 				   	precision, 	/* Longitude precision */
 				   	scopeId,  	/* Scope */
-				   	lowerLatBound.left, lowerLatBound.right , /* Latitude lower bound  */
-					upperLatBound.left, lowerLatBound.right , /* Latitude upper bound  */
-					lowerLonBound.left, lowerLonBound.right , /* Longitude lower bound */
-					upperLonBound.left, upperLonBound.right , /* Longitude upper bound */
+				   	lowerLatBound, /* Latitude lower bound  */
+					upperLatBound, /* Latitude upper bound  */
+					lowerLonBound, /* Longitude lower bound */
+					upperLonBound, /* Longitude upper bound */
 				   	page*HEATMAP_RESULTS_PER_PAGE);
 
 	if(0 != mysql_query(conn, query) ){
@@ -508,9 +507,9 @@ int db_getHeatmap(int page, long scopeId, long precision, Decimal lowerLatBound,
 		gs_heatmap_setIntensity( atol(row[0]), &gsh[i]);
 		gs_heatmap_setScopeId( scopeId, &gsh[i]);
 		gs_heatmap_setCreatedTime( row[1], &gsh[i]);
-		createDecimalFromString(&latitude,row[2]);
+		latitude = createDecimalFromString(row[2]);
 		gs_heatmap_setLatitude(latitude,&gsh[i]);
-		createDecimalFromString(&longitude,row[3]);
+		longitude = createDecimalFromString(row[3]);
 		gs_heatmap_setLongitude(longitude,&gsh[i]);
 		i++;
 	}
@@ -741,9 +740,9 @@ int db_getMarkerComments(int page, long scopeId, struct gs_marker * gsm, struct 
 		gs_marker_setScopeId( scopeId, &gsm[i]);
 		gs_comment_setScopeId(scopeId, &gsc[i]);
 		gs_comment_setCommentType(row[3], &gsc[i]);
-		createDecimalFromString(&latitude,row[4]);
+		latitude = createDecimalFromString(row[4]);
 		gs_marker_setLatitude(latitude,&gsm[i]);
-		createDecimalFromString(&longitude,row[5]);
+		longitude = createDecimalFromString(row[5]);
 		gs_marker_setLongitude(longitude,&gsm[i]);
 		gs_marker_setAddressed(atoi(row[6]), &gsm[i]);
 		i++;
@@ -764,15 +763,15 @@ static int db_getMarkerCommentsCoordinate(int page, long scopeId, struct gs_mark
 	Decimal upDec;
 	int i;
 	char query[strlen(queryString)];
-	char lower[16];
-	char upper[16];
+	char lower[DecimalWidth];
+	char upper[DecimalWidth];
 
 	bzero(query,sizeof query);
 	bzero(lower,sizeof lower);
 	bzero(upper,sizeof upper);
 
-	createDecimalFromString(&lowDec,"0.0");
-	createDecimalFromString(&upDec, "0.0");
+	lowDec = createDecimalFromString("0.0");
+	upDec = createDecimalFromString( "0.0");
 
 	/* calculate the bounds via the center and offset */
 	add_decimals(center, offset, &upDec); 	
@@ -781,7 +780,6 @@ static int db_getMarkerCommentsCoordinate(int page, long scopeId, struct gs_mark
     formatDecimal(upDec, upper);
 
 	sprintf(query, queryString, scopeId, lower, upper ,page*MARKER_LIMIT);
-	fprintf(stderr, "%s\n", query);
 	if(0 != mysql_query(conn, query) ){
 		fprintf(stderr, "%s\n", mysql_error(conn));
 		return 0;
@@ -803,9 +801,9 @@ static int db_getMarkerCommentsCoordinate(int page, long scopeId, struct gs_mark
 		gs_marker_setScopeId( scopeId, &gsm[i]);
 		gs_comment_setScopeId(scopeId, &gsc[i]);
 		gs_comment_setCommentType(row[3], &gsc[i]);
-		createDecimalFromString(&latitude,row[4]);
+		latitude = createDecimalFromString(row[4]);
 		gs_marker_setLatitude(latitude,&gsm[i]);
-		createDecimalFromString(&longitude,row[5]);
+		longitude = createDecimalFromString(row[5]);
 		gs_marker_setLongitude(longitude,&gsm[i]);
 		gs_marker_setAddressed(atoi(row[6]), &gsm[i]);
 		i++;
@@ -831,10 +829,10 @@ int db_getMarkerCommentsFullFilter(int page, long scopeId, struct gs_marker * gs
 	Decimal upDec;
 	int i;
 	char query[sizeof GS_MARKER_COMMENT_GET_BY_BOTH];
-	char latLower[16];
-	char latUpper[16];
-	char lonLower[16];
-	char lonUpper[16];
+	char latLower[DecimalWidth];
+	char latUpper[DecimalWidth];
+	char lonLower[DecimalWidth];
+	char lonUpper[DecimalWidth];
 
 	bzero(query,sizeof query);
 	bzero(latLower,sizeof latLower);
@@ -843,8 +841,8 @@ int db_getMarkerCommentsFullFilter(int page, long scopeId, struct gs_marker * gs
 	bzero(lonUpper,sizeof lonUpper);
 
 	/* Initialize */
-	createDecimalFromString(&lowDec,"0.0");
-	createDecimalFromString(&upDec, "0.0");
+	lowDec = createDecimalFromString("0.0");
+	upDec = createDecimalFromString( "0.0");
 
 	/* calculate the bounds via the center and offset */
 	add_decimals(latCenter, latOffset, &upDec); 	
@@ -880,9 +878,9 @@ int db_getMarkerCommentsFullFilter(int page, long scopeId, struct gs_marker * gs
 		gs_marker_setScopeId( scopeId, &gsm[i]);
 		gs_comment_setScopeId(scopeId, &gsc[i]);
 		gs_comment_setCommentType(row[3], &gsc[i]);
-		createDecimalFromString(&latitude,row[4]);
+		latitude = createDecimalFromString(row[4]);
 		gs_marker_setLatitude(latitude,&gsm[i]);
-		createDecimalFromString(&longitude,row[5]);
+		longitude = createDecimalFromString(row[5]);
 		gs_marker_setLongitude(longitude,&gsm[i]);
 		gs_marker_setAddressed(atoi(row[6]), &gsm[i]);
 		i++;

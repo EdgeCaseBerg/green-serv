@@ -30,8 +30,8 @@ int main(){
 	   
    	db_insertComment(&testComment,conn);
 
-   	createDecimalFromString(&latitude, "-44.050");
-	createDecimalFromString(&longitude, "-44.70");
+   	latitude = createDecimalFromString( "-44.050");
+	longitude= createDecimalFromString( "-44.70");
 
    
 	gs_marker_ZeroStruct(&testMarker);

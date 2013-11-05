@@ -1,3 +1,4 @@
+#define GREENSERV 1
 #include "config.h"
 #include "helpers/json.h"
 #include "helpers/decimal.h"
@@ -23,25 +24,25 @@ int main(){
 	  	fprintf(stderr, "%s\n", "Could not connect to mySQL");
 	  	return 1;
    	}
-
 	gs_heatmap_ZeroStruct(&testHeatmap);
 	gs_heatmapNToJSON(testHeatmap, json,HEATMAP_JSON_LENGTH);
 	printf("%s\n", json);
-
 	gs_heatmap_setIntensity( 2, &testHeatmap);
 	gs_heatmap_setScopeId( CAMPAIGN_ID, &testHeatmap);
-	createDecimalFromString(&testHeatmap.latitude,"-44.0781");
-	createDecimalFromString(&testHeatmap.longitude,"70.011");
+	testHeatmap.latitude = createDecimalFromString("-44.0781");
+
+	
+	testHeatmap.longitude = createDecimalFromString("70.011");
 	
 	db_insertHeatmap(&testHeatmap, conn);
 
 	gs_heatmapNToJSON(testHeatmap, json,HEATMAP_JSON_LENGTH);
 	printf("%s\n", json);
 
-	createDecimalFromString(&lowerBoundLat, "-50.0");
-	createDecimalFromString(&upperBoundLat, "-43.78");
-	createDecimalFromString(&lowerBoundLon, "69.9");
-	createDecimalFromString(&upperBoundLon, "71.78");
+	lowerBoundLat = createDecimalFromString("-50.0");
+	upperBoundLat = createDecimalFromString("-43.78");
+	lowerBoundLon = createDecimalFromString("69.9");
+	upperBoundLon = createDecimalFromString("71.78");
 	heatmapPage = malloc(HEATMAP_RESULTS_PER_PAGE* sizeof(struct gs_heatmap));
 	if(heatmapPage != NULL){
 		numHeatmap = db_getHeatmap(	
