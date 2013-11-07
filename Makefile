@@ -58,8 +58,11 @@ commentC.o: src/controllers/comments.c strmap.o comment.o router.o
 markerC.o: src/controllers/markers.c router.o strmap.o marker.o
 	$(CC) $(gflags) -c src/controllers/markers.c -o obj/markerC.o
 
-network.o: src/network/net.c router.o heartbeatC.o commentC.o markerC.o
-	$(CC) $(gflags) -c src/network/net.c -o obj/network.o
+heatmapC.o: src/controllers/heatmaps.c router.o strmap.o heatmap.o
+	$(CC) $(gflags) -c src/controllers/heatmaps.c -o obj/heatmapC.o
+
+network.o: src/network/net.c router.o heartbeatC.o commentC.o markerC.o heatmapC.o
+	$(CC) $(gflags) -c src/network/net.c -o obj/network.o 
 
 router.o: src/network/router.c strmap.o
 	$(CC) $(gflags) -c src/network/router.c -o obj/router.o

@@ -28,6 +28,7 @@
 	#include "controllers/comments.h"
 	#include "controllers/heartbeat.h"
 	#include "controllers/markers.h"
+	#include "controllers/heatmaps.h"
 	
 
 	/*Create an HTTP Json response

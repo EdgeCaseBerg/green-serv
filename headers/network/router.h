@@ -13,7 +13,7 @@
 	#define PUT 8
 	#define DELETE 16
 	#define UNKNOWN_METHOD 32
-	#define ERROR_STR_FORMAT "{\"status_code\" : %i, \"Error_Message\": %s}"
+	#define ERROR_STR_FORMAT "{\"status_code\" : %i, \"Error_Message\": \"%s\"}"
 
 	#include "helpers/strmap.h"
 	#include <stdlib.h>

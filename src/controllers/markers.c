@@ -380,6 +380,7 @@ int marker_post(char * buffer, int buffSize, const struct http_request * request
 
 
 	bzero(keyBuffer,sizeof keyBuffer);
+	bzero(valBuffer,sizeof valBuffer);
 	gs_marker_ZeroStruct(&marker);
 	gs_comment_ZeroStruct(&assocComment);
 	strFlag = 0;
