@@ -278,7 +278,7 @@ int gs_heatmapNToJSON(const struct gs_heatmap gsh, char * jsonOutput, int jsonOu
     formatDecimal(gsh.latitude,latitude);
     formatDecimal(gsh.longitude,longitude);
 
-    jsonLatWritten = snprintf(jsonLat,21+DecimalWidth,"{\"latitude\" : %s", latitude);
+    jsonLatWritten = snprintf(jsonLat,21+DecimalWidth,"{\"latitude\" : %s,", latitude);
     jsonLonWritten = snprintf(jsonLon,22+DecimalWidth," \"longitude\" : %s,", longitude);
     jsonSecondsWritten = snprintf(jsonSeconds,27+sizeof(long)," \"secondsWorked\" : %ld }",gsh.intensity);
 

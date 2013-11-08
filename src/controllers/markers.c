@@ -155,7 +155,15 @@ int marker_controller(const struct http_request * request, char * stringToReturn
 			if((sm_exists(sm,"latoffset")==1) ^ (sm_exists(sm,"lonoffset")==1)){
 				/*Err! if one is used, both must be used! */
 				sm_delete(sm);
-				free(buffer); free(latDegrees); free(lonDegrees); free(latOffset); free(lonOffset);
+				free(buffer);
+				if(latDegrees != NULL)
+					free(latDegrees); 
+				if(lonDegrees != NULL)
+					free(lonDegrees); 
+				if(latOffset != NULL)
+					free(latOffset); 
+				if(lonOffset != NULL)
+					free(lonOffset);
 				status = 422;
 				goto mc_bothOffsets;
 			}
@@ -163,7 +171,13 @@ int marker_controller(const struct http_request * request, char * stringToReturn
 				/*Let the -90.1 slide by as ok...*/
 				if(*latDegrees < -90L || *latDegrees > 90L){
 					sm_delete(sm);
-					free(buffer); free(latDegrees); free(lonDegrees); free(latOffset); free(lonOffset);
+					free(buffer);
+					free(latDegrees); 
+					if(lonDegrees != NULL)
+						free(lonDegrees); 
+					free(latOffset); 
+					if(lonOffset != NULL)
+						free(lonOffset);
 					status = 422;
 					goto mc_bothOffsets;		
 				}
@@ -171,7 +185,15 @@ int marker_controller(const struct http_request * request, char * stringToReturn
 			if(lonDegrees != NULL)
 				if(*lonDegrees < -180L || *lonDegrees > 180L){
 					sm_delete(sm);
-					free(buffer); free(latDegrees); free(lonDegrees); free(latOffset); free(lonOffset);
+					free(buffer); 
+					if(latDegrees != NULL)
+						free(latDegrees); 
+					if(lonDegrees != NULL)
+						free(lonDegrees); 
+					if(latOffset != NULL)
+						free(latOffset); 
+					if(lonOffset != NULL)
+						free(lonOffset);
 					status = 422;
 					goto mc_bothOffsets;			
 				}
@@ -192,7 +214,15 @@ int marker_controller(const struct http_request * request, char * stringToReturn
 			if(status == -1){
 				/* Something went terribly wrong */
 				sm_delete(sm);
-				free(buffer); free(latDegrees); free(lonDegrees); free(latOffset); free(lonOffset);
+				free(buffer); 
+				if(latDegrees != NULL)
+					free(latDegrees); 
+				if(lonDegrees != NULL)
+					free(lonDegrees); 
+				if(latOffset != NULL)
+					free(latOffset); 
+				if(lonOffset != NULL)
+					free(lonOffset);
 				goto mc_nomem;
 			}
 			break;
@@ -200,7 +230,15 @@ int marker_controller(const struct http_request * request, char * stringToReturn
 			if(sm_exists(sm,"id")!=1){
 				status = 400;
 				sm_delete(sm);
-				free(buffer); free(latDegrees); free(lonDegrees); free(latOffset); free(lonOffset);
+				free(buffer); 
+				if(latDegrees != NULL)
+					free(latDegrees); 
+				if(lonDegrees != NULL)
+					free(lonDegrees); 
+				if(latOffset != NULL)
+					free(latOffset); 
+				if(lonOffset != NULL)
+					free(lonOffset);
 				goto mc_missing_key;
 			}
 			sm_get(sm, "id", tempBuf, sizeof tempBuf);
@@ -211,7 +249,15 @@ int marker_controller(const struct http_request * request, char * stringToReturn
 			if(sm_exists(sm,"id")!=1){
 				status = 400;
 				sm_delete(sm);
-				free(buffer); free(latDegrees); free(lonDegrees); free(latOffset); free(lonOffset);
+				free(buffer); 
+				if(latDegrees != NULL)
+					free(latDegrees); 
+				if(lonDegrees != NULL)
+					free(lonDegrees); 
+				if(latOffset != NULL)
+					free(latOffset); 
+				if(lonOffset != NULL)
+					free(lonOffset);
 				goto mc_missing_key;
 			}
 			sm_get(sm, "id", tempBuf, sizeof tempBuf);
@@ -219,13 +265,29 @@ int marker_controller(const struct http_request * request, char * stringToReturn
 			status = marker_delete(buffer, buffSize, id);
 			if(status == -1){
 				sm_delete(sm);
-				free(buffer); free(latDegrees); free(lonDegrees); free(latOffset); free(lonOffset);
+				free(buffer); 
+				if(latDegrees != NULL)
+					free(latDegrees); 
+				if(lonDegrees != NULL)
+					free(lonDegrees); 
+				if(latOffset != NULL)
+					free(latOffset); 
+				if(lonOffset != NULL)
+					free(lonOffset);
 				goto mc_nomem;	
 			}
 			break;
 		default:
 			status = 501;	
-			free(buffer); free(latDegrees); free(lonDegrees); free(latOffset); free(lonOffset);
+			free(buffer); 
+			if(latDegrees != NULL)
+				free(latDegrees); 
+			if(lonDegrees != NULL)
+				free(lonDegrees); 
+			if(latOffset != NULL)
+				free(latOffset); 
+			if(lonOffset != NULL)
+				free(lonOffset);
 			sm_delete(sm);
 			goto mc_unsupportedMethod;
 	}
@@ -380,6 +442,7 @@ int marker_post(char * buffer, int buffSize, const struct http_request * request
 
 
 	bzero(keyBuffer,sizeof keyBuffer);
+	bzero(valBuffer,sizeof valBuffer);
 	gs_marker_ZeroStruct(&marker);
 	gs_comment_ZeroStruct(&assocComment);
 	strFlag = 0;

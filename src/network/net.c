@@ -29,6 +29,7 @@ void* doNetWork(struct threadData* td) {
             status = comment_controller(&request, response, sizeof response);
             break;
         case HEATMAP_CONTROLLER :
+            status = heatmap_controller(&request, response, sizeof response);
             break;
         case MARKER_CONTROLLER :
             status = marker_controller(&request, response, sizeof response);
