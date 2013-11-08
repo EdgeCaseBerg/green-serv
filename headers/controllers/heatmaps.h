@@ -55,6 +55,9 @@
 	#ifndef TRUE
 		#define TRUE 1
 	#endif
+	#ifndef DEFAULT_OFFSET
+		#define DEFAULT_OFFSET "0.5"
+	#endif
 
 	int heatmap_controller(const struct http_request * request, char * stringToReturn, int strLength);
 

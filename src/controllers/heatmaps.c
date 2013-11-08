@@ -1,5 +1,9 @@
 #include "controllers/heatmaps.h"
 
+static inline int min(const int a, const int b){
+	return a < b ? a : b;
+}
+
 int heatmap_controller(const struct http_request * request, char * stringToReturn, int strLength){
 	int status;
 	char * buffer; 
@@ -87,18 +91,28 @@ int heatmap_controller(const struct http_request * request, char * stringToRetur
 		if( sm_exists(sm,"latdegrees") == 1){
 			sm_get(sm,"latdegrees",tempBuf,sizeof tempBuf);
 			(*latDegrees) = createDecimalFromString(tempBuf);
+		}else{
+			free(latDegrees);
+			latDegrees = NULL;
 		}
 		if( sm_exists(sm, "londegrees") == 1){
 			sm_get(sm,"londegrees",tempBuf,sizeof tempBuf);
 			(*lonDegrees) = createDecimalFromString(tempBuf);
+		}else{
+			free(lonDegrees);
+			lonDegrees = NULL;
 		}
 		if( sm_exists(sm, "lonoffset") == 1){
 			sm_get(sm,"lonoffset",tempBuf,sizeof tempBuf);
 			(*lonOffset) = createDecimalFromString(tempBuf);
+		} else {
+			(*lonOffset) = createDecimalFromString(DEFAULT_OFFSET);
 		}
 		if( sm_exists(sm, "latoffset") == 1){
 			sm_get(sm,"latoffset",tempBuf,sizeof tempBuf);
 			(*latOffset) = createDecimalFromString(tempBuf);
+		} else {
+			(*latOffset) = createDecimalFromString(DEFAULT_OFFSET);
 		}
 		if( sm_exists(sm, "precision") == 1){
 			sm_get(sm,"precision",tempBuf, sizeof tempBuf);
@@ -109,7 +123,12 @@ int heatmap_controller(const struct http_request * request, char * stringToRetur
 			}else{
 				hop:
 				sm_delete(sm);
-				free(buffer); free(latDegrees); free(lonDegrees); free(latOffset); free(lonOffset);	
+				free(buffer); 
+				if(latDegrees != NULL)
+					free(latDegrees); 
+				if(lonDegrees != NULL)
+					free(lonDegrees); 
+				free(latOffset); free(lonOffset);	
 				goto bad_precision;
 			}
 		}
@@ -118,6 +137,12 @@ int heatmap_controller(const struct http_request * request, char * stringToRetur
 			if(strncasecmp(tempBuf,"true",4) == 0)
 				raw = TRUE;
 		}
+	}else{
+		free(lonOffset); lonOffset  = NULL;
+		free(latOffset); latOffset  = NULL;
+		free(lonDegrees); lonDegrees = NULL;
+		free(latDegrees); latDegrees = NULL;
+
 	}
 
 	switch(request->method){
@@ -127,7 +152,16 @@ int heatmap_controller(const struct http_request * request, char * stringToRetur
 			if((sm_exists(sm,"latoffset")==1) ^ (sm_exists(sm,"lonoffset")==1)){
 				/*Err! if one is used, both must be used! */
 				sm_delete(sm);
-				free(buffer); free(latDegrees); free(lonDegrees); free(latOffset); free(lonOffset);
+				free(buffer);
+				if(latDegrees != NULL)
+					free(latDegrees); 
+				if(lonDegrees != NULL)
+					free(lonDegrees); 
+				if(latOffset != NULL)
+					free(latOffset);
+				if(lonOffset != NULL)
+					free(lonOffset);
+				
 				status = 422;
 				goto mh_bothOffsets;
 			}
@@ -135,7 +169,16 @@ int heatmap_controller(const struct http_request * request, char * stringToRetur
 				/*Let the -90.1 slide by as ok...*/
 				if(*latDegrees < -90L || *latDegrees > 90L){
 					sm_delete(sm);
-					free(buffer); free(latDegrees); free(lonDegrees); free(latOffset); free(lonOffset);
+					free(buffer); 
+					if(latDegrees != NULL)
+						free(latDegrees); 
+					if(lonDegrees != NULL)
+						free(lonDegrees); 
+					if(latOffset != NULL)
+						free(latOffset);
+					if(lonOffset != NULL)
+						free(lonOffset);
+
 					status = 422;
 					goto mh_badlat;		
 				}
@@ -143,29 +186,81 @@ int heatmap_controller(const struct http_request * request, char * stringToRetur
 			if(lonDegrees != NULL)
 				if(*lonDegrees < -180L || *lonDegrees > 180L){
 					sm_delete(sm);
-					free(buffer); free(latDegrees); free(lonDegrees); free(latOffset); free(lonOffset);
+					free(buffer); 
+					if(latDegrees != NULL)
+						free(latDegrees); 
+					if(lonDegrees != NULL)
+						free(lonDegrees); 
+					if(latOffset != NULL)
+						free(latOffset);
+					if(lonOffset != NULL)
+						free(lonOffset);
+					
 					status = 422;
 					goto mh_badlon;			
 				}
 			status = heatmap_get(buffer, buffSize,page, latDegrees, latOffset, lonDegrees, lonOffset, precision, raw);
+			if(status == -1){
+				free(buffer); 
+				if(latDegrees != NULL)
+					free(latDegrees); 
+				if(lonDegrees != NULL)
+					free(lonDegrees); 
+				if(latOffset != NULL)
+					free(latOffset);
+				if(lonOffset != NULL)
+					free(lonOffset);
+				
+				sm_delete(sm);
+				goto mh_nomem;
+			}
 			break;
 		case PUT:
 			status = heatmap_put(buffer,buffSize,request);
+			if(status == -1){
+				free(buffer); 
+				if(latDegrees != NULL)
+					free(latDegrees); 
+				if(lonDegrees != NULL)
+					free(lonDegrees); 
+				if(latOffset != NULL)
+					free(latOffset);
+				if(lonOffset != NULL)
+					free(lonOffset);
+				
+				sm_delete(sm);	
+				goto mh_nomem;
+			}
 			break;
 		case DELETE:
 		case POST:	
 		default:
 			status = 501;	
-			free(buffer); free(latDegrees); free(lonDegrees); free(latOffset); free(lonOffset);
+			free(buffer); 
+			if(latDegrees != NULL)
+				free(latDegrees); 
+			if(lonDegrees != NULL)
+				free(lonDegrees); 
+			if(latOffset != NULL)
+				free(latOffset);
+			if(lonOffset != NULL)
+				free(lonOffset);
+			
 			sm_delete(sm);
 			goto mh_unsupportedMethod;
 	}
 
-	fprintf(stderr, "Processing by heatmap: Working with %p %s %d", (void*)request, stringToReturn, strLength);
-
 	
 	snprintf(stringToReturn, strLength, "%s", buffer);
-	free(buffer); free(latDegrees); free(lonDegrees); free(latOffset); free(lonOffset);	
+	free(buffer); 
+	if(latDegrees != NULL)
+		free(latDegrees); 
+	if(lonDegrees != NULL)
+		free(lonDegrees); 
+	if(latOffset != NULL)
+		free(latOffset); 
+	if(lonOffset != NULL)
+		free(lonOffset);
 	sm_delete(sm);
 	return status;
 
@@ -200,8 +295,90 @@ int heatmap_controller(const struct http_request * request, char * stringToRetur
 }
 
 int heatmap_get(char * buffer, int buffSize,int page, Decimal * latDegrees, Decimal * latOffset, Decimal * lonDegrees, Decimal * lonOffset, int precision, int raw){
-	fprintf(stderr, "%s %d %d "DecimalFormat DecimalFormat DecimalFormat DecimalFormat "%d %d\n", buffer, buffSize,page, *latDegrees, *latOffset,*lonDegrees,*lonOffset, precision,raw);
-	return 503;
+	MYSQL * conn;
+	struct gs_heatmap * heatmaps;
+	int numHeatmaps;
+	int nextPage;
+	long max;
+	char nextStr[MAX_URL_LENGTH];
+	char prevStr[MAX_URL_LENGTH];
+	char tempBuf[buffSize];
+	char json[512]; /*Some large enough number to hold all the info*/
+	int i;
+	fprintf(stderr, "%p %p\n", (void*)latOffset, (void*)lonOffset);
+	heatmaps = malloc(HEATMAP_RESULTS_PER_PAGE * sizeof(struct gs_heatmap));
+	if(heatmaps == NULL){
+		return -1; /* Return flag to send self nomem */
+	}
+	memset(heatmaps,0,HEATMAP_RESULTS_PER_PAGE * sizeof(struct gs_heatmap));
+
+	mysql_thread_init();
+	conn = _getMySQLConnection();
+	if(!conn){
+		free(heatmaps);
+		mysql_thread_end();
+		fprintf(stderr, "%s\n", "Could not connect to mySQL on worker thread");
+		return -1;
+	}
+
+	bzero(nextStr, sizeof nextStr);
+	bzero(prevStr, sizeof prevStr);
+	bzero(tempBuf,sizeof tempBuf);
+	numHeatmaps = 0;
+
+	if(latDegrees == NULL && lonDegrees == NULL){
+		/* Easy, do a query for all the points regardless of location 
+		 * Negative 1 on the page because we need to start the offset at 0
+		*/
+		numHeatmaps = db_getHeatmap(page-1, _shared_campaign_id, precision, &max, -91L, 91L, -181L, 181L, heatmaps, conn);
+	} else if ( lonDegrees == NULL && latDegrees != NULL) {
+		/* Only caring about latdegrees */
+		numHeatmaps = 0;
+		fprintf(stderr, "%s\n", "lat no lon");
+	} else if ( lonDegrees != NULL && latDegrees == NULL ) {
+		fprintf(stderr, "%s\n", "lon no lat");
+		numHeatmaps = 0;
+	} else if ( lonDegrees != NULL && latDegrees != NULL) {
+		fprintf(stderr, "%s\n", "lon and lat");
+		numHeatmaps = 0;
+	} else {
+		/* Bad Request? not sure if it's possible to even hit this case */
+		fprintf(stderr, "--%s\n", "Possible to hit here?");
+	}
+
+	if( numHeatmaps > HEATMAP_RESULTS_RETURNED ){
+		nextPage = page+1;
+		/*Need to tack on url parameters if present*/
+		snprintf(nextStr,MAX_URL_LENGTH, "%sheatmap?page=%d&raw=%s", BASE_API_URL, nextPage, raw == TRUE ? "true" : "false");
+	} else {
+		snprintf(nextStr,MAX_URL_LENGTH, "null");
+	}
+
+	if(page > 1)
+		snprintf(prevStr,MAX_URL_LENGTH,"%sheatmap?page=%d&raw=%s",BASE_API_URL,page-1, raw == TRUE ? "true" : "false");
+	else
+		snprintf(prevStr,MAX_URL_LENGTH,"null");
+
+	for(i=0; i < min(numHeatmaps,HEATMAP_RESULTS_RETURNED); ++i){
+		bzero(json,sizeof json);
+		if(!raw)
+			heatmaps[i].intensity = (heatmaps[i].intensity/(double)max)*100;
+		gs_heatmapNToJSON(heatmaps[i], json, sizeof json);
+		if(i==0)
+			snprintf(tempBuf,buffSize,"%s",json);
+		else{
+			strncat(tempBuf,",",buffSize);
+			strncat(tempBuf,json,buffSize);
+		}			
+	}
+	printf("%s\n",tempBuf );
+	snprintf(buffer,buffSize, HEATMAP_PAGE_STR, 200, tempBuf, min(numHeatmaps,HEATMAP_RESULTS_RETURNED), page, nextStr,prevStr);
+	
+	free(heatmaps);
+	mysql_close(conn);
+	mysql_thread_end();
+
+	return 200;
 }
 
 int heatmap_put(char * buffer, int buffSize, const struct http_request * request){
