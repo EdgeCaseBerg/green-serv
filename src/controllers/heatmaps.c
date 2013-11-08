@@ -138,7 +138,7 @@ int heatmap_controller(const struct http_request * request, char * stringToRetur
 				raw = TRUE;
 		}
 	}else{
-		free(lonOffset); lonOffset  = NULL;
+		free(lonOffset); lonOffset  = NULL;	
 		free(latOffset); latOffset  = NULL;
 		free(lonDegrees); lonDegrees = NULL;
 		free(latDegrees); latDegrees = NULL;
@@ -303,6 +303,11 @@ int heatmap_get(char * buffer, int buffSize,int page, Decimal * latDegrees, Deci
 	char nextStr[MAX_URL_LENGTH];
 	char prevStr[MAX_URL_LENGTH];
 	char tempBuf[buffSize];
+	Decimal lowerLat;
+	Decimal upperLat;
+	Decimal lowerLon;
+	Decimal upperLon;
+
 	char json[512]; /*Some large enough number to hold all the info*/
 	int i;
 	fprintf(stderr, "%p %p\n", (void*)latOffset, (void*)lonOffset);
@@ -311,6 +316,10 @@ int heatmap_get(char * buffer, int buffSize,int page, Decimal * latDegrees, Deci
 		return -1; /* Return flag to send self nomem */
 	}
 	memset(heatmaps,0,HEATMAP_RESULTS_PER_PAGE * sizeof(struct gs_heatmap));
+	lowerLon = createDecimalFromString("-181");
+	lowerLat = createDecimalFromString("-91");
+	upperLon = createDecimalFromString("181");
+	upperLat = createDecimalFromString("91");
 
 	mysql_thread_init();
 	conn = _getMySQLConnection();
@@ -328,23 +337,26 @@ int heatmap_get(char * buffer, int buffSize,int page, Decimal * latDegrees, Deci
 
 	if(latDegrees == NULL && lonDegrees == NULL){
 		/* Easy, do a query for all the points regardless of location 
-		 * Negative 1 on the page because we need to start the offset at 0
+		/ * Negative 1 on the page because we need to start the offset at 0
 		*/
-		numHeatmaps = db_getHeatmap(page-1, _shared_campaign_id, precision, &max, -91L, 91L, -181L, 181L, heatmaps, conn);
 	} else if ( lonDegrees == NULL && latDegrees != NULL) {
 		/* Only caring about latdegrees */
-		numHeatmaps = 0;
-		fprintf(stderr, "%s\n", "lat no lon");
+		add_decimals(latDegrees,latOffset,&upperLat);
+		subtract_decimals(latDegrees,latOffset,&lowerLat);
 	} else if ( lonDegrees != NULL && latDegrees == NULL ) {
-		fprintf(stderr, "%s\n", "lon no lat");
-		numHeatmaps = 0;
+		add_decimals(lonDegrees,lonOffset,&upperLon);
+		subtract_decimals(lonDegrees,lonOffset,&lowerLon);
 	} else if ( lonDegrees != NULL && latDegrees != NULL) {
-		fprintf(stderr, "%s\n", "lon and lat");
-		numHeatmaps = 0;
+		add_decimals(latDegrees,latOffset,&upperLat);
+		subtract_decimals(latDegrees,latOffset,&lowerLat);
+		add_decimals(lonDegrees,lonOffset,&upperLon);
+		subtract_decimals(lonDegrees,lonOffset,&lowerLon);
 	} else {
 		/* Bad Request? not sure if it's possible to even hit this case */
 		fprintf(stderr, "--%s\n", "Possible to hit here?");
 	}
+	/* Negative 1 on the page because we need to start the offset at 0	*/
+	numHeatmaps = db_getHeatmap(page-1, _shared_campaign_id, precision, &max, lowerLat, upperLat, lowerLon, upperLon, heatmaps, conn);
 
 	if( numHeatmaps > HEATMAP_RESULTS_RETURNED ){
 		nextPage = page+1;
