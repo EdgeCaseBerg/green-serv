@@ -722,7 +722,6 @@ int db_getMarkerComments(int page, long scopeId, struct gs_marker * gsm, struct 
 	bzero(query,sizeof query);
 	sprintf(query, GS_MARKER_COMMENT_GET_ALL, scopeId, page*MARKER_LIMIT);
 
-	fprintf(stderr, "%s\n", query);
 	if(0 != mysql_query(conn, query) ){
 		fprintf(stderr, "%s\n", mysql_error(conn));
 		return 0;
@@ -860,7 +859,6 @@ int db_getMarkerCommentsFullFilter(int page, long scopeId, struct gs_marker * gs
     formatDecimal(upDec, lonUpper);    
    
 	sprintf(query, GS_MARKER_COMMENT_GET_BY_BOTH, scopeId, latLower, latUpper, lonLower, lonUpper ,page*MARKER_LIMIT);
-	fprintf(stderr, "%s\n", query);
 	if(0 != mysql_query(conn, query) ){
 		fprintf(stderr, "%s\n", mysql_error(conn));
 		return 0;
