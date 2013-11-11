@@ -681,7 +681,7 @@ int marker_get(char * buffer,int buffSize,Decimal * latDegrees, Decimal * lonDeg
 		}			
 	}
 
-	snprintf(buffer,buffSize, MARKER_PAGE_STR, 200, hybridBuffer, min(numMarkers,MARKER_RETURNED), page, nextStr,prevStr);
+	snprintf(buffer,buffSize, MARKER_PAGE_STR, 200, hybridBuffer, min(numMarkers,MARKER_RETURNED), page-1, nextStr,prevStr);
 	
 
 	free(comments);

@@ -35,6 +35,7 @@ void* doNetWork(struct threadData* td) {
             status = marker_controller(&request, response, sizeof response);
             break;
         case REPORT_CONTROLLER :
+            status = report_controller(&request, response, sizeof response);
             break;
         default:
             /* We have no clue what the client is talking about with their url */

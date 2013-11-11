@@ -10,6 +10,11 @@ void gs_report_setContent(char * content, struct gs_report * gsr){
 	strncpy(gsr->content,content,GS_REPORT_MAX_LENGTH);
 }
 
+void gs_report_setStackTrace(char * trace, struct gs_report * gsr){
+	bzero(gsr->trace,GS_REPORT_MAX_LENGTH+1);
+	strncpy(gsr->trace,trace,GS_REPORT_MAX_LENGTH);	
+}
+
 void gs_report_setOrigin(char * origin, struct gs_report * gsr){
 	bzero(gsr->origin,SHA_LENGTH+1);
 	sha256(origin,gsr->origin);
@@ -34,6 +39,7 @@ void gs_report_ZeroStruct(struct gs_report * gsr){
 	bzero(gsr->content,GS_REPORT_MAX_LENGTH+1);
 	bzero(gsr->origin,SHA_LENGTH+1);
 	bzero(gsr->authorize,SHA_LENGTH+1);
+	bzero(gsr->trace, GS_REPORT_MAX_LENGTH +1);
 	gsr->id = GS_REPORT_INVALID_ID; 
 	gsr->scopeId = GS_SCOPE_INVALID_ID;
 	bzero(gsr->createdTime, GS_REPORT_CREATED_TIME_LENGTH+1);

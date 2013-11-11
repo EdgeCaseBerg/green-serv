@@ -158,6 +158,7 @@ SQL to create database structure:
     CREATE TABLE report (
         id INT(12) NOT NULL auto_increment PRIMARY KEY,
         content TEXT, -- stores 64Kb.
+        trace TEXT, -- stores 64Kb.
         scope_id INT(12), -- this is an ancestor style query
         origin CHAR(64) NOT NULL, -- sha256 hash
         authorize CHAR(64) NOT NULL, -- sha256 hash

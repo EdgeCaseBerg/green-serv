@@ -19,7 +19,7 @@
 	#include <stdlib.h>
 	#include <stdio.h>
 
-	#define MAX_URL_LENGTH 100
+	#define MAX_URL_LENGTH 256
 	struct http_request{
 		int method;
 		char url[MAX_URL_LENGTH]; /* The request URL to determine the controller */
