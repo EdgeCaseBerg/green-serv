@@ -398,12 +398,6 @@ int run_network(char * buffer, int bufferLength, void*(*func)(void*)){
             #endif
         }
     }
-    if(clientfd)
-        close(clientfd);
-    #ifndef DETACHED_THREADS
-    for(j=0; j < i-1 && j < NUMTHREADS; ++j)
-        pthread_join(children[j],NULL);
-    #endif
     #ifdef DETACHED_THREADS
     pthread_attr_destroy(&attr);
     #endif
