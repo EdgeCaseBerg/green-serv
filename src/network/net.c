@@ -320,3 +320,98 @@ int test_network(char * buffer, int bufferLength, void*(*func)(void*)){
 
     return 0;
 }
+
+
+#include <unistd.h>
+#include <stdio.h>
+#include <signal.h>
+
+volatile sig_atomic_t stop;
+void stop_server(int signum){
+    /* Call me with ctrl Z if ctrl c doesnt work*/
+    stop = 1;
+    if(signum == SIGINT)
+        stop =1;
+    
+}
+
+int run_network(char * buffer, int bufferLength, void*(*func)(void*)){
+    struct sockaddr_in sockserv,sockclient;
+    int socketfd,clientfd;
+    socklen_t clientsocklen;
+    char buff[BUFSIZ];
+    pthread_t children[NUMTHREADS];
+    struct threadData data[NUMTHREADS];
+    int i,j;
+    stop = 0;
+    #ifdef DETACHED_THREADS
+    pthread_attr_t attr;
+    #endif
+    
+    clientfd = socketfd = 0; 
+    bzero(buff,BUFSIZ);
+    bzero(&sockserv,sizeof(sockserv));
+
+    socketfd = createSocket();
+    setupSockAndBind(socketfd, &sockserv, PORT); 
+    listen(socketfd,NUMTHREADS);
+
+    clientsocklen = sizeof socketfd;
+
+    #ifdef DETACHED_THREADS
+    pthread_attr_init(&attr);
+    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+    #endif
+
+    signal(SIGINT, stop_server);
+    signal(SIGTERM, stop_server);
+    signal(SIGQUIT, stop_server);
+    signal(SIGHUP, stop_server);    
+
+    i=j=0;
+    if(errno != 13){
+        while(stop == 0){
+            for(i=0; i < NUMTHREADS && stop == 0; i++){
+                clientfd = accept(socketfd,(struct sockaddr*)&sockclient,&clientsocklen);
+                buff[read(clientfd,buff,BUFSIZ)] = '\0';
+                strncpy(buffer, buff ,bufferLength);
+
+                /* A thread pool would be intelligent here */
+                sprintf(data[i].msg, "%s", buffer);
+                data[i].clientfd = clientfd;
+                #ifndef DETACHED_THREADS
+                    pthread_create(&children[i],NULL,func,&data[i]);
+                #else
+                    pthread_create(&children[i],&attr,func,&data[i]);
+                #endif
+                bzero(buff,BUFSIZ);
+                bzero(buffer,bufferLength);
+                
+            }           
+            /*Gobble Up the resources (if not detaching threads)
+             *If you do want to detach threads change the define. 
+             *in net.h
+            */
+            #ifndef DETACHED_THREADS
+            for(j=0; j < NUMTHREADS && j < i; ++j)
+                pthread_join(children[j],NULL);
+            #endif
+        }
+    }
+    #ifndef DETACHED_THREADS
+    for(j=0; j < i && j < NUMTHREADS; ++j)
+        pthread_join(children[j],NULL);
+    #endif
+    #ifdef DETACHED_THREADS
+    pthread_attr_destroy(&attr);
+    #endif
+    if(shutdown(socketfd,2) <0)
+        fprintf(stderr, "%s\n", "Problem shutting down socket descriptor");
+    if(close(socketfd) < 0)
+        fprintf(stderr, "%s\n", "Problem closing socket descriptor");
+    /* Sleep a moment to hope that any running threads will finish */
+    fprintf(stdout, "%s\n", "Exiting Server...");
+    sleep(2);
+
+    return 0;
+}

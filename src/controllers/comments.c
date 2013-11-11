@@ -43,7 +43,7 @@ int comment_controller(const struct http_request * request, char * stringToRetur
 				page = atoi(tempBuf);
 				if(page <= 0){
 					/* Err */
-					status = 400;			
+					status = 422;			
 					sm_delete(sm);
 					goto cc_badpage;
 				}
@@ -55,7 +55,7 @@ int comment_controller(const struct http_request * request, char * stringToRetur
 				if(strncasecmp(cType, CTYPE_1,COMMENTS_CTYPE_SIZE) != 0)
 					if(strncasecmp(cType, CTYPE_2,COMMENTS_CTYPE_SIZE) != 0)
 						if(strncasecmp(cType, CTYPE_3,COMMENTS_CTYPE_SIZE) != 0){
-							status = 400;					
+							status = 422;					
 							sm_delete(sm);
 							goto cc_badtype;
 						}
@@ -95,12 +95,17 @@ int comment_controller(const struct http_request * request, char * stringToRetur
 			if( status == -1 ){
 				sm_delete(sm);
 				goto cc_nomem;
-			} else if(status == 400) {
+			} else if(status == 422) {
 				sm_delete(sm);
 				goto cc_badtype;
 			} else if(status == -400) {
+				status = 400;
 				sm_delete(sm);
 				goto cc_missing;
+			}else if(status == -422){
+				sm_delete(sm);
+				status = 422;
+				goto cc_emptymessage;
 			}
 			snprintf(stringToReturn,strLength,"%s",buffer);
 			break;
@@ -149,6 +154,10 @@ int comment_controller(const struct http_request * request, char * stringToRetur
 	cc_missing_key:
 		snprintf(stringToReturn, strLength, ERROR_STR_FORMAT, status, MISSING_ID_KEY);
 		return status;							
+
+	cc_emptymessage:
+		snprintf(stringToReturn, strLength, ERROR_STR_FORMAT, status, EMPTY_COMMENT_MESSAGE);
+		return status;									
 
 }
 
@@ -243,15 +252,17 @@ int comment_post(char * buffer, int buffSize, const struct http_request * reques
 	struct gs_comment insComment;
 	StrMap * sm;
 	int i;
+	int empty;
 	int j;
 	int strFlag;
 	char keyBuffer[GS_COMMENT_MAX_LENGTH+1];
 	char valBuffer[GS_COMMENT_MAX_LENGTH+1];
-
+	char **convertSuccess;
 
 	bzero(keyBuffer,sizeof keyBuffer);
 	gs_comment_ZeroStruct(&insComment);
 	strFlag = 0;
+	convertSuccess = NULL;
 
 	sm = sm_new(HASH_TABLE_CAPACITY);
 	if(sm == NULL){
@@ -272,14 +283,14 @@ int comment_post(char * buffer, int buffSize, const struct http_request * reques
 			/*find the beginning of the value
 			 *which is either a " or a number. So skip spaces and commas
 			*/
-			for(i++; i < request->contentLength && request->data[i] != '\0' && (request->data[i] == ',' || request->data[i] == ' ' || request->data[i] == ':'); ++i)
+			for(i++; i<  (int)(sizeof valBuffer)-1 && i < request->contentLength && request->data[i] != '\0' && (request->data[i] == ',' || request->data[i] == ' ' || request->data[i] == ':'); ++i)
 				;
 			/*Skip any opening qoute */
-			if(request->data[i] != '\0' && request->data[i] == '"'){
+			if( i < (int)(sizeof valBuffer)-1 && request->data[i] != '\0' && request->data[i] == '"'){
 				i++;
 				strFlag = 1;
 			}
-			for(j=0; i < request->contentLength && request->data[i] != '\0'; ++j,++i){
+			for(j=0; i < request->contentLength && request->data[i] != '\0' && i < (int)(sizeof valBuffer)-1; ++j,++i){
 				if(strFlag == 0){
 					if(request->data[i] == ' ' || request->data[i] == '\n')
 						break; /*break out if num data*/
@@ -291,11 +302,12 @@ int comment_post(char * buffer, int buffSize, const struct http_request * reques
 			}
 			valBuffer[j] = '\0';
 			/* Skip any closing paren. */
-			if(request->data[i] == '"')
+			if(i < (int)(sizeof valBuffer) && request->data[i] == '"')
 				i++;
-			if(strlen(keyBuffer) > 0 && strlen(valBuffer) > 0)
+			if(strlen(keyBuffer) > 0 && strlen(valBuffer) > 0){
 				if(sm_put(sm, keyBuffer, valBuffer) == 0)
                 	fprintf(stderr, "Failed to copy parameters into hash table while parsing url\n");
+            }
 		}
 		strFlag = 0;
 	}
@@ -306,6 +318,14 @@ int comment_post(char * buffer, int buffSize, const struct http_request * reques
 		fprintf(stderr, "required keys not found\n");
 		return -400;		
 	}else{
+		if(sm_exists(sm,"message") == 1){
+			if(sm_get(sm,"type",keyBuffer, sizeof keyBuffer) == 1){
+				if(strlen(keyBuffer) > GS_COMMENT_MAX_LENGTH){
+					sm_delete(sm);
+					return 422;
+				}
+			}
+		}
 		if(sm_exists(sm, "type") ==1){
 			if(sm_get(sm,"type", valBuffer, sizeof valBuffer) == 1){
 				/* Verify that it is a correct type */
@@ -313,7 +333,7 @@ int comment_post(char * buffer, int buffSize, const struct http_request * reques
 					if(strncasecmp(valBuffer, CTYPE_2,COMMENTS_CTYPE_SIZE) != 0)
 						if(strncasecmp(valBuffer, CTYPE_3,COMMENTS_CTYPE_SIZE) != 0){				
 							sm_delete(sm);
-							return 400;
+							return 422;
 						}
 
 			}
@@ -323,10 +343,25 @@ int comment_post(char * buffer, int buffSize, const struct http_request * reques
 	/* valid, cary on and copy over */
 	gs_comment_setScopeId(_shared_campaign_id, &insComment);
 	sm_get(sm, "message",valBuffer, sizeof valBuffer);
+	/* Check for message being empty */
+	empty = 1;
+	for(i=0; i < (int)strlen(valBuffer); ++i){
+		 empty = empty && (valBuffer[i] == ' ');
+	}
+	if(empty){
+		sm_delete(sm);
+		return -422;
+	}
+	fprintf(stderr, "val::%s\n", valBuffer);
 	gs_comment_setContent(valBuffer, &insComment);
 	if(sm_exists(sm, "pin")){
 		sm_get(sm, "pin",keyBuffer,sizeof keyBuffer);
-		gs_comment_setPinId(atol(keyBuffer),&insComment);
+		if(strtod(keyBuffer,convertSuccess) != 0 && convertSuccess == NULL){
+			gs_comment_setPinId(atol(keyBuffer),&insComment);
+		}else{
+			sm_delete(sm);
+			return 422;
+		} 
 	}
 	sm_get(sm, "type", insComment.cType, sizeof insComment.cType);
 	sm_delete(sm);

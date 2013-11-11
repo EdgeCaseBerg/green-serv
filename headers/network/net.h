@@ -4,9 +4,9 @@
 	#define METHOD_LENGTH 7
 	
 	#define FIRSTLINEBUFFSIZE 256
-	#define NUMTHREADS 1/*00*/
+	#define NUMTHREADS 100
 	#define DETACHED_THREADS
-	#undef DETACHED_THREADS
+	#undef DETACHED_THREADS /* Using detacthed threads runs the risk of leaving fd's open */
 	/* Simple struct to contain data to be sent to worker threads */
 	struct threadData{
 	    char msg[16384];
@@ -63,6 +63,8 @@
 
 	/* This function is unlikely to live beyond testing things */
 	int test_network(char * buffer, int bufferLength, void*( *func )(void*) );
+
+	int run_network(char * buffer, int bufferLength, void*( *func )(void*) );
 
 
 

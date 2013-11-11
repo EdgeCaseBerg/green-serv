@@ -36,6 +36,7 @@
 	#ifndef MISSING_ID_KEY
 		#define MISSING_ID_KEY "Required key id not found"
 	#endif
+	#define EMPTY_COMMENT_MESSAGE "Message may not be empty"
 
 	int comment_controller(const struct http_request * request, char * stringToReturn, int strLength);
 

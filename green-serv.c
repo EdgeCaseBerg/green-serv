@@ -58,7 +58,7 @@ int main(int argc, const char* argv[]) {
 	char buff[1024];
 	bzero(buff,1024);
 	/*What a silly cast we have to make...*/
-	test_network(buff,1024,(void*(*)(void*))&doNetWork);
+	run_network(buff,1024,(void*(*)(void*))&doNetWork);
 
 	/*Clean Up database connection*/
 	mysql_library_end();
