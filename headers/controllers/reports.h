@@ -41,10 +41,17 @@
 	#ifndef KEYS_MISSING
 		#define KEYS_MISSING "Could not process request due to required keys not being found in data."
 	#endif
+	#ifndef REPORT_NOT_FOUND
+		#define REPORT_NOT_FOUND "Could not find report"
+	#endif
+	#ifndef ORIGIN_NOT_ALLOWED
+		#define ORIGIN_NOT_ALLOWED "You do not have permission to delete this report"
+	#endif
+
 	
 	int report_controller(const struct http_request * request, char * stringToReturn, int strLength);
 
-	int report_delete(char * buffer, int buffSize, long id);
+	int report_delete(char * buffer, int buffSize, char * origin, char * hash);
 
 	int report_post(char * buffer, int buffSize, const struct http_request * request);
 

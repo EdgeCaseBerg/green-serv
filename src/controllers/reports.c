@@ -22,6 +22,9 @@ int report_controller(const struct http_request * request, char * stringToReturn
 	status = 503;
 	buffSize = RESULTS_PER_PAGE*(sizeof(struct gs_report)*4+1)+(2*MAX_URL_LENGTH);
 	bzero(tempBuf, sizeof tempBuf);
+	bzero(origin,sizeof origin);
+	bzero(hash, sizeof hash);
+	bzero(since, sizeof since);
 	page = 1;
 	valid = 1;
 
@@ -91,6 +94,8 @@ int report_controller(const struct http_request * request, char * stringToReturn
 			break;
 		case GET:
 		case DELETE:
+			status = report_delete( buffer, buffSize, origin, hash);
+			break;
 		case PUT:
 		default:
 			status = 501;	
@@ -121,7 +126,56 @@ int report_controller(const struct http_request * request, char * stringToReturn
 
 }
 
-int report_delete(char * buffer, int buffSize, long id);
+int report_delete(char * buffer, int buffSize, char * origin, char * hash){
+	MYSQL *conn;
+	struct gs_report report;
+	char orig[SHA_LENGTH+1]; 
+
+	mysql_thread_init();
+	conn = _getMySQLConnection();
+	if(!conn){
+		mysql_thread_end();
+		fprintf(stderr, "%s\n", "Could not connect to mySQL on worker thread");
+		return -1;
+	}	
+
+	bzero(orig, sizeof orig);
+	sha256(origin,orig);
+
+	db_getReportByAuth(hash, &report, conn);
+
+	if(report.id == GS_REPORT_INVALID_ID){
+		/* Couldn't find.  */
+		snprintf(buffer, buffSize, ERROR_STR_FORMAT, 404, REPORT_NOT_FOUND);
+		mysql_close(conn);
+		mysql_thread_end();
+		return 404;
+	}
+
+	/* Check the origin's to determine permissions to delete */
+	if(strncmp(report.origin, orig, SHA_LENGTH) != 0){
+		snprintf(buffer, buffSize, ERROR_STR_FORMAT, 403, ORIGIN_NOT_ALLOWED);
+		mysql_close(conn);
+		mysql_thread_end();
+		return 403;
+	}
+
+	if( db_deleteReport(&report, conn) > 0 ){
+		snprintf(buffer, buffSize, "%s","");
+		mysql_close(conn);
+		mysql_thread_end();
+		return 204;
+	}else{
+		snprintf(buffer, buffSize, "{\"status_code\" : 404 ,\"message\" : \"Successful Deletion\"}");
+		mysql_close(conn);
+		mysql_thread_end();
+		return 404;		
+	}
+
+
+	
+
+}
 
 int report_post(char * buffer, int buffSize, const struct http_request * request){
 	MYSQL *conn;
@@ -245,11 +299,6 @@ int report_post(char * buffer, int buffSize, const struct http_request * request
 		return -1;
 	}	
 
-	/* Insert comment first  because our mySQL trigger
-	 * will then handle updating the comment's pin id to match the new pin
-	 * that we'll submit after. If we didn't have this trigger we'd have
-	 * to do things  a bit differently.
-	*/
 	db_insertReport(&report,conn);
 	if(report.id == GS_REPORT_INVALID_ID){
 		snprintf(buffer,buffSize,ERROR_STR_FORMAT,422,"Could not create report in database for some reason");

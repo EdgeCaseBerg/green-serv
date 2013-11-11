@@ -79,7 +79,6 @@ int db_getComments(int page, long scopeId, struct gs_comment * gsc, MYSQL * conn
 
 	i=0;
 	result = mysql_use_result(conn);
-	fprintf(stderr, "%s\n", query);
 	while( (row=mysql_fetch_row(result)) != NULL ){
 		/* Initialize */
 		gs_comment_ZeroStruct(&gsc[i]);
@@ -496,7 +495,6 @@ int db_getHeatmap(int page, long scopeId, long precision, long * max, Decimal lo
 		fprintf(stderr, "%s\n", mysql_error(conn));
 		return 0;
 	}
-	fprintf(stderr, "%s\n", query);
 
 	i=0;
 	result = mysql_use_result(conn);
@@ -587,7 +585,7 @@ void db_insertReport(struct gs_report * gsr, MYSQL * conn){
 void db_getReportByAuth(char * auth, struct gs_report * gsr, MYSQL * conn){
 	MYSQL_RES * result;
 	MYSQL_ROW row; 
-	char query[99+65+4]; /* 99 for query, 65 for auth hash, 4 for safety*/
+	char query[99+65+40]; /* 99 for query, 65 for auth hash, 4 for safety*/
 
 	gs_report_ZeroStruct(gsr);
 	bzero(query,sizeof query);
@@ -618,7 +616,7 @@ void db_getReportByAuth(char * auth, struct gs_report * gsr, MYSQL * conn){
 }
 
 int db_deleteReport(struct gs_report * gsr, MYSQL * conn){
-	char query[99+(64*2)+5]; /* 61 for query, 64*2+1 for hashes, 4 for safety*/
+	char query[99+(64*2)+5+100]; /* 61 for query, 64*2+1 for hashes, 4 for safety*/
 
 	bzero(query,sizeof query);
 	sprintf(query, GS_REPORT_DELETE, gsr->origin,gsr->authorize);
