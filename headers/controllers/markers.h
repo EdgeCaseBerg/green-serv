@@ -45,7 +45,9 @@
 	#define BAD_LON_OFFSET "Longitude offset must be numeric"
 	#define BAD_LAT_OFFSET "Latitude offset must be numeric"
 	#define NO_ADDRESSED_KEY "Required key or value for addressed not present"
-	#define KEYS_MISSING "Could not process request due to required keys not being found in data."
+	#ifndef KEYS_MISSING
+		#define KEYS_MISSING "Could not process request due to required keys not being found in data."
+	#endif
 	#define BOTH_OFFSET_ERR "Both lonOffset and latOffset must be present if either is used"
 
 	int marker_controller(const struct http_request * request, char * stringToReturn, int strLength);

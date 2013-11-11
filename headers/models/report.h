@@ -16,6 +16,8 @@
 		char createdTime[GS_REPORT_CREATED_TIME_LENGTH+1];  /* YYYY-MM-DD HH:MM:SS + \0 = 20*/
 	};
 
+	/* setOrigin, and setAuthorize both perform sha256 calculations */
+
 	/* Any functions specifically working with just gs_report: */
 	void gs_report_setId(long id, struct gs_report * gsr);
 	/* Content will be truncated to be within GS_REPORT_MAX_LENGTH characters plus a null character!*/

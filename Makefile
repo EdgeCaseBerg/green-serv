@@ -61,7 +61,10 @@ markerC.o: src/controllers/markers.c router.o strmap.o marker.o
 heatmapC.o: src/controllers/heatmaps.c router.o strmap.o heatmap.o
 	$(CC) $(gflags) -c src/controllers/heatmaps.c -o obj/heatmapC.o
 
-network.o: src/network/net.c router.o heartbeatC.o commentC.o markerC.o heatmapC.o
+reportsC.o: src/controllers/reports.c router.o strmap.o report.o sha256.o
+	$(CC) $(gflags) -c src/controllers/reports.c -o obj/reportsC.o
+
+network.o: src/network/net.c router.o heartbeatC.o commentC.o markerC.o heatmapC.o reportsC.o
 	$(CC) $(gflags) -c src/network/net.c -o obj/network.o 
 
 router.o: src/network/router.c strmap.o
