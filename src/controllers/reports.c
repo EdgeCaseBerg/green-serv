@@ -14,6 +14,7 @@ int report_controller(const struct http_request * request, char * stringToReturn
 	char tempBuf[100];
 	char hash[65]; /* SHA256 or md5 */
 	char since[20]; /* YYYY-mm-dd-HH:MM */
+	char * defaultSince = "2000-01-01 00:00";
 	char origin[100]; 
 	StrMap * sm;
 	unsigned int i;
@@ -67,20 +68,35 @@ int report_controller(const struct http_request * request, char * stringToReturn
 		}
 		if(sm_exists(sm,"since") == 1){
 			sm_get(sm,"since",since, sizeof since);
-			for (i = 0; i < sizeof since; ++i){
+			for (i = 0; since[i] != '\0' && i < sizeof since; ++i){
+				fprintf(stderr, "%d %d\n", i, valid);
 				if(i==4 || i == 7 || i ==10 || i ==13){
 					if(since[i] != '-')
 						valid = 0;
+					if(!valid && i == 10)
+						if(since[i] == '+'){ /* space url encoded */
+							valid = 1;
+							since[i] = ' ';
+						}
+					if(!valid && i ==13)
+						if(since[i] == ':')
+							valid = 1;
 				}else{
 					if(!isdigit(since[i]))
 						valid = 0;
 				}
 			}
 			if(!valid){
+				fprintf(stderr, "--:%s\n", since );
 				free(buffer);
 				sm_delete(sm);
 				goto rc_bad_date;
 			}
+		}else{
+			for(i=0; i < sizeof defaultSince; ++i){
+				since[i] = defaultSince[i];
+			}
+			since[i] = '\0';
 		}
 		if(sm_exists(sm,"origin") ==1 ){
 			sm_get(sm,"origin",origin ,sizeof origin);
@@ -93,6 +109,8 @@ int report_controller(const struct http_request * request, char * stringToReturn
 			status = report_post(buffer, buffSize, request);
 			break;
 		case GET:
+			status = report_get(buffer, buffSize, hash, since, page);
+			break;
 		case DELETE:
 			status = report_delete( buffer, buffSize, origin, hash);
 			break;
@@ -171,10 +189,6 @@ int report_delete(char * buffer, int buffSize, char * origin, char * hash){
 		mysql_thread_end();
 		return 404;		
 	}
-
-
-	
-
 }
 
 int report_post(char * buffer, int buffSize, const struct http_request * request){
@@ -320,4 +334,90 @@ int report_post(char * buffer, int buffSize, const struct http_request * request
 		return -1;
 }
 
-int report_get(char * buffer,int buffSize, char * hash, char * since, int page);
+int report_get(char * buffer,int buffSize, char * hash, char * since, int page){
+	MYSQL *conn;
+	struct gs_report report;
+	struct gs_report * reports;
+	int reportBuffSize;
+	int nextPage;
+	char nextStr[MAX_URL_LENGTH];
+	char prevStr[MAX_URL_LENGTH];
+	char reports_buffer[buffSize];
+	long numReports;
+	char json[512];
+	int i;
+	
+	nextPage = 1;
+	numReports = 0;
+	reportBuffSize = RESULTS_PER_PAGE* ( sizeof (struct gs_report));
+
+	mysql_thread_init();
+	conn = _getMySQLConnection();
+	if(!conn){
+		mysql_thread_end();
+		fprintf(stderr, "%s\n", "Could not connect to mySQL on worker thread");
+		return -1;
+	}	
+
+	bzero(json, sizeof json);
+
+
+	if(strlen(hash) != 0){
+		db_getReportByAuth(hash, &report, conn);
+
+		if(report.id == GS_REPORT_INVALID_ID){
+			/* Couldn't find.  */
+			snprintf(buffer, buffSize, ERROR_STR_FORMAT, 404, REPORT_NOT_FOUND);
+			mysql_close(conn);
+			mysql_thread_end();
+			return 404;
+		}
+		gs_reportNToJSON(report, json, sizeof json);
+		snprintf(buffer, buffSize, "{\"status_code\" : 200,\"report\" : %s}",json);
+	}else{
+		/* Paginated GET */
+		reports = malloc(reportBuffSize);
+		if(reports == NULL){
+			mysql_close(conn);
+			mysql_thread_end();
+			return -1;
+		}
+		memset(reports,0,reportBuffSize);
+		bzero(nextStr, sizeof nextStr);
+		bzero(prevStr, sizeof nextStr);
+
+		numReports = db_getReports(page-1, since, _shared_campaign_id, reports, conn);
+
+		if( numReports > RESULTS_RETURNED ){
+			nextPage = page+1;
+			/*TODO: Need to tack on url parameters if present...*/
+			snprintf(nextStr,MAX_URL_LENGTH, "%sdebug?page=%d", BASE_API_URL, nextPage);
+		} else {
+			snprintf(nextStr,MAX_URL_LENGTH, "null");
+		}
+
+		if(page > 1)
+			snprintf(prevStr,MAX_URL_LENGTH,"%sdebug?page=%d",BASE_API_URL,page-1);
+		else
+			snprintf(prevStr,MAX_URL_LENGTH,"null");
+
+		bzero(reports_buffer,sizeof reports_buffer);
+		for(i=0; i < min(numReports,RESULTS_RETURNED); ++i){
+			bzero(json,sizeof json);
+			gs_reportNToJSON(reports[i] ,json, sizeof json);
+			if(i==0)
+				snprintf(reports_buffer,buffSize,"%s",json);
+			else{
+				strncat(reports_buffer,",",buffSize);
+				strncat(reports_buffer,json,buffSize);
+			}			
+		}
+
+		snprintf(buffer,buffSize, REPORT_PAGE_STR, 200, reports_buffer, min(numReports,RESULTS_RETURNED), page, nextStr,prevStr);
+		free(reports);
+	}
+
+	mysql_close(conn);
+	mysql_thread_end();
+	return 200;
+}

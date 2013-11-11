@@ -39,7 +39,7 @@ int main(){
 	
 	reportPage = malloc(RESULTS_PER_PAGE * sizeof(struct gs_report));
 	if(reportPage != NULL){
-		numReports = db_getReports(0, CAMPAIGN_ID, reportPage, conn);;
+		numReports = db_getReports(0,"2000-00-00-00-00", CAMPAIGN_ID, reportPage, conn);;
 		for(i=0; i < numReports; ++i){
 			bzero(json,JSON_LENGTH);
 			gs_reportNToJSON(reportPage[i], json,JSON_LENGTH);

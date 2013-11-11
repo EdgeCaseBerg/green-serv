@@ -24,7 +24,7 @@
 	/* Gets it's own results because it's more likely we'll want more
 	 * heatmap data than something like comments
 	*/
-	#define HEATMAP_RESULTS_PER_PAGE 50
+	#define HEATMAP_RESULTS_PER_PAGE 51
 	#define HEATMAP_RESULTS_RETURNED (HEATMAP_RESULTS_PER_PAGE-1)
 	#define TOSTR(x) #x
 	#define STRINGIFY(x) TOSTR(x)
@@ -66,7 +66,7 @@
 	#define GS_HEATMAP_FIND_MATCH "SELECT id, intensity FROM heatmap WHERE scope_id = %ld AND latitude = " DecimalFormat " AND longitude = " DecimalFormat ";"
 	#define GS_HEATMAP_UPDATE_BY_ID "UPDATE heatmap SET intensity = %ld WHERE id = %ld;"
 
-	#define GS_REPORT_GET_ALL "SELECT id, content, scope_id, origin, authorize, created_time, trace FROM report WHERE scope_id = %ld ORDER BY created_time DESC LIMIT %d, " STRINGIFY(RESULTS_PER_PAGE)  
+	#define GS_REPORT_GET_ALL "SELECT id, content, scope_id, origin, authorize, created_time, trace FROM report WHERE scope_id = %ld AND created_time > '%s' ORDER BY created_time DESC LIMIT %d, " STRINGIFY(RESULTS_PER_PAGE)  
 	#define GS_REPORT_GET_BY_AUTH "SELECT id, content, scope_id, origin, authorize, created_time,trace  FROM report WHERE authorize = \"%s\""
 	#define GS_REPORT_INSERT "INSERT INTO report (content, scope_id, origin, authorize, trace) VALUES (\"%s\", %ld, \"%s\", \"%s\", \"%s\")"
 	#define GS_REPORT_DELETE "DELETE FROM report WHERE origin =\"%s\" AND authorize=\"%s\""
@@ -152,7 +152,8 @@
 
 	int db_deleteReport(struct gs_report * gsr, MYSQL * conn);
 
-	int db_getReports(int page, long scopeId, struct gs_report * gsr, MYSQL * conn);
+	/*Since should be like: YYYY-MM-DD-HH:MM */
+	int db_getReports(int page, char* since, long scopeId, struct gs_report * gsr, MYSQL * conn);
 
 	/* Allocate enough room for marker limit sizes for gsm and gsc */
 	int db_getMarkerComments(int page, long scopeId, struct gs_marker * gsm, struct gs_comment * gsc, MYSQL * conn);

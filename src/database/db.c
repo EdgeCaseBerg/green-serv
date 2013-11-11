@@ -71,6 +71,7 @@ int db_getComments(int page, long scopeId, struct gs_comment * gsc, MYSQL * conn
 	limit = limit > 0 ? limit-(page) : limit;
 	sprintf(query, GS_COMMENT_GET_ALL, scopeId, limit);
 
+
 	if(0 != mysql_query(conn, query) ){
 		fprintf(stderr, "%s\n", query);
 		fprintf(stderr, "%s\n", mysql_error(conn));
@@ -235,10 +236,14 @@ int db_getMarkers(int page, long scopeId, struct gs_marker * gsm, MYSQL * conn){
 	Decimal latitude;
 	Decimal longitude;
 	int i;
+	int limit;
 	char query[sizeof GS_MARKER_GET_ALL];
-
 	bzero(query,sizeof query);
-	sprintf(query, GS_MARKER_GET_ALL, scopeId, page*MARKER_LIMIT);
+	
+	limit = page*MARKER_LIMIT;
+	limit = limit > 0 ? limit-(page) : limit;
+
+	sprintf(query, GS_MARKER_GET_ALL, scopeId, limit);
 
 	if(0 != mysql_query(conn, query) ){
 		fprintf(stderr, "%s\n", mysql_error(conn));
@@ -478,8 +483,11 @@ int db_getHeatmap(int page, long scopeId, long precision, long * max, Decimal lo
 	Decimal latitude;
 	Decimal longitude;
 	int i;
+	int limit;
 	char query[HEATMAP_PAGE_QUERY_SIZE];
 
+	limit = page*HEATMAP_RESULTS_PER_PAGE;
+	limit = limit > 0 ? limit-(page) : limit;
 	bzero(query,sizeof query);
 	sprintf(query, 	GS_HEATMAP_GET_ALL, 
 				   	precision, 	/* Latitude precision */
@@ -489,8 +497,9 @@ int db_getHeatmap(int page, long scopeId, long precision, long * max, Decimal lo
 					upperLatBound, /* Latitude upper bound  */
 					lowerLonBound, /* Longitude lower bound */
 					upperLonBound, /* Longitude upper bound */
-				   	page*HEATMAP_RESULTS_PER_PAGE);
+				   	limit);
 
+	fprintf(stderr, "%s\n", query);
 	if(0 != mysql_query(conn, query) ){
 		fprintf(stderr, "%s\n", mysql_error(conn));
 		return 0;
@@ -675,14 +684,19 @@ int db_deleteMarker(long id, MYSQL * conn){
 #ifndef REPORT_PAGE_QUERY_SIZE
 	#define REPORT_PAGE_QUERY_SIZE 256 
 #endif
-int db_getReports(int page, long scopeId, struct gs_report * gsr, MYSQL * conn){
+int db_getReports(int page,char * since, long scopeId,  struct gs_report * gsr, MYSQL * conn){
 	MYSQL_RES * result;
 	MYSQL_ROW row; 
 	int i;
+	int limit;
 	char query[REPORT_PAGE_QUERY_SIZE];
 	bzero(query,sizeof query);
-	sprintf(query,GS_REPORT_GET_ALL,scopeId, page);
 
+	limit = page*RESULTS_PER_PAGE;
+	limit = limit > 0 ? limit-(page) : limit;
+	sprintf(query,GS_REPORT_GET_ALL,scopeId, since, limit);
+
+	fprintf(stderr, "--%s\n", query);
 	if(0 != mysql_query(conn, query) ){
 		fprintf(stderr, "%s\n", mysql_error(conn));
 		return 0;
@@ -716,13 +730,17 @@ int db_getMarkerComments(int page, long scopeId, struct gs_marker * gsm, struct 
 	MYSQL_RES * result;
 	MYSQL_ROW row; 
 	Decimal latitude;
+	int limit;
 	Decimal longitude;
 	int i;
 	char query[sizeof GS_MARKER_COMMENT_GET_ALL];
 
 	bzero(query,sizeof query);
-	sprintf(query, GS_MARKER_COMMENT_GET_ALL, scopeId, page*MARKER_LIMIT);
+	limit = page*MARKER_LIMIT;
+	limit = limit > 0 ? limit-(page) : limit;
+	sprintf(query, GS_MARKER_COMMENT_GET_ALL, scopeId, limit);
 
+	fprintf(stderr, "%s\n", query);
 	if(0 != mysql_query(conn, query) ){
 		fprintf(stderr, "%s\n", mysql_error(conn));
 		return 0;
@@ -765,6 +783,7 @@ static int db_getMarkerCommentsCoordinate(int page, long scopeId, struct gs_mark
 	Decimal longitude;
 	Decimal lowDec;
 	Decimal upDec;
+	int limit;
 	int i;
 	char query[strlen(queryString)];
 	char lower[DecimalWidth];
@@ -777,13 +796,16 @@ static int db_getMarkerCommentsCoordinate(int page, long scopeId, struct gs_mark
 	lowDec = createDecimalFromString("0.0");
 	upDec = createDecimalFromString( "0.0");
 
+	limit = page*MARKER_LIMIT;
+	limit = limit > 0 ? limit-(page) : limit;
+
 	/* calculate the bounds via the center and offset */
 	add_decimals(center, offset, &upDec); 	
     subtract_decimals(center, offset, &lowDec); 
     formatDecimal(lowDec, lower);
     formatDecimal(upDec, upper);
 
-	sprintf(query, queryString, scopeId, lower, upper ,page*MARKER_LIMIT);
+	sprintf(query, queryString, scopeId, lower, upper ,limit);
 	if(0 != mysql_query(conn, query) ){
 		fprintf(stderr, "%s\n", mysql_error(conn));
 		return 0;
@@ -832,6 +854,7 @@ int db_getMarkerCommentsFullFilter(int page, long scopeId, struct gs_marker * gs
 	Decimal lowDec;
 	Decimal upDec;
 	int i;
+	int limit;
 	char query[sizeof GS_MARKER_COMMENT_GET_BY_BOTH];
 	char latLower[DecimalWidth];
 	char latUpper[DecimalWidth];
@@ -848,6 +871,9 @@ int db_getMarkerCommentsFullFilter(int page, long scopeId, struct gs_marker * gs
 	lowDec = createDecimalFromString("0.0");
 	upDec = createDecimalFromString( "0.0");
 
+	limit = page*MARKER_LIMIT;
+	limit = limit > 0 ? limit-(page) : limit;
+
 	/* calculate the bounds via the center and offset */
 	add_decimals(latCenter, latOffset, &upDec); 	
     subtract_decimals(latCenter, latOffset, &lowDec); 
@@ -859,7 +885,7 @@ int db_getMarkerCommentsFullFilter(int page, long scopeId, struct gs_marker * gs
     formatDecimal(lowDec, lonLower);
     formatDecimal(upDec, lonUpper);    
    
-	sprintf(query, GS_MARKER_COMMENT_GET_BY_BOTH, scopeId, latLower, latUpper, lonLower, lonUpper ,page*MARKER_LIMIT);
+	sprintf(query, GS_MARKER_COMMENT_GET_BY_BOTH, scopeId, latLower, latUpper, lonLower, lonUpper ,limit);
 	if(0 != mysql_query(conn, query) ){
 		fprintf(stderr, "%s\n", mysql_error(conn));
 		return 0;
