@@ -251,7 +251,7 @@ int gs_heatmapToJSON(const struct gs_heatmap gsh, char * jsonOutput){
     formatDecimal(gsh.latitude,latitude);
     formatDecimal(gsh.longitude,longitude);
 
-    json = "{\"latitude\" : %s, \"longitude\" : %s, \"secondsWorked\" : %ld }";
+    json = "{\"latDegrees\" : %s, \"lonDegrees\" : %s, \"secondsWorked\" : %ld }";
 
     return sprintf( jsonOutput,
                     json,
@@ -278,8 +278,8 @@ int gs_heatmapNToJSON(const struct gs_heatmap gsh, char * jsonOutput, int jsonOu
     formatDecimal(gsh.latitude,latitude);
     formatDecimal(gsh.longitude,longitude);
 
-    jsonLatWritten = snprintf(jsonLat,21+DecimalWidth,"{\"latitude\" : %s,", latitude);
-    jsonLonWritten = snprintf(jsonLon,22+DecimalWidth," \"longitude\" : %s,", longitude);
+    jsonLatWritten = snprintf(jsonLat,21+DecimalWidth,"{\"latDegrees\" : %s,", latitude);
+    jsonLonWritten = snprintf(jsonLon,22+DecimalWidth," \"lonDegrees\" : %s,", longitude);
     jsonSecondsWritten = snprintf(jsonSeconds,27+sizeof(long)," \"secondsWorked\" : %ld }",gsh.intensity);
 
     if(jsonLonWritten + jsonLatWritten + jsonSecondsWritten > jsonOutputAllocatedSize-1){

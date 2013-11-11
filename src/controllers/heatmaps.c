@@ -136,6 +136,8 @@ int heatmap_controller(const struct http_request * request, char * stringToRetur
 			sm_get(sm,"raw",tempBuf, sizeof tempBuf);
 			if(strncasecmp(tempBuf,"true",4) == 0)
 				raw = TRUE;
+			else
+				raw = FALSE;
 		}
 	}else{
 		free(lonOffset); lonOffset  = NULL;	
@@ -383,7 +385,6 @@ int heatmap_get(char * buffer, int buffSize,int page, Decimal * latDegrees, Deci
 			strncat(tempBuf,json,buffSize);
 		}			
 	}
-	printf("%s\n",tempBuf );
 	snprintf(buffer,buffSize, HEATMAP_PAGE_STR, 200, tempBuf, min(numHeatmaps,HEATMAP_RESULTS_RETURNED), page, nextStr,prevStr);
 	
 	free(heatmaps);
@@ -401,6 +402,7 @@ int heatmap_put(char * buffer, int buffSize, const struct http_request * request
 	int j;
 	int strFlag;
 	long intensity;
+	int stillInLoop;
 	char keyBuffer[GS_COMMENT_MAX_LENGTH+1];
 	char valBuffer[GS_COMMENT_MAX_LENGTH+1];
 	Decimal longitude;
@@ -420,6 +422,7 @@ int heatmap_put(char * buffer, int buffSize, const struct http_request * request
 
 	/*Parse the JSON for the information we desire */
 	for(i=0; i < request->contentLength && request->data[i] != '\0'; ++i){
+		stillInLoop = 0;
 		/*We're at the start of a string*/
 		if(request->data[i] == '"'){
 			/*Go until we hit the closing qoute*/
@@ -455,81 +458,108 @@ int heatmap_put(char * buffer, int buffSize, const struct http_request * request
 			if(strlen(keyBuffer) > 0 && strlen(valBuffer) > 0)
 				if(sm_put(sm, keyBuffer, valBuffer) == 0)
                 	fprintf(stderr, "Failed to copy parameters into hash table while parsing url\n");
+            /* Check if we have a full and valid point yet */
+            if(sm_exists(sm, "secondsworked") == 1 && sm_exists(sm,"latdegrees") == 1 && sm_exists(sm,"londegrees") ==1 ){
+            	fprintf(stderr, "%s\n", "jumping");
+            	stillInLoop = 1;
+            	/* Spaghetti:
+            	 * Jump over to perform the procedure to validate and place the object into the database
+            	 * then we will be returned to the returnloop label on success
+            	 * where we will create a new hashmap to hold the new values form the next iteration.
+            	*/
+            	goto doloop;
+            	returnloop:
+            	sm = sm_new(HASH_TABLE_CAPACITY);
+				if(sm == NULL){
+					fprintf(stderr, "sm err\n");
+					return -1;
+				}
+				stillInLoop = 0;
+            }
 		}
 		strFlag = 0;
 	}
 
-	/* Verify that the data is valid */
-	if(	sm_exists(sm, "secondsworked") 	!=1 || 
-		sm_exists(sm, "latdegrees") 	!=1 ||
-		sm_exists(sm, "londegrees") 	!=1 ){
-		sm_delete(sm);
-		snprintf(buffer,buffSize,ERROR_STR_FORMAT,400,KEYS_MISSING);
-		return 400;		
-	}else{		
-		/* _shared_campaign_id is a global inherited from green-serv.c */
-		gs_heatmap_setScopeId(_shared_campaign_id, &heatmap);		
-
-		sm_get(sm,"londegrees",valBuffer,sizeof valBuffer);
-		longitude = createDecimalFromString(valBuffer);
-		gs_heatmap_setLongitude(longitude, &heatmap);
-
-		sm_get(sm,"latdegrees",valBuffer,sizeof valBuffer);
-		latitude = createDecimalFromString( valBuffer);
-		gs_heatmap_setLatitude(latitude, &heatmap);
-
-		/* Check latitude and longitude ranges */
-		if(!(-90L <= latitude && latitude <= 90L )){
+	/*Slight spaghetti code. But neccesary. */
+	if(stillInLoop){
+		doloop:
+		/* Verify that the data is valid */
+		if(	sm_exists(sm, "secondsworked") 	!=1 || 
+			sm_exists(sm, "latdegrees") 	!=1 ||
+			sm_exists(sm, "londegrees") 	!=1 ){
 			sm_delete(sm);
-			snprintf(buffer,buffSize,ERROR_STR_FORMAT,400,LATITUDE_OUT_OF_RANGE_ERR);
-			return 400;
-		}
+			snprintf(buffer,buffSize,ERROR_STR_FORMAT,400,KEYS_MISSING);
+			return 400;		
+		}else{		
+			/* _shared_campaign_id is a global inherited from green-serv.c */
+			gs_heatmap_setScopeId(_shared_campaign_id, &heatmap);		
 
-		if(!(-180L <= longitude && longitude <= 180L)){
-			sm_delete(sm);
-			snprintf(buffer,buffSize,ERROR_STR_FORMAT,400,LONGITUDE_OUT_OF_RANGE_ERR);
-			return 400;
-		}
+			sm_get(sm,"londegrees",valBuffer,sizeof valBuffer);
+			longitude = createDecimalFromString(valBuffer);
+			gs_heatmap_setLongitude(longitude, &heatmap);
 
-		sm_get(sm,"secondsworked", valBuffer, sizeof valBuffer);
-		fprintf(stderr, "valbuff:%s\n", valBuffer);
-		intensity = strtol(valBuffer,NULL,10);
-		if(intensity > 0L)
-			gs_heatmap_setIntensity(intensity, &heatmap);
-		else{
-			if(intensity <= 0 ){
+			sm_get(sm,"latdegrees",valBuffer,sizeof valBuffer);
+			latitude = createDecimalFromString( valBuffer);
+			gs_heatmap_setLatitude(latitude, &heatmap);
+
+			/* Check latitude and longitude ranges */
+			if(!(-90L <= latitude && latitude <= 90L )){
 				sm_delete(sm);
-				snprintf(buffer,buffSize,ERROR_STR_FORMAT,400,BAD_INTENSITY_ERR);
-				return 400;		
-			}else{
+				snprintf(buffer,buffSize,ERROR_STR_FORMAT,400,LATITUDE_OUT_OF_RANGE_ERR);
+				return 400;
+			}
+
+			if(!(-180L <= longitude && longitude <= 180L)){
 				sm_delete(sm);
-				snprintf(buffer,buffSize,ERROR_STR_FORMAT,422,BAD_INTENSITY_NEG_ERR);
-				return 422;	
-			}	
+				snprintf(buffer,buffSize,ERROR_STR_FORMAT,400,LONGITUDE_OUT_OF_RANGE_ERR);
+				return 400;
+			}
+
+			sm_get(sm,"secondsworked", valBuffer, sizeof valBuffer);
+			fprintf(stderr, "valbuff:%s\n", valBuffer);
+			intensity = strtol(valBuffer,NULL,10);
+			if(intensity > 0L)
+				gs_heatmap_setIntensity(intensity, &heatmap);
+			else{
+				if(intensity <= 0 ){
+					sm_delete(sm);
+					snprintf(buffer,buffSize,ERROR_STR_FORMAT,400,BAD_INTENSITY_ERR);
+					return 400;		
+				}else{
+					sm_delete(sm);
+					snprintf(buffer,buffSize,ERROR_STR_FORMAT,422,BAD_INTENSITY_NEG_ERR);
+					return 422;	
+				}	
+			}
+
+		
 		}
 
-	
-	}
+		mysql_thread_init();
+		conn = _getMySQLConnection();
+		if(!conn){
+			mysql_thread_end();
+			fprintf(stderr, "%s\n", "Could not connect to mySQL on worker thread");
+			return -1;
+		}	
 
-	mysql_thread_init();
-	conn = _getMySQLConnection();
-	if(!conn){
+		db_insertHeatmap(&heatmap,conn);
+		if(heatmap.id == GS_HEATMAP_INVALID_ID){
+			fprintf(stderr, "%s\n", "Unknown error occured, could not insert heatmap into database.");
+			snprintf(buffer,buffSize,ERROR_STR_FORMAT,422,"Could not create heatmap. An Unknown Request Error has occured");
+			goto cleanup_on_err;
+		}
+
+		mysql_close(conn);
 		mysql_thread_end();
-		fprintf(stderr, "%s\n", "Could not connect to mySQL on worker thread");
-		return -1;
-	}	
-
-	db_insertHeatmap(&heatmap,conn);
-	if(heatmap.id == GS_HEATMAP_INVALID_ID){
-		fprintf(stderr, "%s\n", "Unknown error occured, could not insert heatmap into database.");
-		snprintf(buffer,buffSize,ERROR_STR_FORMAT,422,"Could not create heatmap. An Unknown Request Error has occured");
-		goto cleanup_on_err;
+		sm_delete(sm);
+		if(stillInLoop){
+			fprintf(stderr, "%s\n", "jumping back");
+			goto returnloop;
+		}
 	}
-
-	mysql_close(conn);
-	mysql_thread_end();
+	/* Once we're done looping we still need to clean up this last hashmap we use */
 	sm_delete(sm);
-
 	snprintf(buffer,buffSize,"{ \"status_code\" : 200, \"message\" : \"Successful submit\" }");
 
 	return 200;
