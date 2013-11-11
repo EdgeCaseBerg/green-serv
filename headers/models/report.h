@@ -10,7 +10,8 @@
 	struct gs_report {
 		long id;
 		long scopeId;
-		char content[GS_REPORT_MAX_LENGTH+1]; /* 140 chars + \0 = 141 */
+		char content[GS_REPORT_MAX_LENGTH+1];
+		char trace[GS_REPORT_MAX_LENGTH+1];
 		char origin[SHA_LENGTH+1];
 		char authorize[SHA_LENGTH+1];
 		char createdTime[GS_REPORT_CREATED_TIME_LENGTH+1];  /* YYYY-MM-DD HH:MM:SS + \0 = 20*/
@@ -22,6 +23,7 @@
 	void gs_report_setId(long id, struct gs_report * gsr);
 	/* Content will be truncated to be within GS_REPORT_MAX_LENGTH characters plus a null character!*/
 	void gs_report_setContent(char * content, struct gs_report * gsr);
+	void gs_report_setStackTrace(char * trace, struct gs_report * gsr);
 	void gs_report_setScopeId(long ScopeId, struct gs_report * gsr);
 	void gs_report_setCreatedTime(char * createdTime, struct gs_report * gsr); /* Contemplate long for epoch time? */
 	void gs_report_setOrigin(char * origin, struct gs_report * gsr);

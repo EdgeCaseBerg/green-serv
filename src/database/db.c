@@ -534,7 +534,7 @@ void db_insertReport(struct gs_report * gsr, MYSQL * conn){
 		return; /* Return if scope is invalid that we can tell*/
 
 	bzero(query,sizeof query);
-	sprintf(query, GS_REPORT_INSERT, gsr->content, gsr->scopeId, gsr->origin, gsr->authorize);
+	sprintf(query, GS_REPORT_INSERT, gsr->content, gsr->scopeId, gsr->origin, gsr->authorize, gsr->trace);
 
 	if(0 != mysql_query(conn, query) ){
 		fprintf(stderr, "%s\n", mysql_error(conn));
@@ -577,6 +577,7 @@ void db_insertReport(struct gs_report * gsr, MYSQL * conn){
 	strncpy(gsr->origin,row[3], SHA_LENGTH);
 	strncpy(gsr->authorize, row[4], SHA_LENGTH);
 	gs_report_setCreatedTime( row[5], gsr);
+	gs_report_setStackTrace( row[6], gsr);
 	
 
 	mysql_free_result(result);
@@ -611,6 +612,7 @@ void db_getReportByAuth(char * auth, struct gs_report * gsr, MYSQL * conn){
 	strncpy(gsr->origin,row[3], SHA_LENGTH);
 	strncpy(gsr->authorize, row[4], SHA_LENGTH);
 	gs_report_setCreatedTime( row[5], gsr);
+	gs_report_setStackTrace( row[6], gsr);
 
 	mysql_free_result(result);  
 }
@@ -700,6 +702,7 @@ int db_getReports(int page, long scopeId, struct gs_report * gsr, MYSQL * conn){
 		strncpy(gsr[i].origin,row[3], SHA_LENGTH);
 		strncpy(gsr[i].authorize, row[4], SHA_LENGTH);
 		gs_report_setCreatedTime( row[5], &gsr[i]);
+		gs_report_setStackTrace( row[6], &gsr[i]);
 		i++;
 	}
 	mysql_free_result(result);  

@@ -17,6 +17,7 @@ int main(){
    	char json[HEATMAP_JSON_LENGTH];
    	int numHeatmap;
    	int i;
+   	long j;
    	bzero(json,HEATMAP_JSON_LENGTH);
 
    	conn = _getMySQLConnection();
@@ -38,7 +39,7 @@ int main(){
 
 	gs_heatmapNToJSON(testHeatmap, json,HEATMAP_JSON_LENGTH);
 	printf("%s\n", json);
-
+	j=1;
 	lowerBoundLat = createDecimalFromString("-50.0");
 	upperBoundLat = createDecimalFromString("-43.78");
 	lowerBoundLon = createDecimalFromString("69.9");
@@ -49,6 +50,7 @@ int main(){
 					/* page 	*/ 		0,
 					/* scope 	*/ 	CAMPAIGN_ID, 
 					/* precision*/	8, 
+					/* max */		&j,
 					/* Low Lat 	*/ 	lowerBoundLat,
 					/* Up Lat  	*/	upperBoundLat,
 					/* Low Lon 	*/	lowerBoundLon,

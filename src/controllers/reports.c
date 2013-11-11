@@ -220,7 +220,7 @@ int report_post(char * buffer, int buffSize, const struct http_request * request
 			return 422;				
 		}
 		snprintf(stackTrace, sizeof stackTrace, "%s", valBuffer);
-		/* This is where a setStackTrace func call goes once implemented */
+		gs_report_setStackTrace(stackTrace, &report);
 
 		sm_get(sm,"origin", valBuffer, sizeof valBuffer);
 		if(strlen(valBuffer) == 0){

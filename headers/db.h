@@ -66,9 +66,9 @@
 	#define GS_HEATMAP_FIND_MATCH "SELECT id, intensity FROM heatmap WHERE scope_id = %ld AND latitude = " DecimalFormat " AND longitude = " DecimalFormat ";"
 	#define GS_HEATMAP_UPDATE_BY_ID "UPDATE heatmap SET intensity = %ld WHERE id = %ld;"
 
-	#define GS_REPORT_GET_ALL "SELECT id, content, scope_id, origin, authorize, created_time FROM report WHERE scope_id = %ld ORDER BY created_time DESC LIMIT %d, " STRINGIFY(RESULTS_PER_PAGE) ";" 
-	#define GS_REPORT_GET_BY_AUTH "SELECT id, content, scope_id, origin, authorize, created_time FROM report WHERE authorize = \"%s\";"
-	#define GS_REPORT_INSERT "INSERT INTO report (content, scope_id, origin, authorize) VALUES (\"%s\", %ld, \"%s\", \"%s\")"
+	#define GS_REPORT_GET_ALL "SELECT id, content, scope_id, origin, authorize, created_time, trace FROM report WHERE scope_id = %ld ORDER BY created_time DESC LIMIT %d, " STRINGIFY(RESULTS_PER_PAGE)  
+	#define GS_REPORT_GET_BY_AUTH "SELECT id, content, scope_id, origin, authorize, created_time,trace  FROM report WHERE authorize = \"%s\""
+	#define GS_REPORT_INSERT "INSERT INTO report (content, scope_id, origin, authorize, trace) VALUES (\"%s\", %ld, \"%s\", \"%s\", \"%s\")"
 	#define GS_REPORT_DELETE "DELETE FROM report WHERE origin =\"%s\" AND authorize=\"%s\""
 
 
