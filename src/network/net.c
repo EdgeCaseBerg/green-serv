@@ -1,5 +1,17 @@
 #include "network/net.h"
 
+#ifndef BOOT_LOGGING
+    #define BOOT_LOGGING 0
+#endif
+#if(BOOT_LOGGING != 1)
+    #ifdef BOOT_LOGGING
+        #undef BOOT_LOGGING
+    #endif
+    #define BOOT_LOGGING 0
+#endif
+/*pre must be a string declared like "sting" not a variable*/
+#define BOOT_LOG_STR(pre,s) if(BOOT_LOGGING == 1) fprintf(stderr, pre "%s\n", (s));
+
 /* Ha, this function name is great. DO NETWORK WORK -- doNetWork! 
  * Is funny because network is what we talk over see?
 */
@@ -353,12 +365,16 @@ int run_network(char * buffer, int bufferLength, void*(*func)(void*)){
     bzero(&sockserv,sizeof(sockserv));
 
     socketfd = createSocket();
+    BOOT_LOG_STR("Socket Creation: ", strerror(errno));
     setupSockAndBind(socketfd, &sockserv, PORT); 
+    BOOT_LOG_STR("Socket Bind: ", strerror(errno));
     listen(socketfd,NUMTHREADS);
+    BOOT_LOG_STR("Socket Listen: ", strerror(errno));
 
     clientsocklen = sizeof socketfd;
 
     #ifdef DETACHED_THREADS
+    BOOT_LOG_STR("Detached threads is defined", "");
     pthread_attr_init(&attr);
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
     #endif
@@ -406,8 +422,11 @@ int run_network(char * buffer, int bufferLength, void*(*func)(void*)){
     if(close(socketfd) < 0)
         fprintf(stderr, "%s\n", "Problem closing socket descriptor");
     /* Sleep a moment to hope that any running threads will finish */
-    fprintf(stdout, "%s\n", "Exiting Server...");
+    BOOT_LOG_STR("Exiting Server...", "");
     sleep(2);
 
     return 0;
 }
+
+
+#undef BOOT_LOG_STR

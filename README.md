@@ -65,6 +65,11 @@ you'd like.
         */
         #define DATABASE_LOGGING 1
 
+        /* Define the boot logging if you want to see that the socket
+        * and binding creation process was succesful (recommended set to 1)
+        */
+        #define BOOT_LOGGING 1
+
         /*This is a global variable declaration.
          *The main driving file will define this variable. Calling
          *parties may use this variable as a read-only variable.

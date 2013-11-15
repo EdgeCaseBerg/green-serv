@@ -12,7 +12,17 @@
 #include "network/net.h"
 #include <string.h>
 
-
+#ifndef BOOT_LOGGING
+    #define BOOT_LOGGING 0
+#endif
+#if(BOOT_LOGGING != 1)
+    #ifdef BOOT_LOGGING
+        #undef BOOT_LOGGING
+    #endif
+    #define BOOT_LOGGING 0
+#endif
+/*pre must be a string declared like "sting" not a variable*/
+#define BOOT_LOG_STR(pre,s) if(BOOT_LOGGING == 1) fprintf(stderr, pre "%s\n", (s));
 
 /* Check for flags. */
 void parseArgs(int argc, const char * argv[], struct gs_scope * campaign, MYSQL * conn){
@@ -37,6 +47,7 @@ int main(int argc, const char* argv[]) {
 	 *weird reason.
 	*/
 	#ifdef THREADED_DB
+	BOOT_LOG_STR("Initializing MySQL Library.","");
 	mysql_library_init(0, NULL, NULL);
 	#endif
 
@@ -58,8 +69,11 @@ int main(int argc, const char* argv[]) {
 	char buff[1024];
 	bzero(buff,1024);
 	/*What a silly cast we have to make...*/
+	BOOT_LOG_STR("Running Network Interface:", "");
 	run_network(buff,1024,(void*(*)(void*))&doNetWork);
-
+	BOOT_LOG_STR("Finished Network Interface.","");
 	/*Clean Up database connection*/
 	mysql_library_end();
 }
+
+#undef BOOT_LOG_STR
