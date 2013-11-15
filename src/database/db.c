@@ -1,4 +1,14 @@
-	#include "db.h"
+#include "db.h"
+#ifndef THREADED_DB
+	#define THREADED_DB 0
+#endif
+#if(THREADED_DB != 1)
+	#ifdef THREADED_DB
+		#undef THREADED_DB
+	#endif
+	#define THREADED_DB 0
+#endif
+#define LOGDB if(THREADED_DB == 1) fprintf(stderr, "%s\n", query);
 
 /* _shared_campaign_id is declared in config.h and is a global
  * readonly variable to be used for scoping purposes
@@ -29,7 +39,7 @@ void db_getScopeById(long id, struct gs_scope * gss, MYSQL * conn){
 
 	bzero(query,sizeof query);
 	sprintf(query, GS_SCOPE_GET_BY_ID, id);
-
+	LOGDB
 	if(0 != mysql_query(conn, query) ){
 		fprintf(stderr, "%s\n", mysql_error(conn));
 		return;
@@ -71,7 +81,7 @@ int db_getComments(int page, long scopeId, struct gs_comment * gsc, MYSQL * conn
 	limit = limit > 0 ? limit-(page) : limit;
 	sprintf(query, GS_COMMENT_GET_ALL, scopeId, limit);
 
-
+	LOGDB
 	if(0 != mysql_query(conn, query) ){
 		fprintf(stderr, "%s\n", query);
 		fprintf(stderr, "%s\n", mysql_error(conn));
@@ -109,7 +119,7 @@ int db_getCommentsByType(int page, long scopeId, struct gs_comment * gsc, char *
 	limit = page*RESULTS_PER_PAGE;
 	limit = limit > 0 ? limit-(page) : limit;
 	sprintf(query, GS_COMMENT_GET_BY_TYPE, scopeId, cType,limit);
-
+	LOGDB
 	if(0 != mysql_query(conn, query) ){
 		fprintf(stderr, "%s\n", query);
 		fprintf(stderr, "%s\n", mysql_error(conn));
@@ -145,7 +155,7 @@ void db_getCommentById(long id, struct gs_comment * gsc, MYSQL * conn){
 
 	bzero(query,sizeof query);
 	sprintf(query, GS_COMMENT_GET_BY_ID, id);
-
+	LOGDB
 	if(0 != mysql_query(conn, query) ){
 		fprintf(stderr, "%s\n", mysql_error(conn));
 		return;
@@ -184,7 +194,7 @@ void db_insertComment(struct gs_comment * gsc, MYSQL * conn){
 
 	bzero(query,sizeof query);
 	sprintf(query, GS_COMMENT_INSERT, gsc->content, gsc->scopeId, gsc->pinId,gsc->cType);
-
+	LOGDB
 	if(0 != mysql_query(conn, query) ){
 		fprintf(stderr, "%s\n", mysql_error(conn));
 		return;
@@ -205,7 +215,7 @@ void db_insertComment(struct gs_comment * gsc, MYSQL * conn){
    
 	/* Fresh Start and we want to return to the user EXACTLY what's in the db */
 	gs_comment_ZeroStruct(gsc);
-
+	LOGDB
 	if(0 != mysql_query(conn, query) ){
 		fprintf(stderr, "%s\n", mysql_error(conn));
 		return;
@@ -244,7 +254,7 @@ int db_getMarkers(int page, long scopeId, struct gs_marker * gsm, MYSQL * conn){
 	limit = limit > 0 ? limit-(page) : limit;
 
 	sprintf(query, GS_MARKER_GET_ALL, scopeId, limit);
-
+	LOGDB
 	if(0 != mysql_query(conn, query) ){
 		fprintf(stderr, "%s\n", mysql_error(conn));
 		return 0;
@@ -285,7 +295,7 @@ void db_insertMarker(struct gs_marker * gsm, MYSQL * conn){
 
 	bzero(query,sizeof query);
 	sprintf(query, GS_MARKER_INSERT, gsm->commentId, gsm->scopeId, gsm->latitude,  gsm->longitude,  gsm->addressed);
-
+	LOGDB
 	if(0 != mysql_query(conn, query) ){
 		fprintf(stderr, "%s\n", mysql_error(conn));
 		return;
@@ -303,7 +313,7 @@ void db_insertMarker(struct gs_marker * gsm, MYSQL * conn){
 	/* Now we could either compute the time stamp or ask the db for it. */
 	bzero(query,sizeof query);
 	sprintf(query,GS_MARKER_GET_BY_ID, affected);
-
+	LOGDB	
 	/* Fresh Start and we want to return to the user EXACTLY what's in the db */
 	gs_marker_ZeroStruct(gsm);
 
@@ -345,7 +355,7 @@ void db_getMarkerById(long id, struct gs_marker * gsm, MYSQL * conn){
 
 	bzero(query,sizeof query);
 	sprintf(query, GS_MARKER_GET_BY_ID, id);
-
+	LOGDB
 	if(0 != mysql_query(conn, query) ){
 		fprintf(stderr, "%s\n", mysql_error(conn));
 		return;
@@ -390,7 +400,7 @@ void db_insertHeatmap(struct gs_heatmap * gsh, MYSQL * conn){
 	/* Check for possible merges */
 	bzero(query,sizeof query);
 	sprintf(query, GS_HEATMAP_FIND_MATCH, gsh->scopeId, gsh->latitude, gsh->longitude);
-
+	LOGDB
 	if(0 != mysql_query(conn, query) ){
 		fprintf(stderr, "%s\n", mysql_error(conn));
 		return;
@@ -413,7 +423,7 @@ void db_insertHeatmap(struct gs_heatmap * gsh, MYSQL * conn){
 		mysql_free_result(result);
 	}
 
-
+	LOGDB
 	if(0 != mysql_query(conn, query) ){
 		fprintf(stderr, "%s\n", mysql_error(conn));
 		return;
@@ -447,7 +457,7 @@ void db_insertHeatmap(struct gs_heatmap * gsh, MYSQL * conn){
 
 	/* Fresh Start and we want to return to the user EXACTLY what's in the db */
 	gs_heatmap_ZeroStruct(gsh);
-
+	LOGDB
 	if(0 != mysql_query(conn, query) ){
 		fprintf(stderr, "%s\n", mysql_error(conn));
 		return;
@@ -499,7 +509,7 @@ int db_getHeatmap(int page, long scopeId, long precision, long * max, Decimal lo
 					upperLonBound, /* Longitude upper bound */
 				   	limit);
 
-	fprintf(stderr, "%s\n", query);
+	LOGDB
 	if(0 != mysql_query(conn, query) ){
 		fprintf(stderr, "%s\n", mysql_error(conn));
 		return 0;
@@ -542,7 +552,7 @@ void db_insertReport(struct gs_report * gsr, MYSQL * conn){
 
 	bzero(query,sizeof query);
 	sprintf(query, GS_REPORT_INSERT, gsr->content, gsr->scopeId, gsr->origin, gsr->authorize, gsr->trace);
-
+	LOGDB
 	if(0 != mysql_query(conn, query) ){
 		fprintf(stderr, "%s\n", mysql_error(conn));
 		return;
@@ -563,7 +573,7 @@ void db_insertReport(struct gs_report * gsr, MYSQL * conn){
 
 	/* Fresh Start and we want to return to the user EXACTLY what's in the db */
 	gs_report_ZeroStruct(gsr);
-
+	LOGDB
 	if(0 != mysql_query(conn, query) ){
 		fprintf(stderr, "%s\n", mysql_error(conn));
 		return;
@@ -600,7 +610,7 @@ void db_getReportByAuth(char * auth, struct gs_report * gsr, MYSQL * conn){
 	bzero(query,sizeof query);
 	
 	sprintf(query, GS_REPORT_GET_BY_AUTH, auth);
-
+	LOGDB
 	if(0 != mysql_query(conn, query) ){
 		fprintf(stderr, "%s\n", mysql_error(conn));
 		return;
@@ -629,7 +639,7 @@ int db_deleteReport(struct gs_report * gsr, MYSQL * conn){
 
 	bzero(query,sizeof query);
 	sprintf(query, GS_REPORT_DELETE, gsr->origin,gsr->authorize);
-
+	LOGDB
 	if(0 != mysql_query(conn, query) ){
 		fprintf(stderr, "%s\n", mysql_error(conn));
 		return 0;
@@ -643,7 +653,7 @@ int db_deleteComment( long id, MYSQL * conn){
 
 	bzero(query, sizeof query);
 	sprintf(query, GS_COMMENT_DELETE, id);
-
+	LOGDB
 	if(0 != mysql_query(conn, query) ){
 		fprintf(stderr, "%s\n", mysql_error(conn));
 		return 0;
@@ -658,7 +668,7 @@ int db_addressMarker(long id, int addressed, MYSQL * conn){
 
 	bzero(query, sizeof query);
 	sprintf(query, GS_MARKER_ADDRESS, addressed,id);
-
+	LOGDB
 	if(0 != mysql_query(conn, query) ){
 		fprintf(stderr, "%s\n", mysql_error(conn));
 		return 0;
@@ -672,7 +682,7 @@ int db_deleteMarker(long id, MYSQL * conn){
 
 	bzero(query, sizeof query);
 	sprintf(query, GS_MARKER_DELETE, id);
-
+	LOGDB
 	if(0 != mysql_query(conn, query) ){
 		fprintf(stderr, "%s\n", mysql_error(conn));
 		return 0;
@@ -696,7 +706,7 @@ int db_getReports(int page,char * since, long scopeId,  struct gs_report * gsr, 
 	limit = limit > 0 ? limit-(page) : limit;
 	sprintf(query,GS_REPORT_GET_ALL,scopeId, since, limit);
 
-	fprintf(stderr, "--%s\n", query);
+	LOGDB
 	if(0 != mysql_query(conn, query) ){
 		fprintf(stderr, "%s\n", mysql_error(conn));
 		return 0;
@@ -740,7 +750,7 @@ int db_getMarkerComments(int page, long scopeId, struct gs_marker * gsm, struct 
 	limit = limit > 0 ? limit-(page) : limit;
 	sprintf(query, GS_MARKER_COMMENT_GET_ALL, scopeId, limit);
 
-	fprintf(stderr, "%s\n", query);
+	LOGDB
 	if(0 != mysql_query(conn, query) ){
 		fprintf(stderr, "%s\n", mysql_error(conn));
 		return 0;
@@ -806,6 +816,7 @@ static int db_getMarkerCommentsCoordinate(int page, long scopeId, struct gs_mark
     formatDecimal(upDec, upper);
 
 	sprintf(query, queryString, scopeId, lower, upper ,limit);
+	LOGDB
 	if(0 != mysql_query(conn, query) ){
 		fprintf(stderr, "%s\n", mysql_error(conn));
 		return 0;
@@ -886,6 +897,7 @@ int db_getMarkerCommentsFullFilter(int page, long scopeId, struct gs_marker * gs
     formatDecimal(upDec, lonUpper);    
    
 	sprintf(query, GS_MARKER_COMMENT_GET_BY_BOTH, scopeId, latLower, latUpper, lonLower, lonUpper ,limit);
+	LOGDB
 	if(0 != mysql_query(conn, query) ){
 		fprintf(stderr, "%s\n", mysql_error(conn));
 		return 0;

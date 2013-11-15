@@ -59,6 +59,12 @@ you'd like.
         */
         #define THREADED_DB 1
 
+        /* Define the database logging macro if you want to be able to see 
+        * the database queries that are executed on each request:
+        * Define as 1 for logging queries, and 0 or undefined for no logging
+        */
+        #define DATABASE_LOGGING 1
+
         /*This is a global variable declaration.
          *The main driving file will define this variable. Calling
          *parties may use this variable as a read-only variable.
