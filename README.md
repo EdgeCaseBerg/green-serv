@@ -44,6 +44,7 @@ you'd like.
 		#define USERNAME "tassadar"
         #define CAMPAIGN_ID 0L
         #define CAMPAIGN_DESC "8CharMax"
+        #define BASE_API_URL "http://localhost:10110/api/"
         /*Define json safe output return function 
         * If you compile with the RETURN_ON_JSON_RISK constant defined
         * then you will return early from the safe json output functions
@@ -69,6 +70,12 @@ you'd like.
         * and binding creation process was succesful (recommended set to 1)
         */
         #define BOOT_LOGGING 1
+
+        /* Define the networking logging to see the requests come and go. 
+        * set the logging to level 2 to see _everything_, set to 1 to see
+        * basic information. set to 0 to output no network logging
+        */
+        #define NETWORK_LOGGING 2
 
         /*This is a global variable declaration.
          *The main driving file will define this variable. Calling

@@ -460,7 +460,6 @@ int heatmap_put(char * buffer, int buffSize, const struct http_request * request
                 	fprintf(stderr, "Failed to copy parameters into hash table while parsing url\n");
             /* Check if we have a full and valid point yet */
             if(sm_exists(sm, "secondsworked") == 1 && sm_exists(sm,"latdegrees") == 1 && sm_exists(sm,"londegrees") ==1 ){
-            	fprintf(stderr, "%s\n", "jumping");
             	stillInLoop = 1;
             	/* Spaghetti:
             	 * Jump over to perform the procedure to validate and place the object into the database
@@ -516,7 +515,6 @@ int heatmap_put(char * buffer, int buffSize, const struct http_request * request
 			}
 
 			sm_get(sm,"secondsworked", valBuffer, sizeof valBuffer);
-			fprintf(stderr, "valbuff:%s\n", valBuffer);
 			intensity = strtol(valBuffer,NULL,10);
 			if(intensity > 0L)
 				gs_heatmap_setIntensity(intensity, &heatmap);
@@ -554,7 +552,6 @@ int heatmap_put(char * buffer, int buffSize, const struct http_request * request
 		mysql_thread_end();
 		sm_delete(sm);
 		if(stillInLoop){
-			fprintf(stderr, "%s\n", "jumping back");
 			goto returnloop;
 		}
 	}

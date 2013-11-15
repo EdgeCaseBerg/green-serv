@@ -29,9 +29,6 @@ int report_controller(const struct http_request * request, char * stringToReturn
 	page = 1;
 	valid = 1;
 
-	
-
-
 	buffer = malloc(buffSize);
 	if(buffer == NULL){
 		status = 500;

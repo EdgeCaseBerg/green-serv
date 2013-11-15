@@ -12,6 +12,17 @@
 /*pre must be a string declared like "sting" not a variable*/
 #define BOOT_LOG_STR(pre,s) if(BOOT_LOGGING == 1) fprintf(stderr, pre "%s\n", (s));
 
+#ifndef NETWORK_LOGGING
+   #define NETWORK_LOGGING 0
+#endif
+#if(NETWORK_LOGGING != 2 || NETWORK_LOGGING != 1) 
+    #undef NETWORK_LOGGING
+    #define NETWORK_LOGGING 0
+#endif
+#define NETWORK_LOG_LEVEL_2_NUM(s,d) if(NETWORK_LOGGING == 2) fprintf(stderr, "%s %d\n",(s), (d) );
+#define NETWORK_LOG_LEVEL_2(s) if(NETWORK_LOGGING == 2) fprintf(stderr, "%s\n", (s) );
+#define NETWORK_LOG_LEVEL_1(s) if(NETWORK_LOGGING >= 1) fprintf(stderr, "%s\n", (s) );
+
 /* Ha, this function name is great. DO NETWORK WORK -- doNetWork! 
  * Is funny because network is what we talk over see?
 */
@@ -35,21 +46,27 @@ void* doNetWork(struct threadData* td) {
     /* Determine method and call. */
     switch(controller){
         case HEARTBEAT_CONTROLLER :
+            NETWORK_LOG_LEVEL_2("Heartbeat Controller Processing Request.");
             status = heartbeat_controller(response,sizeof response);
             break;
         case COMMENTS_CONTROLLER :
+            NETWORK_LOG_LEVEL_2("Comments Controller Processing Request.");
             status = comment_controller(&request, response, sizeof response);
             break;
         case HEATMAP_CONTROLLER :
+            NETWORK_LOG_LEVEL_2("Heatmap Controller Processing Request.");
             status = heatmap_controller(&request, response, sizeof response);
             break;
         case MARKER_CONTROLLER :
+            NETWORK_LOG_LEVEL_2("Marker Controller Processing Request.");
             status = marker_controller(&request, response, sizeof response);
             break;
         case REPORT_CONTROLLER :
+            NETWORK_LOG_LEVEL_2("Report Controller Processing Request.");
             status = report_controller(&request, response, sizeof response);
             break;
         default:
+            NETWORK_LOG_LEVEL_2("Unknown URL. Refusing to process request.");
             /* We have no clue what the client is talking about with their url */
             status = 404;
             break;
@@ -57,9 +74,11 @@ void* doNetWork(struct threadData* td) {
     
 
     /* Log and clean up. */
-    printf("url: %s\n", request.url);
+    NETWORK_LOG_LEVEL_1("Incoming Request:")
+    NETWORK_LOG_LEVEL_1(request.url);
     if(request.contentLength > 0)
-        printf("td: %s\n", request.data);
+        NETWORK_LOG_LEVEL_2("Incoming Data:");
+        NETWORK_LOG_LEVEL_2(request.data);
     if(request.contentLength > 0)
         free(request.data);
 
@@ -67,8 +86,12 @@ void* doNetWork(struct threadData* td) {
     createResponse(response,td->msg,status);
     td->msg[strlen(td->msg)] = '\0';
 
+
     bytesSent = send(td->clientfd,td->msg,strlen(td->msg),0);  
-    printf("Sent %d bytes to the client : %s\n",bytesSent,strerror(errno));
+    NETWORK_LOG_LEVEL_1("Sending Response:");
+    NETWORK_LOG_LEVEL_1(td->msg);
+    NETWORK_LOG_LEVEL_2_NUM("Bytes sent to client: ", bytesSent);
+    NETWORK_LOG_LEVEL_2(strerror(errno));
 
     close(td->clientfd);
 
@@ -142,12 +165,10 @@ static int strnstr(char * needle, char * haystack, int haystackLen){
                  * and looked at all the characters without
                  * terminating early. 
                 */
-                 printf("found %s:%d\n",needle, i);
                  return i;
             }
         }
     }
-    printf("%s%s\n", "could not find ", needle);
     return -1;
 }
 
@@ -178,7 +199,8 @@ int parseRequest(struct http_request * requestToFill, char * requestStr){
                 methodLoc = strnstr("DELETE", buff, FIRSTLINEBUFFSIZE   );
                 if(methodLoc == -1){
                     /* Fuck it. What'd you try to give me? */
-                    fprintf(stderr, "Could not determine method: %s\n",buff );
+                    NETWORK_LOG_LEVEL_1("Could not determine HTTP method. Method Not Recognized:");
+                    NETWORK_LOG_LEVEL_2(buff);
                     requestToFill->method = UNKNOWN_METHOD;
                 }else{
                     requestToFill->method = DELETE;
@@ -232,10 +254,9 @@ int parseRequest(struct http_request * requestToFill, char * requestStr){
                     }else{
                         /* Could not find content...*/
                         free(requestToFill->data);
-                        fprintf(stderr, "%s\n", "Could not find start of content. memory freed");
                     }
                 }else{
-                    fprintf(stderr, "%s\n", "Could not allocate enough memory for content in request ");
+                    NETWORK_LOG_LEVEL_1("Could not allocate enough memory for content in request");
                 }
             }else{
                 /* Don't preallocate memory for the struct or this will cause
@@ -389,6 +410,7 @@ int run_network(char * buffer, int bufferLength, void*(*func)(void*)){
         while(stop == 0){
             for(i=0; i < NUMTHREADS && stop == 0; i++){
                 clientfd = accept(socketfd,(struct sockaddr*)&sockclient,&clientsocklen);
+                NETWORK_LOG_LEVEL_2_NUM("Accepted Client Request on File Descriptor ", clientfd);
                 buff[read(clientfd,buff,BUFSIZ)] = '\0';
                 strncpy(buffer, buff ,bufferLength);
 
@@ -398,6 +420,7 @@ int run_network(char * buffer, int bufferLength, void*(*func)(void*)){
                 #ifndef DETACHED_THREADS
                     pthread_create(&children[i],NULL,func,&data[i]);
                 #else
+                    NETWORK_LOG_LEVEL_2("Spawning detached thread");
                     pthread_create(&children[i],&attr,func,&data[i]);
                 #endif
                 bzero(buff,BUFSIZ);
@@ -410,6 +433,7 @@ int run_network(char * buffer, int bufferLength, void*(*func)(void*)){
             */
             #ifndef DETACHED_THREADS
             for(j=0; j < NUMTHREADS && j < i; ++j)
+                NETWORK_LOG_LEVEL_1("Pausing to Join threads. One moment...");
                 pthread_join(children[j],NULL);
             #endif
         }
@@ -428,5 +452,7 @@ int run_network(char * buffer, int bufferLength, void*(*func)(void*)){
     return 0;
 }
 
-
+#undef NETWORK_LOG_LEVEL_2_NUM
+#undef NETWORK_LOG_LEVEL_2
+#undef NETWORK_LOG_LEVEL_1
 #undef BOOT_LOG_STR

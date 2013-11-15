@@ -5,7 +5,6 @@ static inline int min(const int a, const int b){
 }
 
 int marker_controller(const struct http_request * request, char * stringToReturn, int strLength){
-	fprintf(stderr, "Working with %p %s %d", (void*)request, stringToReturn, strLength);
 	int status;
 	int buffSize;
 	int numParams;
@@ -370,7 +369,6 @@ int marker_address(char * buffer, int buffSize, long id, const struct http_reque
 	char * boolVal;
 
 	affected = addressed =  0;
-	fprintf(stderr, "%ld %ld\n", affected, id);
 
 	/* Retrieve the put data first */
 	if(request->contentLength > 0){
@@ -617,9 +615,6 @@ int marker_get(char * buffer,int buffSize,Decimal * latDegrees, Decimal * lonDeg
 	}
 	memset(markers,0,MARKER_LIMIT * sizeof(struct gs_marker));
 
-
-	fprintf(stderr, "%s buff: %s buffsize %d lad%plod%p lao%ploo%p %d\n", "Called market get",buffer,buffSize,(void*)latDegrees,(void*)lonDegrees,(void*)latOffset,(void*)lonOffset,page);
-	
 	mysql_thread_init();
 	conn = _getMySQLConnection();
 	if(!conn){
