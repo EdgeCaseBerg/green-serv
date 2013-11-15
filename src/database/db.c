@@ -1,14 +1,14 @@
 #include "db.h"
-#ifndef THREADED_DB
-	#define THREADED_DB 0
+#ifndef DATABASE_LOGGING
+	#define DATABASE_LOGGING 0
 #endif
-#if(THREADED_DB != 1)
-	#ifdef THREADED_DB
-		#undef THREADED_DB
+#if(DATABASE_LOGGING != 1)
+	#ifdef DATABASE_LOGGING
+		#undef DATABASE_LOGGING
 	#endif
-	#define THREADED_DB 0
+	#define DATABASE_LOGGING 0
 #endif
-#define LOGDB if(THREADED_DB == 1) fprintf(stderr, "%s\n", query);
+#define LOGDB if(DATABASE_LOGGING == 1) fprintf(stderr, "%s\n", query);
 
 /* _shared_campaign_id is declared in config.h and is a global
  * readonly variable to be used for scoping purposes
