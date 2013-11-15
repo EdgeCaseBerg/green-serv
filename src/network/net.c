@@ -87,14 +87,18 @@ void* doNetWork(struct threadData* td) {
     createResponse(response,td->msg,status);
     td->msg[strlen(td->msg)] = '\0';
 
+    if(td->clientfd != -1){
+        bytesSent = send(td->clientfd,td->msg,strlen(td->msg),0);  
+        NETWORK_LOG_LEVEL_1("Sending Response:");
+        NETWORK_LOG_LEVEL_1(td->msg);
+        NETWORK_LOG_LEVEL_2_NUM("Bytes sent to client: ", bytesSent);
+        NETWORK_LOG_LEVEL_2(strerror(errno));
 
-    bytesSent = send(td->clientfd,td->msg,strlen(td->msg),0);  
-    NETWORK_LOG_LEVEL_1("Sending Response:");
-    NETWORK_LOG_LEVEL_1(td->msg);
-    NETWORK_LOG_LEVEL_2_NUM("Bytes sent to client: ", bytesSent);
-    NETWORK_LOG_LEVEL_2(strerror(errno));
-
-    close(td->clientfd);
+        close(td->clientfd);
+    }else{
+        NETWORK_LOG_LEVEL_2("File Descriptor invalid. If shutting down there is no problem.");
+        NETWORK_LOG_LEVEL_2("If not shutting down, there was an issue sending data to the client.");
+    }
 
     return NULL;
 }
@@ -411,22 +415,28 @@ int run_network(char * buffer, int bufferLength, void*(*func)(void*)){
         while(stop == 0){
             for(i=0; i < NUMTHREADS && stop == 0; i++){
                 clientfd = accept(socketfd,(struct sockaddr*)&sockclient,&clientsocklen);
-                NETWORK_LOG_LEVEL_2_NUM("Accepted Client Request on File Descriptor ", clientfd);
-                buff[read(clientfd,buff,BUFSIZ)] = '\0';
-                strncpy(buffer, buff ,bufferLength);
+                if(clientfd != -1){
+                    NETWORK_LOG_LEVEL_2_NUM("Accepted Client Request on File Descriptor ", clientfd);
+                    buff[read(clientfd,buff,BUFSIZ)] = '\0';
+                    strncpy(buffer, buff ,bufferLength);
 
-                /* A thread pool would be intelligent here */
-                sprintf(data[i].msg, "%s", buffer);
-                data[i].clientfd = clientfd;
-                #ifndef DETACHED_THREADS
-                    pthread_create(&children[i],NULL,func,&data[i]);
-                #else
-                    NETWORK_LOG_LEVEL_2("Spawning detached thread");
-                    pthread_create(&children[i],&attr,func,&data[i]);
-                #endif
-                bzero(buff,BUFSIZ);
-                bzero(buffer,bufferLength);
-                
+                    /* A thread pool would be intelligent here */
+                    sprintf(data[i].msg, "%s", buffer);
+                    data[i].clientfd = clientfd;
+                    #ifndef DETACHED_THREADS
+                        pthread_create(&children[i],NULL,func,&data[i]);
+                    #else
+                        NETWORK_LOG_LEVEL_2("Spawning detached thread");
+                        pthread_create(&children[i],&attr,func,&data[i]);
+                    #endif
+                    bzero(buff,BUFSIZ);
+                    bzero(buffer,bufferLength);
+                }else{
+                    NETWORK_LOG_LEVEL_1("Connection shutdown for invalid client.");
+                    NETWORK_LOG_LEVEL_2("Invalid file descriptor from client connection.");
+                    NETWORK_LOG_LEVEL_2("If shutting down server ignore previous warning.");
+                    i--; /* Move thread index back one */
+                }                
             }           
             /*Gobble Up the resources (if not detaching threads)
              *If you do want to detach threads change the define. 
