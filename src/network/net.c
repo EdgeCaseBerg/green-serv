@@ -76,9 +76,10 @@ void* doNetWork(struct threadData* td) {
     /* Log and clean up. */
     NETWORK_LOG_LEVEL_1("Incoming Request:")
     NETWORK_LOG_LEVEL_1(request.url);
-    if(request.contentLength > 0)
+    if(request.contentLength > 0){
         NETWORK_LOG_LEVEL_2("Incoming Data:");
         NETWORK_LOG_LEVEL_2(request.data);
+    }
     if(request.contentLength > 0)
         free(request.data);
 
@@ -432,9 +433,10 @@ int run_network(char * buffer, int bufferLength, void*(*func)(void*)){
              *in net.h
             */
             #ifndef DETACHED_THREADS
-            for(j=0; j < NUMTHREADS && j < i; ++j)
+            for(j=0; j < NUMTHREADS && j < i; ++j){
                 NETWORK_LOG_LEVEL_1("Pausing to Join threads. One moment...");
                 pthread_join(children[j],NULL);
+            }
             #endif
         }
     }
