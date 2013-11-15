@@ -15,7 +15,7 @@
 #ifndef NETWORK_LOGGING
    #define NETWORK_LOGGING 0
 #endif
-#if(NETWORK_LOGGING != 2 || NETWORK_LOGGING != 1) 
+#if(NETWORK_LOGGING != 2 && NETWORK_LOGGING != 1) 
     #undef NETWORK_LOGGING
     #define NETWORK_LOGGING 0
 #endif

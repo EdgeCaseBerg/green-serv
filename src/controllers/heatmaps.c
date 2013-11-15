@@ -312,7 +312,6 @@ int heatmap_get(char * buffer, int buffSize,int page, Decimal * latDegrees, Deci
 
 	char json[512]; /*Some large enough number to hold all the info*/
 	int i;
-	fprintf(stderr, "%p %p\n", (void*)latOffset, (void*)lonOffset);
 	heatmaps = malloc(HEATMAP_RESULTS_PER_PAGE * sizeof(struct gs_heatmap));
 	if(heatmaps == NULL){
 		return -1; /* Return flag to send self nomem */
