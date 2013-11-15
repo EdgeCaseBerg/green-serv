@@ -133,7 +133,6 @@ int db_getCommentsByType(int page, long scopeId, struct gs_comment * gsc, char *
 		gs_comment_ZeroStruct(&gsc[i]);
 
 		gs_comment_setId( atol(row[0]), &gsc[i]);
-		fprintf(stderr, "%s\n", row[1]);
 		gs_comment_setPinId(row[1] == NULL ? -1 : atol(row[1]), &gsc[i]);
 		gs_comment_setContent( row[2], &gsc[i]);
 		gs_comment_setScopeId( atol(row[3]), &gsc[i]);
