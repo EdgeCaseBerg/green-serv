@@ -38,7 +38,7 @@ you'd like.
 		#define __CONFIG_H__
 	
 		#define PORT 10110
-		#define HOST "green.xenonapps.dev"
+		#define HOST "localhost"
 		#define DATABASE "green_xenon"
 		#define PASSWORD "pylons"
 		#define USERNAME "tassadar"
@@ -96,13 +96,13 @@ you'd like.
 SQL to create database structure:
 ------------------------------------------------------------------------
 
-    CREATE DATABASE the_database;
+    CREATE DATABASE green_xenon;
     
-    CREATE USER 'user'@'localhost' IDENTIFIED BY 'cleartextpassword';
-    GRANT ALL ON the_database.* TO 'user'@'localhost';
+    CREATE USER 'tassadar'@'localhost' IDENTIFIED BY 'pylons';
+    GRANT ALL ON green_xenon.* TO 'tassadar'@'localhost';
     FLUSH PRIVILEGES;
     
-    USE the_database;
+    USE green_xenon;
     
     CREATE TABLE scope (
     	id INT(12) NOT NULL auto_increment PRIMARY KEY,
