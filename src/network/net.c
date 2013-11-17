@@ -365,17 +365,23 @@ int test_network(char * buffer, int bufferLength, void*(*func)(void*)){
 #include <signal.h>
 
 volatile sig_atomic_t stop;
+int socketfd;
 void stop_server(int signum){
     /* Call me with ctrl Z if ctrl c doesnt work*/
     stop = 1;
     if(signum == SIGINT)
         stop =1;
-    
+
+    /* Close the open and listening socket in the server. So the while
+     * loop below can actually stop.
+    */
+    close(socketfd);
 }
+
 
 int run_network(char * buffer, int bufferLength, void*(*func)(void*)){
     struct sockaddr_in sockserv,sockclient;
-    int socketfd,clientfd;
+    int clientfd;
     socklen_t clientsocklen;
     char buff[BUFSIZ];
     pthread_t children[NUMTHREADS];
@@ -432,7 +438,7 @@ int run_network(char * buffer, int bufferLength, void*(*func)(void*)){
                     bzero(buff,BUFSIZ);
                     bzero(buffer,bufferLength);
                 }else{
-                    NETWORK_LOG_LEVEL_1("Connection shutdown for invalid client.");
+                    NETWORK_LOG_LEVEL_1("Connection shutdown.");
                     NETWORK_LOG_LEVEL_2("Invalid file descriptor from client connection.");
                     NETWORK_LOG_LEVEL_2("If shutting down server ignore previous warning.");
                     i--; /* Move thread index back one */
@@ -453,10 +459,11 @@ int run_network(char * buffer, int bufferLength, void*(*func)(void*)){
     #ifdef DETACHED_THREADS
     pthread_attr_destroy(&attr);
     #endif
-    if(shutdown(socketfd,2) <0)
-        fprintf(stderr, "%s\n", "Problem shutting down socket descriptor");
-    if(close(socketfd) < 0)
-        fprintf(stderr, "%s\n", "Problem closing socket descriptor");
+    /* There is no need to call close(socketfd) here because the socket
+     * is closed by the signal interupt. And the only way we can get to 
+     * this point in the program is by being interupted by said signal
+     * which will have already closed the file descriptor open.
+    */
     /* Sleep a moment to hope that any running threads will finish */
     BOOT_LOG_STR("Exiting Server...", "");
     sleep(2);
