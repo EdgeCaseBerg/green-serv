@@ -113,17 +113,6 @@ SQL to create database structure:
     
     #Seed The Database with initial ancestor
     INSERT INTO scope (description) VALUES ('GREEN_UP');
-    
-    #Cache table for fast pagination
-    CREATE TABLE cacheComments (
-        id INT(12) NOT NULL auto_increment PRIMARY KEY,
-        pin_id INT(12) NULL,
-        comment_type VARCHAR(10) DEFAULT "COMMENT",
-        content VARCHAR(140) NOT NULL,
-        scope_id INT(12) NOT NULL, -- this is an ancestor style query
-        created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
-    ) ENGINE Memory;
-
 
     CREATE TABLE comments (
         id INT(12) NOT NULL auto_increment PRIMARY KEY,
@@ -135,18 +124,6 @@ SQL to create database structure:
         INDEX (`scope_id`),
         CONSTRAINT FOREIGN KEY (`scope_id`) REFERENCES `scope` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
     ) ENGINE InnoDB;
-
-    #High speed reading
-    CREATE TABLE cacheMarkers (
-        id INT(12) NOT NULL auto_increment PRIMARY KEY,
-        comment_id INT(12) NULL,
-        addressed INT(1) DEFAULT 0 NOT NULL,
-        scope_id INT(12), -- this is an ancestor style query
-        created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-        latitude DECIMAL(10, 8) NOT NULL,
-        longitude DECIMAL(11, 8) NOT NULL
-    ) ENGINE Memory;
-
 
     CREATE TABLE markers (
         id INT(12) NOT NULL auto_increment PRIMARY KEY,
