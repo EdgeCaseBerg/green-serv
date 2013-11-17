@@ -449,8 +449,8 @@ int run_network(char * buffer, int bufferLength, void*(*func)(void*)){
              *in net.h
             */
             #ifndef DETACHED_THREADS
+            NETWORK_LOG_LEVEL_1("Pausing to Join threads. One moment...");
             for(j=0; j < NUMTHREADS && j < i; ++j){
-                NETWORK_LOG_LEVEL_1("Pausing to Join threads. One moment...");
                 pthread_join(children[j],NULL);
             }
             #endif

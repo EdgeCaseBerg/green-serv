@@ -387,14 +387,13 @@ int report_get(char * buffer,int buffSize, char * hash, char * since, int page){
 
 		if( numReports > RESULTS_RETURNED ){
 			nextPage = page+1;
-			/*TODO: Need to tack on url parameters if present...*/
-			snprintf(nextStr,MAX_URL_LENGTH, "%sdebug?page=%d", BASE_API_URL, nextPage);
+			snprintf(nextStr,MAX_URL_LENGTH, "%sdebug?page=%d&since=%s", BASE_API_URL, nextPage, since );
 		} else {
 			snprintf(nextStr,MAX_URL_LENGTH, "null");
 		}
 
 		if(page > 1)
-			snprintf(prevStr,MAX_URL_LENGTH,"%sdebug?page=%d",BASE_API_URL,page-1);
+			snprintf(prevStr,MAX_URL_LENGTH,"%sdebug?page=%d&since=%s",BASE_API_URL,page-1,since);
 		else
 			snprintf(prevStr,MAX_URL_LENGTH,"null");
 
