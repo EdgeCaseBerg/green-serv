@@ -34,11 +34,6 @@ void gs_heatmap_ZeroStruct(struct gs_heatmap * gsh){
 	gsh->id = GS_HEATMAP_INVALID_ID;
 	gsh->scopeId = GS_SCOPE_INVALID_ID;
 	gsh->intensity = 0;
-	/* 0 is actually a good 'invalid' or default for the right
-	 * side because if someone gives just 1. or 1 to a string 
-	 * parsing function and we only set the left, the right is 
-	 * still correct!
-	*/
 	gsh->latitude = 0;  
 	gsh->longitude = 0;
 }

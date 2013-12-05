@@ -192,9 +192,6 @@ int report_post(char * buffer, int buffSize, const struct http_request * request
 	MYSQL *conn;
 	struct gs_report report;
 	StrMap * sm;
-	int i;
-	int j;
-	int strFlag;
 	char keyBuffer[GS_REPORT_MAX_LENGTH+1];
 	char valBuffer[GS_REPORT_MAX_LENGTH+1];
 	char message[GS_REPORT_MAX_LENGTH+1];
@@ -209,7 +206,7 @@ int report_post(char * buffer, int buffSize, const struct http_request * request
 	bzero(stackTrace, sizeof stackTrace);
 	bzero(origin, sizeof origin);
 	gs_report_ZeroStruct(&report);
-	strFlag = 0;
+	
 
 	sm = sm_new(HASH_TABLE_CAPACITY);
 	if(sm == NULL){
@@ -218,45 +215,7 @@ int report_post(char * buffer, int buffSize, const struct http_request * request
 	}
 
 	/*Parse the JSON for the information we desire */
-	for(i=0; i < request->contentLength && request->data[i] != '\0'; ++i){
-		/*We're at the start of a string*/
-		if(request->data[i] == '"'){
-			/*Go until we hit the closing qoute*/
-			i++;
-			for(j=0; i < request->contentLength && request->data[i] != '\0' && request->data[i] != '"' && (unsigned int)j < sizeof keyBuffer; ++j,++i){
-				keyBuffer[j] = (int)request->data[i] > 64 && request->data[i] < 91 ? request->data[i] + 32 : request->data[i];
-			}
-			keyBuffer[j] = '\0';
-			/*find the beginning of the value
-			 *which is either a " or a number. So skip spaces and commas
-			*/
-			for(i++; i < request->contentLength && request->data[i] != '\0' && (request->data[i] == ',' || request->data[i] == ' ' || request->data[i] == ':' || request->data[i] == '\n'); ++i)
-				;
-			/*Skip any opening qoute */
-			if(request->data[i] != '\0' && request->data[i] == '"'){
-				i++;
-				strFlag = 1;
-			}
-			for(j=0; i < request->contentLength && request->data[i] != '\0'; ++j,++i){
-				if(strFlag == 0){
-					if(request->data[i] == ' ' || request->data[i] == '\n')
-						break; /*break out if num data*/
-				}else{
-					if(request->data[i] == '"' && request->data[i-1] != '\\')
-						break;
-				}
-				valBuffer[j] = request->data[i];
-			}
-			valBuffer[j] = '\0';
-			/* Skip any closing paren. */
-			if(request->data[i] == '"')
-				i++;
-			if(strlen(keyBuffer) > 0 && strlen(valBuffer) > 0)
-				if(sm_put(sm, keyBuffer, valBuffer) == 0)
-                	fprintf(stderr, "Failed to copy parameters into hash table while parsing url\n");
-		}
-		strFlag = 0;
-	}
+	parseJSON(request->data,request->contentLength, sm);
 
 	/* Verify that the data is valid */
 	if(	sm_exists(sm, "stacktrace") !=1 || 

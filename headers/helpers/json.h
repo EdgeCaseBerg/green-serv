@@ -23,5 +23,8 @@
 	int gs_markerCommentNToJSON(const struct gs_marker * gsm, const struct gs_comment * gsc ,char * jsonOutput, int jsonOutputAllocatedSize);
 	#define COMMENT_JSON_LENGTH 512
 
+	#include "helpers/strmap.h"
+	void parseJSON(const char * input, int input_length, StrMap * sm);
+
 
 #endif

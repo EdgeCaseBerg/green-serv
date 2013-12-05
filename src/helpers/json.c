@@ -7,6 +7,57 @@
 #include "helpers/json.h"
 
 
+void parseJSON(const char * input, int input_length, StrMap * sm){
+    int strFlag, i, j;
+    char keyBuffer[COMMENT_JSON_LENGTH+1];
+    char valBuffer[COMMENT_JSON_LENGTH+1];
+    bzero(keyBuffer, sizeof keyBuffer);
+    bzero(valBuffer, sizeof valBuffer);
+
+
+    for(strFlag=i=0; i < input_length && input[i] != '\0'; ++i){
+        /*We're at the start of a string*/
+        if(input[i] == '"'){
+            /*Go until we hit the closing qoute*/
+            i++;
+            for(j=0; i < input_length && input[i] != '\0' && input[i] != '"' && (unsigned int)j < sizeof keyBuffer; ++j,++i){
+                keyBuffer[j] = (int)input[i] > 64 && input[i] < 91 ? input[i] + 32 : input[i];
+            }
+            keyBuffer[j] = '\0';
+            /*find the beginning of the value
+             *which is either a " or a number. So skip spaces and commas
+            */
+            for(i++; i<  (int)(sizeof valBuffer)-1 && i < input_length && input[i] != '\0' && (input[i] == ',' || input[i] == ' ' || input[i] == ':'); ++i)
+                ;
+            /*Skip any opening qoute */
+            if( i < (int)(sizeof valBuffer)-1 && input[i] != '\0' && input[i] == '"'){
+                i++;
+                strFlag = 1;
+            }
+            for(j=0; i < input_length && input[i] != '\0' && i < (int)(sizeof valBuffer)-1; ++j,++i){
+                if(strFlag == 0){
+                    if(input[i] == ' ' || input[i] == '\n')
+                        break; /*break out if num data*/
+                }else{
+                    if(input[i] == '"' && input[i-1] != '\\')
+                        break;
+                }
+                valBuffer[j] = input[i];
+            }
+            valBuffer[j] = '\0';
+            /* Skip any closing paren. */
+            if(i < (int)(sizeof valBuffer) && input[i] == '"')
+                i++;
+            if(strlen(keyBuffer) > 0 && strlen(valBuffer) > 0){
+                if(sm_put(sm, keyBuffer, valBuffer) == 0)
+                    fprintf(stderr, "Failed to copy parameters into hash table while parsing JSON Data: Key: %s, Val: %s\n", keyBuffer, valBuffer);
+            }
+        }
+        strFlag = 0;
+    }
+
+}
+
 /*This function assumes that the output is large enough to handle
  *whatever input is being escaped. For safety, you should allocate
  *about 4 times as much space if you want to be completely safe.

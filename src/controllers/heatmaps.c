@@ -419,7 +419,7 @@ int heatmap_put(char * buffer, int buffSize, const struct http_request * request
 		return -1;
 	}
 
-	/*Parse the JSON for the information we desire */
+	/*Parse the JSON for the information we desire no using parseJSON here yet until refactor becuase of goto logic*/
 	for(i=0; i < request->contentLength && request->data[i] != '\0'; ++i){
 		stillInLoop = 0;
 		/*We're at the start of a string*/

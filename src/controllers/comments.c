@@ -253,15 +253,12 @@ int comment_post(char * buffer, int buffSize, const struct http_request * reques
 	StrMap * sm;
 	int i;
 	int empty;
-	int j;
-	int strFlag;
 	char keyBuffer[GS_COMMENT_MAX_LENGTH+1];
 	char valBuffer[GS_COMMENT_MAX_LENGTH+1];
 	char **convertSuccess;
 
 	bzero(keyBuffer,sizeof keyBuffer);
 	gs_comment_ZeroStruct(&insComment);
-	strFlag = 0;
 	convertSuccess = NULL;
 
 	sm = sm_new(HASH_TABLE_CAPACITY);
@@ -271,46 +268,7 @@ int comment_post(char * buffer, int buffSize, const struct http_request * reques
 	}
 
 	/*Parse the JSON for the information we desire */
-	for(i=0; i < request->contentLength && request->data[i] != '\0'; ++i){
-		/*We're at the start of a string*/
-		if(request->data[i] == '"'){
-			/*Go until we hit the closing qoute*/
-			i++;
-			for(j=0; i < request->contentLength && request->data[i] != '\0' && request->data[i] != '"' && (unsigned int)j < sizeof keyBuffer; ++j,++i){
-				keyBuffer[j] = (int)request->data[i] > 64 && request->data[i] < 91 ? request->data[i] + 32 : request->data[i];
-			}
-			keyBuffer[j] = '\0';
-			/*find the beginning of the value
-			 *which is either a " or a number. So skip spaces and commas
-			*/
-			for(i++; i<  (int)(sizeof valBuffer)-1 && i < request->contentLength && request->data[i] != '\0' && (request->data[i] == ',' || request->data[i] == ' ' || request->data[i] == ':'); ++i)
-				;
-			/*Skip any opening qoute */
-			if( i < (int)(sizeof valBuffer)-1 && request->data[i] != '\0' && request->data[i] == '"'){
-				i++;
-				strFlag = 1;
-			}
-			for(j=0; i < request->contentLength && request->data[i] != '\0' && i < (int)(sizeof valBuffer)-1; ++j,++i){
-				if(strFlag == 0){
-					if(request->data[i] == ' ' || request->data[i] == '\n')
-						break; /*break out if num data*/
-				}else{
-					if(request->data[i] == '"' && request->data[i-1] != '\\')
-						break;
-				}
-				valBuffer[j] = request->data[i];
-			}
-			valBuffer[j] = '\0';
-			/* Skip any closing paren. */
-			if(i < (int)(sizeof valBuffer) && request->data[i] == '"')
-				i++;
-			if(strlen(keyBuffer) > 0 && strlen(valBuffer) > 0){
-				if(sm_put(sm, keyBuffer, valBuffer) == 0)
-                	fprintf(stderr, "Failed to copy parameters into hash table while parsing url\n");
-            }
-		}
-		strFlag = 0;
-	}
+	parseJSON(request->data,request->contentLength, sm);
 
 	/* Determine if the request is valid or not */
 	if(sm_exists(sm, "type") !=1 || sm_exists(sm, "message") !=1){
@@ -319,7 +277,7 @@ int comment_post(char * buffer, int buffSize, const struct http_request * reques
 		return -400;		
 	}else{
 		if(sm_exists(sm,"message") == 1){
-			if(sm_get(sm,"type",keyBuffer, sizeof keyBuffer) == 1){
+			if(sm_get(sm,"message",keyBuffer, sizeof keyBuffer) == 1){
 				if(strlen(keyBuffer) > GS_COMMENT_MAX_LENGTH){
 					sm_delete(sm);
 					return 422;
@@ -341,6 +299,7 @@ int comment_post(char * buffer, int buffSize, const struct http_request * reques
 	}
 
 	/* valid, cary on and copy over */
+	bzero(valBuffer, sizeof valBuffer);
 	gs_comment_setScopeId(_shared_campaign_id, &insComment);
 	sm_get(sm, "message",valBuffer, sizeof valBuffer);
 	/* Check for message being empty */
@@ -352,7 +311,7 @@ int comment_post(char * buffer, int buffSize, const struct http_request * reques
 		sm_delete(sm);
 		return -422;
 	}
-	fprintf(stderr, "val::%s\n", valBuffer);
+	
 	gs_comment_setContent(valBuffer, &insComment);
 	if(sm_exists(sm, "pin")){
 		sm_get(sm, "pin",keyBuffer,sizeof keyBuffer);
@@ -398,7 +357,7 @@ int comment_delete(char * buffer, int buffSize, long id){
 	if(!conn){
 		mysql_thread_end();
 		fprintf(stderr, "%s\n", "Could not connect to mySQL on worker thread");
-		return -1;
+		return 500;
 	}	
 
 	affected = db_deleteComment(id,conn);
