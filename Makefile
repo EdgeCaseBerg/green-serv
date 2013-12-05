@@ -11,13 +11,13 @@ mysqlflags = -I/usr/include/mysql -DBIG_JOINS=1 -fno-strict-aliasing
 mysqllibs  = -L/usr/lib/x86_64-linux-gnu -lmysqlclient_r -lpthread -lz -lm -lrt -ldl 
 valgrind = valgrind --tool=memcheck --leak-check=yes --show-reachable=yes --num-callers=20 --track-fds=yes
 unittests = test-decimal test-comment test-scope test-marker test-report test-heatmap test-heartbeat test-router test-network
-unittestobj = obj/comment.o  obj/db.o  obj/decimal.o  obj/heatmap.o  obj/json.o obj/marker.o  obj/report.o  obj/scope.o  obj/sha256.o
+unittestobj = obj/comment.o  obj/db.o  obj/decimal.o  obj/heatmap.o  obj/json.o obj/strmap.o obj/marker.o  obj/report.o  obj/scope.o  obj/sha256.o
 controllertests = test-hb-controller
 
 all: a.out
 
 a.out: gs.o
-	$(CC)  obj/*o  -o a.out $(mysqllibs) -g -lcrypto -lpthread
+	$(CC)  obj/*.o  -o a.out $(mysqllibs) -g -lcrypto -lpthread
 
 gs.o: green-serv.c json.o db.o network.o
 	$(CC) $(gflags) -c green-serv.c -o obj/gs.o  	
@@ -25,7 +25,7 @@ gs.o: green-serv.c json.o db.o network.o
 db.o: src/database/db.c scope.o comment.o marker.o heatmap.o report.o
 	$(CC) $(mysqlflags) $(gflags) -c src/database/db.c -o obj/db.o  	
 
-json.o: src/helpers/json.c comment.o scope.o marker.o heatmap.o report.o decimal.o
+json.o: src/helpers/json.c comment.o scope.o marker.o heatmap.o report.o decimal.o strmap.o
 	$(CC) $(gflags) -c src/helpers/json.c -o obj/json.o  	
 
 scope.o: src/models/scope.c
@@ -108,14 +108,14 @@ test-report: tests/unit/report-test.c report.o json.o db.o
 test-heatmap: tests/unit/heatmap-test.c heatmap.o json.o db.o decimal.o
 	$(CC) $(mysqlflags) $(gflags) tests/unit/heatmap-test.c $(unittestobj) -o tests/bin/heatmap.out $(mysqllibs) -lcrypto	
 
-test-heartbeat: tests/unit/heartbeat-test.c json.o decimal.o
-	$(CC) $(gflags) tests/unit/heartbeat-test.c obj/json.o obj/decimal.o -o tests/bin/heartbeat.out 
+test-heartbeat: tests/unit/heartbeat-test.c json.o decimal.o strmap.o
+	$(CC) $(gflags) tests/unit/heartbeat-test.c obj/json.o obj/strmap.o obj/decimal.o -o tests/bin/heartbeat.out 
 
 test-router: tests/unit/router-test.c router.o strmap.o
 	$(CC) $(gflags) tests/unit/router-test.c obj/router.o obj/strmap.o -o tests/bin/router.out
 
 test-network: tests/unit/network-test.c router.o  strmap.o network.o commentC.o markerC.o heartbeatC.o db.o comment.o report.o marker.o scope.o heatmap.o heatmapC.o reportsC.o
-	$(CC) $(mysqlflags) $(gflags) tests/unit/network-test.c $(unittestobj) obj/router.o obj/network.o obj/strmap.o obj/commentC.o obj/markerC.o  obj/heartbeatC.o obj/heatmapC.o obj/reportsC.o -o tests/bin/network.out -lpthread $(mysqllibs) -lcrypto
+	$(CC) $(mysqlflags) $(gflags) tests/unit/network-test.c $(unittestobj) obj/router.o obj/network.o obj/commentC.o obj/markerC.o  obj/heartbeatC.o obj/heatmapC.o obj/reportsC.o -o tests/bin/network.out -lpthread $(mysqllibs) -lcrypto
 
 #Controller Tests
 
