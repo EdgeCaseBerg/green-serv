@@ -1,4 +1,5 @@
 #include "helpers/json.h"
+#include <unistd.h>
 
 #define JSON_LENGTH 32
 int main(){
@@ -7,7 +8,9 @@ int main(){
 	gs_heartbeatNToJSON(json,JSON_LENGTH);
 	
 	printf("%s\n", json);
-
+	close(STDIN_FILENO);
+	close(STDOUT_FILENO);
+	close(STDERR_FILENO);
 	return 0;
 }
 #undef JSON_LENGTH

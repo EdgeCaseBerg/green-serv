@@ -2,6 +2,7 @@
 #include "models/report.h"
 #include "db.h"
 #include "config.h"
+#include <unistd.h>
 
 #define JSON_LENGTH GS_REPORT_MAX_LENGTH*4 /* EXTREMELY important here, you can get away with *3, but for absolutely safety
 											* here and anywhere a json object is made for reports, there needs to be a LOT of
@@ -22,6 +23,9 @@ int main(){
    	conn = _getMySQLConnection();
    	if(!conn){
 	  	fprintf(stderr, "%s\n", "Could not connect to mySQL");
+	  	close(STDIN_FILENO);
+		close(STDOUT_FILENO);
+		close(STDERR_FILENO);
 	  	return 1;
    	}
 
@@ -61,4 +65,8 @@ int main(){
 
 	mysql_close(conn);
 	mysql_library_end();
+
+	close(STDIN_FILENO);
+	close(STDOUT_FILENO);
+	close(STDERR_FILENO);
 }
