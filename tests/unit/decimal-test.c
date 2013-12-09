@@ -157,6 +157,8 @@ int main(){
 	negativeZeroValue();
 	subtractPositiveFromNegative();
 	subtractNegativeFromNegative();
-	
+	close(STDIN_FILENO);
+	close(STDOUT_FILENO);
+	close(STDERR_FILENO);
 	return 0;
 }

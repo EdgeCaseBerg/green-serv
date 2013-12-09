@@ -3,6 +3,7 @@
 #include "models/comment.h"
 #include "models/marker.h"
 #include "helpers/json.h"
+#include <unistd.h>
 
 #define JSON_LENGTH 512
 int main(){
@@ -20,6 +21,9 @@ int main(){
    	conn = _getMySQLConnection();
    	if(!conn){
 	  	fprintf(stderr, "%s\n", "Could not connect to mySQL");
+	  	close(STDIN_FILENO);
+		close(STDOUT_FILENO);
+		close(STDERR_FILENO);
 	  	return 1;
    	}
 
@@ -67,6 +71,9 @@ int main(){
 	mysql_close(conn);
 	mysql_library_end();
 	
+	close(STDIN_FILENO);
+	close(STDOUT_FILENO);
+	close(STDERR_FILENO);
 
 }
 #undef JSON_LENGTH

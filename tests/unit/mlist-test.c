@@ -3,7 +3,7 @@
 #include "models/comment.h"
 #include "models/marker.h"
 #include "models/heatmap.h"
-
+#include <unistd.h>
 
 
 int main() {
@@ -63,9 +63,16 @@ int main() {
 	fprintf(stdout, "Destroying list... ");
 	destroy_list(head);
 
+	close(STDIN_FILENO);
+	close(STDOUT_FILENO);
+	close(STDERR_FILENO);
+
 	return 0;
 
 	out_of_mem:
 		fprintf(stderr, "Couldn't do test out of memory\n");
+		close(STDIN_FILENO);
+		close(STDOUT_FILENO);
+		close(STDERR_FILENO);
 		return 1;
 }

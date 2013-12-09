@@ -2,6 +2,7 @@
 #include "db.h"
 #include "config.h"
 #include "helpers/json.h"
+#include <unistd.h>
 
 #define JSON_LENGTH 1000
 int main(){
@@ -53,6 +54,9 @@ int main(){
    	mysql_close(conn);
 	mysql_library_end();
 
+	close(STDIN_FILENO);
+	close(STDOUT_FILENO);
+	close(STDERR_FILENO);
 
 }
 #undef JSON_LENGTH

@@ -4,6 +4,7 @@
 #include "helpers/decimal.h"
 #include "models/heatmap.h"
 #include "db.h"
+#include <unistd.h>
 
 #define HEATMAP_JSON_LENGTH 512
 int main(){
@@ -23,6 +24,9 @@ int main(){
    	conn = _getMySQLConnection();
    	if(!conn){
 	  	fprintf(stderr, "%s\n", "Could not connect to mySQL");
+	  	close(STDIN_FILENO);
+		close(STDOUT_FILENO);
+		close(STDERR_FILENO);
 	  	return 1;
    	}
 	gs_heatmap_ZeroStruct(&testHeatmap);
@@ -70,4 +74,7 @@ int main(){
 
 	mysql_close(conn);
 	mysql_library_end();
+	close(STDIN_FILENO);
+	close(STDOUT_FILENO);
+	close(STDERR_FILENO);
 }

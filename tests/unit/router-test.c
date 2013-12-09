@@ -1,4 +1,5 @@
 #include "network/router.h"
+#include <unistd.h>
 
 #include <stdio.h>
 
@@ -30,5 +31,9 @@ int main(){
 	expected("/api/asadssd",INVALID_CONTROLLER);
 	expected("/ap",INVALID_CONTROLLER);
 	expected("/aasspi/asadssd",INVALID_CONTROLLER);
+
+	close(STDIN_FILENO);
+	close(STDOUT_FILENO);
+	close(STDERR_FILENO);
 	
 }
