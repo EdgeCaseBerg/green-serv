@@ -29,6 +29,19 @@ MYSQL * _getMySQLConnection(){
 	return mysql_real_connect(conn, server, user, password, database, 0, NULL, 0);
 }
 
+void db_start_transaction(MYSQL * conn){
+	mysql_autocommit(conn, 0);
+}
+
+void db_abort_transaction(MYSQL * conn){
+	mysql_rollback(conn);
+}
+
+void db_end_transaction(MYSQL * conn){
+	mysql_commit(conn);
+	mysql_autocommit(conn, 1);
+}
+
 void db_getScopeById(long id, struct gs_scope * gss, MYSQL * conn){
 	MYSQL_RES * result;
 	MYSQL_ROW row; 

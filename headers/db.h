@@ -160,4 +160,9 @@
 	int db_getMarkerCommentsLatitude(int page, long scopeId, struct gs_marker * gsm, struct gs_comment * gsc, MYSQL * conn,Decimal * center, Decimal * latOffset);
 	int db_getMarkerCommentsLongitude(int page, long scopeId, struct gs_marker * gsm, struct gs_comment * gsc, MYSQL * conn,Decimal * center, Decimal * lonOffset);
 	int db_getMarkerCommentsFullFilter(int page, long scopeId, struct gs_marker * gsm, struct gs_comment * gsc, MYSQL * conn,Decimal * latCenter, Decimal * latOffset, Decimal * lonCenter, Decimal * lonOffset);
+
+	void db_start_transaction(MYSQL * conn);
+	void db_abort_transaction(MYSQL * conn);
+	void db_end_transaction(MYSQL * conn);
+
 #endif
