@@ -58,7 +58,7 @@ commentC.o: src/controllers/comments.c strmap.o comment.o router.o
 markerC.o: src/controllers/markers.c router.o strmap.o marker.o
 	$(CC) $(gflags) -c src/controllers/markers.c -o obj/markerC.o
 
-heatmapC.o: src/controllers/heatmaps.c router.o strmap.o heatmap.o
+heatmapC.o: src/controllers/heatmaps.c router.o strmap.o heatmap.o mlist.o
 	$(CC) $(gflags) -c src/controllers/heatmaps.c -o obj/heatmapC.o
 
 reportsC.o: src/controllers/reports.c router.o strmap.o report.o sha256.o
