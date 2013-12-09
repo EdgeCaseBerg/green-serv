@@ -12,136 +12,51 @@ static inline int min(const int a, const int b){
  *Returns the status code of the response.
 */
 int comment_controller(const struct http_request * request, char * stringToReturn, int strLength){
-	char cType[COMMENTS_CTYPE_SIZE];
 	char buffer[(RESULTS_PER_PAGE * sizeof(struct gs_comment))*4+1+(2*MAX_URL_LENGTH)];
-	char tempBuf[20];
-	int page;
 	int status;
-	int numParams;
-	long id;
-	StrMap * sm;
-
-	page=1;
+	
 	status = 503;
-	bzero(cType, sizeof cType);
 	bzero(buffer, sizeof buffer);
-	bzero(tempBuf, sizeof tempBuf);
-
-	
-
-	sm = sm_new(HASH_TABLE_CAPACITY);
-	if(sm == NULL){
-		status = 500;
-		goto cc_nomem;
-	}
-
-	/* Parse the URL */
-	numParams = parseURL(request->url, strlen(request->url), sm);
-	if(numParams > 0){
-		if(sm_exists(sm, "page") == 1)
-			if(sm_get(sm, "page", tempBuf, sizeof tempBuf) == 1){
-				page = atoi(tempBuf);
-				if(page <= 0){
-					/* Err */
-					status = 422;			
-					sm_delete(sm);
-					goto cc_badpage;
-				}
-
-			}
-		if(sm_exists(sm, "type") ==1){
-			if(sm_get(sm,"type", cType, sizeof cType) == 1){
-				/* Verify that it is a correct type */
-				if(strncasecmp(cType, CTYPE_1,COMMENTS_CTYPE_SIZE) != 0)
-					if(strncasecmp(cType, CTYPE_2,COMMENTS_CTYPE_SIZE) != 0)
-						if(strncasecmp(cType, CTYPE_3,COMMENTS_CTYPE_SIZE) != 0){
-							status = 422;					
-							sm_delete(sm);
-							goto cc_badtype;
-						}
-
-			}
-		}else{
-			/*No Type, set flag*/
-			cType[0] = '\0';
-		}
-	}
-	
-	/* For the client we start numbering from 1, for interal use we need to use
-	 * page-1 because the page is part of the calculation of the limit term in
-	 * the query. So to get the first page it needs to be 0.
-	*/
-	page -=1;
 
 	switch(request->method){
 		case GET:
-			if(cType[0] == '\0' ){
-				if( comments_get(buffer, sizeof buffer ,page,NULL) == -1 ){
-					sm_delete(sm);
-					goto cc_nomem;
-				}
-			} else {
-				if( comments_get(buffer, sizeof buffer ,page,cType) == -1 ){
-					sm_delete(sm);
-					goto cc_nomem;
-				}
-			}
+			if( (status = comments_get(buffer, sizeof buffer, request )) == -1 )
+				goto cc_nomem;
 			/* Process results of comments_get */
 			snprintf(stringToReturn,strLength,"%s",buffer);
-			status = 200;
 			break;
 		case POST:
 			status = comment_post(buffer,sizeof buffer,request);
 			if( status == -1 ){
-				sm_delete(sm);
 				goto cc_nomem;
 			} else if(status == 422) {
-				sm_delete(sm);
 				goto cc_badtype;
 			} else if(status == -400) {
 				status = 400;
-				sm_delete(sm);
 				goto cc_missing;
 			}else if(status == -422){
-				sm_delete(sm);
 				status = 422;
 				goto cc_emptymessage;
 			}
 			snprintf(stringToReturn,strLength,"%s",buffer);
 			break;
 		case DELETE:
-			if(sm_exists(sm,"id")!=1){
-				status = 400;
-				sm_delete(sm);
-				goto cc_missing_key;
-			}
-			sm_get(sm, "id", buffer, sizeof buffer);
-			id = atol(buffer);
-			status = comment_delete(buffer, sizeof buffer, id);
+			status = comment_delete(buffer, sizeof buffer, request);
 			snprintf(stringToReturn,strLength,"%s",buffer);
 			break;
 		default:
 			/*Invalid Method Err*/
 			status = 501;	
-			sm_delete(sm);
 			goto cc_unsupportedMethod;
 			break;
 	}
-	sm_delete(sm);
+	
 
 	return status;
 
 	cc_nomem: /*Comment Controller Memory Allocation fail */
 		snprintf(stringToReturn, strLength, ERROR_STR_FORMAT, 500, NOMEM_ERROR);
 		return status;
-
-	cc_badpage:/*Comment Controller Bad Page Request */
-		snprintf(stringToReturn, strLength, ERROR_STR_FORMAT, status, BAD_PAGE_ERR);
-		return status;		
-
-	cc_badtype:/*Comment Controller Bad type request */
-		snprintf(stringToReturn, strLength, ERROR_STR_FORMAT, status, BAD_TYPE_ERR);
-		return status;	
 
 	cc_unsupportedMethod:/*Comment Controller Bad method*/			
 		snprintf(stringToReturn, strLength, ERROR_STR_FORMAT, status, BAD_METHOD_ERR);
@@ -151,8 +66,8 @@ int comment_controller(const struct http_request * request, char * stringToRetur
 		snprintf(stringToReturn, strLength, ERROR_STR_FORMAT, status, MISSING_KEY_ERR);
 		return status;					
 	
-	cc_missing_key:
-		snprintf(stringToReturn, strLength, ERROR_STR_FORMAT, status, MISSING_ID_KEY);
+	cc_badtype:
+		snprintf(stringToReturn, strLength, ERROR_STR_FORMAT, status, BAD_TYPE_ERR);
 		return status;							
 
 	cc_emptymessage:
@@ -165,22 +80,79 @@ int comment_controller(const struct http_request * request, char * stringToRetur
  *page will default to 1 if negative values passed in or 0
  *
 */
-int comments_get(char * buffer, int buffSize,int page,char * cType){
+int comments_get(char * buffer, int buffSize ,const struct http_request * request){
 	struct gs_comment * commentPage;
 	int numComments;
 	MYSQL *conn;
+	int page;
 	int nextPage;
 	char nextStr[MAX_URL_LENGTH];
 	char prevStr[MAX_URL_LENGTH];
 	char json[COMMENT_JSON_LENGTH];
+	char tempBuf[20];
+	char cType[COMMENTS_CTYPE_SIZE];
 	char commentBuffer[buffSize];
-	int i;
+	int i, numParams;
+	StrMap * sm;
 
-	/*Parse */
+
+	page=1;
+	bzero(tempBuf, sizeof tempBuf);
+	bzero(cType, sizeof cType);
+
+	
 	commentPage = malloc(RESULTS_PER_PAGE * sizeof(struct gs_comment));
 	if(commentPage == NULL){
-		return -1; /* Return flag to send self to cc_nomem */
+		return 500; 
 	}
+
+	sm = sm_new(HASH_TABLE_CAPACITY);
+	if(sm == NULL){
+		free(commentPage);
+		return 500;
+	}
+
+	/* Parse the URL */
+	numParams = parseURL(request->url, strlen(request->url), sm);
+	if(numParams > 0){
+		if(sm_exists(sm, "page") == 1)
+			if(sm_get(sm, "page", tempBuf, sizeof tempBuf) == 1){
+				page = atoi(tempBuf); /* TODO: use strtol */
+				if(page <= 0){
+					/* Err */		
+					sm_delete(sm);
+					free(commentPage);
+					snprintf(buffer, buffSize, ERROR_STR_FORMAT, 422, BAD_PAGE_ERR);
+					return 422;
+				}
+
+			}
+		if(sm_exists(sm, "type") ==1){
+			if(sm_get(sm,"type", cType, sizeof cType) == 1){
+				/* Verify that it is a correct type */
+				if(strncasecmp(cType, CTYPE_1,COMMENTS_CTYPE_SIZE) != 0)
+					if(strncasecmp(cType, CTYPE_2,COMMENTS_CTYPE_SIZE) != 0)
+						if(strncasecmp(cType, CTYPE_3,COMMENTS_CTYPE_SIZE) != 0){
+							sm_delete(sm);
+							free(commentPage);
+							snprintf(buffer, buffSize, ERROR_STR_FORMAT, 422, BAD_TYPE_ERR);
+							return 422;
+						}
+
+			}
+		}else{
+			/*No Type, set flag*/
+			cType[0] = '\0';
+		}
+	}
+	sm_delete(sm);
+
+	
+	/* For the client we start numbering from 1, for interal use we need to use
+	 * page-1 because the page is part of the calculation of the limit term in
+	 * the query. So to get the first page it needs to be 0.
+	*/
+	page -=1;
 
 	mysql_thread_init();
 	conn = _getMySQLConnection();
@@ -188,21 +160,21 @@ int comments_get(char * buffer, int buffSize,int page,char * cType){
 		free(commentPage);
 		mysql_thread_end();
 		fprintf(stderr, "%s\n", "Could not connect to mySQL on worker thread");
-		return -1;
+		return 500;
 	}
 
 	bzero(nextStr, sizeof nextStr);
 	bzero(prevStr, sizeof prevStr);
 	bzero(commentBuffer,buffSize);
 
-	if(cType == NULL)
+	if(cType[0] == '\0')
 		numComments = db_getComments(page, _shared_campaign_id ,commentPage, conn);
 	else
 		numComments = db_getCommentsByType(page, _shared_campaign_id, commentPage, cType, conn);
 
 	if( numComments > RESULTS_RETURNED ){
 		nextPage = page+1;
-		if(cType == NULL)
+		if(cType[0] == '\0')
 			snprintf(nextStr,MAX_URL_LENGTH, "%scomments?page=%d", BASE_API_URL, nextPage);
 		else
 			snprintf(nextStr,MAX_URL_LENGTH, "%scomments?page=%d&type=%s", BASE_API_URL, nextPage, cType);
@@ -211,7 +183,7 @@ int comments_get(char * buffer, int buffSize,int page,char * cType){
 	}
 
 	if(page > 1)
-		if(cType == NULL)
+		if(cType[0] == '\0')
 			snprintf(prevStr,MAX_URL_LENGTH,"%scomments?page=%d",BASE_API_URL,page-1);
 		else
 			snprintf(prevStr,MAX_URL_LENGTH,"%scomments?page=%d&type=%s",BASE_API_URL,page-1,cType);
@@ -244,7 +216,7 @@ int comments_get(char * buffer, int buffSize,int page,char * cType){
 	
 	mysql_close(conn);
 	mysql_thread_end();
-	return 0;
+	return 200;
 }
 
 int comment_post(char * buffer, int buffSize, const struct http_request * request){
@@ -348,9 +320,26 @@ int comment_post(char * buffer, int buffSize, const struct http_request * reques
 }
 
 
-int comment_delete(char * buffer, int buffSize, long id){
+int comment_delete(char * buffer, int buffSize, const struct http_request * request){
+	StrMap * sm;
 	MYSQL *conn;
 	long affected; 
+	long id;
+
+	sm = sm_new(HASH_TABLE_CAPACITY);
+	if(sm == NULL){
+		fprintf(stderr, "sm err\n");
+		return -1;
+	}
+	parseURL(request->url, strlen(request->url), sm);
+	if(sm_exists(sm,"id")!=1){
+		sm_delete(sm);
+		snprintf(buffer, buffSize, ERROR_STR_FORMAT, 400, MISSING_ID_KEY);
+		return 400;
+	}
+	sm_get(sm, "id", buffer, sizeof buffer);
+	id = atol(buffer);
+	sm_delete(sm);
 
 	mysql_thread_init();
 	conn = _getMySQLConnection();

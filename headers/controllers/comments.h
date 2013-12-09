@@ -40,11 +40,11 @@
 
 	int comment_controller(const struct http_request * request, char * stringToReturn, int strLength);
 
-	int comments_get(char * buffer, int buffSize,int page,char * cType);
+	int comments_get(char * buffer, int buffSize, const struct http_request * request);
 
 	int comment_post(char * buffer, int buffSize, const struct http_request * request);
 
-	int comment_delete(char * buffer, int buffSize, long id);
+	int comment_delete(char * buffer, int buffSize, const struct http_request * request);
 
 	#define COMMENT_PAGE_STR	"{" \
 									"\"status_code\" : %d ,"\
