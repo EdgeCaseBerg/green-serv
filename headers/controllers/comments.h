@@ -37,6 +37,7 @@
 		#define MISSING_ID_KEY "Required key id not found"
 	#endif
 	#define EMPTY_COMMENT_MESSAGE "Message may not be empty"
+	#define MISSING_PIN_ERR "If pin key present, pin ID must be an integral numeric identifier"
 
 	int comment_controller(const struct http_request * request, char * stringToReturn, int strLength);
 

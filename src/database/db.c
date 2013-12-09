@@ -192,7 +192,7 @@ void db_getCommentById(long id, struct gs_comment * gsc, MYSQL * conn){
 }
 
 #ifndef DB_INSERT_COMMENT_QUERY_SIZE
-	#define DB_INSERT_COMMENT_QUERY_SIZE 58+140+10
+	#define DB_INSERT_COMMENT_QUERY_SIZE 58 + GS_COMMENT_MAX_LENGTH + 1 +10 + sizeof GS_COMMENT_INSERT
 #endif
 void db_insertComment(struct gs_comment * gsc, MYSQL * conn){
 	MYSQL_RES * result;
