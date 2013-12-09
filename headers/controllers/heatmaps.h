@@ -6,6 +6,7 @@
 	#include "models/heatmap.h"
 	#include "db.h"
 	#include "helpers/json.h"
+	#include "helpers/mlist.h"
 	
 	#include <stdio.h>
 	#include <stdlib.h>
