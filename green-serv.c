@@ -10,6 +10,7 @@
 #include "models/heatmap.h"
 #include "models/report.h"
 #include "network/net.h"
+#include <unistd.h>
 #include <string.h>
 
 #ifndef BOOT_LOGGING
@@ -74,6 +75,12 @@ int main(int argc, const char* argv[]) {
 	BOOT_LOG_STR("Finished Network Interface.","");
 	/*Clean Up database connection*/
 	mysql_library_end();
+
+	
+	close(STDIN_FILENO);
+	close(STDOUT_FILENO);
+	close(STDERR_FILENO);
+	return 0;
 }
 
 #undef BOOT_LOG_STR
