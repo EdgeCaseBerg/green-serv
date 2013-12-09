@@ -73,6 +73,9 @@ router.o: src/network/router.c strmap.o
 strmap.o: src/helpers/strmap.c
 	$(CC) $(gflags) -c src/helpers/strmap.c -o obj/strmap.o
 
+mlist.o: src/helpers/mlist.c
+	$(CC) $(gflags) -c src/helpers/mlist.c -o obj/mlist.o
+
 clean:
 	rm obj/*.o *.out
 
@@ -89,6 +92,7 @@ units: $(unittests)
 	$(valgrind) tests/bin/heartbeat.out
 	$(valgrind) tests/bin/router.out
 	$(valgrind) tests/bin/network.out
+	$(valgrind) tests/bin/mlist.out
 
 test-decimal: tests/unit/decimal-test.c decimal.o
 	$(CC) $(gflags) tests/unit/decimal-test.c obj/decimal.o -o tests/bin/decimal.out -lm -rdynamic
@@ -116,6 +120,9 @@ test-router: tests/unit/router-test.c router.o strmap.o
 
 test-network: tests/unit/network-test.c router.o  strmap.o network.o commentC.o markerC.o heartbeatC.o db.o comment.o report.o marker.o scope.o heatmap.o heatmapC.o reportsC.o
 	$(CC) $(mysqlflags) $(gflags) tests/unit/network-test.c $(unittestobj) obj/router.o obj/network.o obj/commentC.o obj/markerC.o  obj/heartbeatC.o obj/heatmapC.o obj/reportsC.o -o tests/bin/network.out -lpthread $(mysqllibs) -lcrypto
+
+test-mlist: tests/unit/mlist-test.c comment.o marker.o heatmap.o mlist.o
+	$(CC) $(gflags) tests/unit/mlist-test.c obj/mlist.o obj/comment.o obj/marker.o obj/heatmap.o -o tests/bin/mlist.out
 
 #Controller Tests
 
