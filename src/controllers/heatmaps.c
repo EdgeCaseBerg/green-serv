@@ -397,9 +397,8 @@ int heatmap_put(char * buffer, int buffSize, const struct http_request * request
 	MYSQL *conn;
 	struct gs_heatmap * heatmap;
 	StrMap * sm;
-	int i;
-	int j;
-	int strFlag;
+	int i, j, strFlag;
+	int numberHeatmapsSent;
 	long intensity;
 	char keyBuffer[GS_COMMENT_MAX_LENGTH+1];
 	char valBuffer[GS_COMMENT_MAX_LENGTH+1];
@@ -421,6 +420,7 @@ int heatmap_put(char * buffer, int buffSize, const struct http_request * request
 		return -1;
 	}
 
+	numberHeatmapsSent = 0;
 	/*Parse the JSON for the information we desire no using parseJSON here yet until refactor becuase of goto logic*/
 	for(i=0; i < request->contentLength && request->data[i] != '\0'; ++i){
 		/*We're at the start of a string*/
@@ -455,9 +455,12 @@ int heatmap_put(char * buffer, int buffSize, const struct http_request * request
 			/* Skip any closing paren. */
 			if(request->data[i] == '"')
 				i++;
-			if(strlen(keyBuffer) > 0 && strlen(valBuffer) > 0)
+			if(strlen(keyBuffer) > 0 && strlen(valBuffer) > 0){
 				if(sm_put(sm, keyBuffer, valBuffer) == 0)
                 	fprintf(stderr, "Failed to copy parameters into hash table while parsing url\n");
+                else
+                	numberHeatmapsSent++; /* Increase for each key val pair we find, then divide by 3 later */
+            }
             /* Check if we have a full and valid point yet */
             if(sm_exists(sm, "secondsworked") == 1 && sm_exists(sm,"latdegrees") == 1 && sm_exists(sm,"londegrees") ==1 ){
             	heatmap = malloc(sizeof (struct gs_heatmap));
@@ -558,8 +561,9 @@ int heatmap_put(char * buffer, int buffSize, const struct http_request * request
 		return -1;
 	}	
 
+	db_start_transaction(conn);
 	/* Iterate over list */
-	for(ltail = lhead; ltail != NULL; ltail = ltail->next ) {
+	for(i=0, ltail = lhead; ltail != NULL; ltail = ltail->next,i++ ) {
 
 		db_insertHeatmap( (struct gs_heatmap* )(ltail->data), conn);
 		if( ((struct gs_heatmap*) ltail->data )->id == GS_HEATMAP_INVALID_ID){
@@ -573,12 +577,18 @@ int heatmap_put(char * buffer, int buffSize, const struct http_request * request
 
 	}
 
+	if(i != (numberHeatmapsSent/3))
+		db_abort_transaction(conn);
+	db_end_transaction(conn); /* Still call end to reset autocommit to true */
+
 	mysql_close(conn);
 	mysql_thread_end();
 	destroy_list(lhead);
 
-	/* Once we're done looping we still need to clean up this last hashmap we use */
-	snprintf(buffer,buffSize,"{ \"status_code\" : 200, \"message\" : \"Successful submit\" }");
+	if(i == 0) /* There were none created ... should we err? */
+		snprintf(buffer,buffSize,"{ \"status_code\" : 200, \"message\" : \"Successful submit\" }");
+	else
+		snprintf(buffer,buffSize,"{ \"status_code\" : 200, \"message\" : \"Successful submit\" }");
 
 	return 200;		
 }
