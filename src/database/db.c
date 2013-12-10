@@ -9,6 +9,7 @@
 	#define DATABASE_LOGGING 0
 #endif
 #define LOGDB if(DATABASE_LOGGING == 1) fprintf(stderr, "%s\n", query);
+#define LOGDBTRANS(status) if(DATABASE_LOGGING == 1) fprintf(stderr, "Transaction has been %s\n", status);
 
 /* _shared_campaign_id is declared in config.h and is a global
  * readonly variable to be used for scoping purposes
@@ -31,15 +32,18 @@ MYSQL * _getMySQLConnection(){
 
 void db_start_transaction(MYSQL * conn){
 	mysql_autocommit(conn, 0);
+	LOGDBTRANS("started");
 }
 
 void db_abort_transaction(MYSQL * conn){
 	mysql_rollback(conn);
+	LOGDBTRANS("aborted");
 }
 
 void db_end_transaction(MYSQL * conn){
 	mysql_commit(conn);
 	mysql_autocommit(conn, 1);
+	LOGDBTRANS("ended");
 }
 
 void db_getScopeById(long id, struct gs_scope * gss, MYSQL * conn){
