@@ -577,18 +577,27 @@ int heatmap_put(char * buffer, int buffSize, const struct http_request * request
 
 	}
 
-	if(i != (numberHeatmapsSent/3))
+	if(i != (numberHeatmapsSent/3) || i == 0 ){
 		db_abort_transaction(conn);
+		db_end_transaction(conn);
+		mysql_close(conn);
+		mysql_thread_end();
+		destroy_list(lhead);		
+		if(i == 0){
+			snprintf(buffer, buffSize, ERROR_STR_FORMAT, 422, "Must send data to be processed");
+			return 422;
+		}else{
+			snprintf(buffer,buffSize,ERROR_STR_FORMAT, 400, KEYS_MISSING);
+			return 400;	
+		}		
+	}
 	db_end_transaction(conn); /* Still call end to reset autocommit to true */
 
 	mysql_close(conn);
 	mysql_thread_end();
 	destroy_list(lhead);
 
-	if(i == 0) /* There were none created ... should we err? */
-		snprintf(buffer,buffSize,"{ \"status_code\" : 200, \"message\" : \"Successful submit\" }");
-	else
-		snprintf(buffer,buffSize,"{ \"status_code\" : 200, \"message\" : \"Successful submit\" }");
+	snprintf(buffer,buffSize,"{ \"status_code\" : 200, \"message\" : \"Successful submit\" }");
 
 	return 200;		
 }
