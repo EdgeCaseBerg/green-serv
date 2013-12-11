@@ -554,6 +554,7 @@ int marker_post(char * buffer, int buffSize, const struct http_request * request
 		return -1;
 	}	
 
+	db_start_transaction(conn);
 	/* Insert comment first  because our mySQL trigger
 	 * will then handle updating the comment's pin id to match the new pin
 	 * that we'll submit after. If we didn't have this trigger we'd have
@@ -573,6 +574,8 @@ int marker_post(char * buffer, int buffSize, const struct http_request * request
 		goto cleanup_on_err;
 	}
 
+	db_end_transaction(conn);
+
 	mysql_close(conn);
 	mysql_thread_end();
 	sm_delete(sm);
@@ -582,6 +585,8 @@ int marker_post(char * buffer, int buffSize, const struct http_request * request
 	return 200;
 
 	cleanup_on_err:
+		db_abort_transaction(conn);
+		db_end_transaction(conn);
 		mysql_close(conn);
 		mysql_thread_end();
 		sm_delete(sm);

@@ -176,7 +176,7 @@ int report_delete(char * buffer, int buffSize, char * origin, char * hash){
 	}
 
 	if( db_deleteReport(&report, conn) > 0 ){
-		snprintf(buffer, buffSize, "%s","");
+		snprintf(buffer, buffSize, "%s",""); /* 204 returns no content */
 		mysql_close(conn);
 		mysql_thread_end();
 		return 204;
