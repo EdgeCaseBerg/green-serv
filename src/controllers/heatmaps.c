@@ -6,14 +6,14 @@ static inline int min(const int a, const int b){
 
 #ifndef FREE_NON_NULL_DEGREES_AND_OFFSETS
 	#define FREE_NON_NULL_DEGREES_AND_OFFSETS \
-											if(latDegrees != NULL)\
-												free(latDegrees);\
-											if(lonDegrees != NULL)\
-												free(lonDegrees); \
-											if(latOffset != NULL)\
-												free(latOffset);\
-											if(lonOffset != NULL)\
-												free(lonOffset);
+		if(latDegrees != NULL)\
+			free(latDegrees);\
+		if(lonDegrees != NULL)\
+			free(lonDegrees); \
+		if(latOffset != NULL)\
+			free(latOffset);\
+		if(lonOffset != NULL)\
+			free(lonOffset);
 #endif
 
 int heatmap_controller(const struct http_request * request, char * stringToReturn, int strLength){
@@ -563,3 +563,5 @@ int heatmap_put(char * buffer, int buffSize, const struct http_request * request
 
 	return 200;		
 }
+
+#undef FREE_NON_NULL_DEGREES_AND_OFFSETS
