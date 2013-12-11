@@ -49,7 +49,7 @@ sha256.o: src/helpers/sha256.c
 decimal.o: src/helpers/decimal.c
 	$(CC) $(gflags) -c src/helpers/decimal.c -o obj/decimal.o
 
-heartbeatC.o: src/controllers/heartbeat.c
+heartbeatC.o: src/controllers/heartbeat.c mlist.o
 	$(CC) $(gflags) -c src/controllers/heartbeat.c -o obj/heartbeatC.o
 
 commentC.o: src/controllers/comments.c strmap.o comment.o router.o
@@ -109,17 +109,17 @@ test-marker: tests/unit/marker-test.c marker.o comment.o json.o db.o
 test-report: tests/unit/report-test.c report.o json.o db.o
 	$(CC) $(mysqlflags) $(gflags) tests/unit/report-test.c $(unittestobj) -o tests/bin/report.out $(mysqllibs) -lcrypto
 
-test-heatmap: tests/unit/heatmap-test.c heatmap.o json.o db.o decimal.o
+test-heatmap: tests/unit/heatmap-test.c heatmap.o json.o db.o decimal.o mlist.o
 	$(CC) $(mysqlflags) $(gflags) tests/unit/heatmap-test.c $(unittestobj) -o tests/bin/heatmap.out $(mysqllibs) -lcrypto	
 
 test-heartbeat: tests/unit/heartbeat-test.c json.o decimal.o strmap.o
-	$(CC) $(gflags) tests/unit/heartbeat-test.c obj/json.o obj/strmap.o obj/decimal.o -o tests/bin/heartbeat.out 
+	$(CC) $(gflags) tests/unit/heartbeat-test.c  obj/strmap.o obj/json.o obj/decimal.o -o tests/bin/heartbeat.out 
 
 test-router: tests/unit/router-test.c router.o strmap.o
 	$(CC) $(gflags) tests/unit/router-test.c obj/router.o obj/strmap.o -o tests/bin/router.out
 
-test-network: tests/unit/network-test.c router.o  strmap.o network.o commentC.o markerC.o heartbeatC.o db.o comment.o report.o marker.o scope.o heatmap.o heatmapC.o reportsC.o
-	$(CC) $(mysqlflags) $(gflags) tests/unit/network-test.c $(unittestobj) obj/router.o obj/network.o obj/commentC.o obj/markerC.o  obj/heartbeatC.o obj/heatmapC.o obj/reportsC.o -o tests/bin/network.out -lpthread $(mysqllibs) -lcrypto
+test-network: tests/unit/network-test.c router.o  strmap.o network.o commentC.o markerC.o heartbeatC.o db.o comment.o report.o marker.o scope.o heatmap.o heatmapC.o reportsC.o mlist.o
+	$(CC) $(mysqlflags) $(gflags) tests/unit/network-test.c $(unittestobj) obj/router.o obj/network.o obj/commentC.o obj/markerC.o  obj/heartbeatC.o obj/heatmapC.o obj/reportsC.o obj/mlist.o -o tests/bin/network.out -lpthread $(mysqllibs) -lcrypto
 
 test-mlist: tests/unit/mlist-test.c comment.o marker.o heatmap.o mlist.o
 	$(CC) $(gflags) tests/unit/mlist-test.c obj/mlist.o obj/comment.o obj/marker.o obj/heatmap.o -o tests/bin/mlist.out
@@ -129,8 +129,8 @@ test-mlist: tests/unit/mlist-test.c comment.o marker.o heatmap.o mlist.o
 controllers: $(controllertests)
 	$(valgrind) tests/bin/heartbeatC.out
 
-test-hb-controller: tests/controllers/heartbeat-test.c heartbeatC.o json.o
-	$(CC) $(gflags) tests/controllers/heartbeat-test.c obj/heartbeatC.o obj/json.o obj/decimal.o -o tests/bin/heartbeatC.out
+test-hb-controller: tests/controllers/heartbeat-test.c heartbeatC.o json.o strmap.o
+	$(CC) $(gflags) tests/controllers/heartbeat-test.c obj/heartbeatC.o obj/json.o obj/strmap.o obj/decimal.o -o tests/bin/heartbeatC.out
 
 
 #Integration Tests with network 

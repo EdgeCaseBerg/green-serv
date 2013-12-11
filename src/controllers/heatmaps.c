@@ -4,6 +4,18 @@ static inline int min(const int a, const int b){
 	return a < b ? a : b;
 }
 
+#ifndef FREE_NON_NULL_DEGREES_AND_OFFSETS
+	#define FREE_NON_NULL_DEGREES_AND_OFFSETS \
+											if(latDegrees != NULL)\
+												free(latDegrees);\
+											if(lonDegrees != NULL)\
+												free(lonDegrees); \
+											if(latOffset != NULL)\
+												free(latOffset);\
+											if(lonOffset != NULL)\
+												free(lonOffset);
+#endif
+
 int heatmap_controller(const struct http_request * request, char * stringToReturn, int strLength){
 	int status;
 	char * buffer; 
@@ -155,14 +167,7 @@ int heatmap_controller(const struct http_request * request, char * stringToRetur
 				/*Err! if one is used, both must be used! */
 				sm_delete(sm);
 				free(buffer);
-				if(latDegrees != NULL)
-					free(latDegrees); 
-				if(lonDegrees != NULL)
-					free(lonDegrees); 
-				if(latOffset != NULL)
-					free(latOffset);
-				if(lonOffset != NULL)
-					free(lonOffset);
+				FREE_NON_NULL_DEGREES_AND_OFFSETS
 				
 				status = 422;
 				goto mh_bothOffsets;
@@ -172,15 +177,7 @@ int heatmap_controller(const struct http_request * request, char * stringToRetur
 				if(*latDegrees < -90L || *latDegrees > 90L){
 					sm_delete(sm);
 					free(buffer); 
-					if(latDegrees != NULL)
-						free(latDegrees); 
-					if(lonDegrees != NULL)
-						free(lonDegrees); 
-					if(latOffset != NULL)
-						free(latOffset);
-					if(lonOffset != NULL)
-						free(lonOffset);
-
+					FREE_NON_NULL_DEGREES_AND_OFFSETS
 					status = 422;
 					goto mh_badlat;		
 				}
@@ -189,14 +186,7 @@ int heatmap_controller(const struct http_request * request, char * stringToRetur
 				if(*lonDegrees < -180L || *lonDegrees > 180L){
 					sm_delete(sm);
 					free(buffer); 
-					if(latDegrees != NULL)
-						free(latDegrees); 
-					if(lonDegrees != NULL)
-						free(lonDegrees); 
-					if(latOffset != NULL)
-						free(latOffset);
-					if(lonOffset != NULL)
-						free(lonOffset);
+					FREE_NON_NULL_DEGREES_AND_OFFSETS
 					
 					status = 422;
 					goto mh_badlon;			
@@ -204,14 +194,7 @@ int heatmap_controller(const struct http_request * request, char * stringToRetur
 			status = heatmap_get(buffer, buffSize,page, latDegrees, latOffset, lonDegrees, lonOffset, precision, raw);
 			if(status == -1){
 				free(buffer); 
-				if(latDegrees != NULL)
-					free(latDegrees); 
-				if(lonDegrees != NULL)
-					free(lonDegrees); 
-				if(latOffset != NULL)
-					free(latOffset);
-				if(lonOffset != NULL)
-					free(lonOffset);
+				FREE_NON_NULL_DEGREES_AND_OFFSETS
 				
 				sm_delete(sm);
 				goto mh_nomem;
@@ -221,14 +204,7 @@ int heatmap_controller(const struct http_request * request, char * stringToRetur
 			status = heatmap_put(buffer,buffSize,request);
 			if(status == -1){
 				free(buffer); 
-				if(latDegrees != NULL)
-					free(latDegrees); 
-				if(lonDegrees != NULL)
-					free(lonDegrees); 
-				if(latOffset != NULL)
-					free(latOffset);
-				if(lonOffset != NULL)
-					free(lonOffset);
+				FREE_NON_NULL_DEGREES_AND_OFFSETS
 				
 				sm_delete(sm);	
 				goto mh_nomem;
@@ -239,14 +215,7 @@ int heatmap_controller(const struct http_request * request, char * stringToRetur
 		default:
 			status = 501;	
 			free(buffer); 
-			if(latDegrees != NULL)
-				free(latDegrees); 
-			if(lonDegrees != NULL)
-				free(lonDegrees); 
-			if(latOffset != NULL)
-				free(latOffset);
-			if(lonOffset != NULL)
-				free(lonOffset);
+			FREE_NON_NULL_DEGREES_AND_OFFSETS
 			
 			sm_delete(sm);
 			goto mh_unsupportedMethod;
@@ -255,14 +224,7 @@ int heatmap_controller(const struct http_request * request, char * stringToRetur
 	
 	snprintf(stringToReturn, strLength, "%s", buffer);
 	free(buffer); 
-	if(latDegrees != NULL)
-		free(latDegrees); 
-	if(lonDegrees != NULL)
-		free(lonDegrees); 
-	if(latOffset != NULL)
-		free(latOffset); 
-	if(lonOffset != NULL)
-		free(lonOffset);
+	FREE_NON_NULL_DEGREES_AND_OFFSETS
 	sm_delete(sm);
 	return status;
 
