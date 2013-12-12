@@ -6,6 +6,7 @@
 	#include "models/report.h"
 	#include "db.h"
 	#include "helpers/json.h"
+	#include "controllers/macros.h"
 	
 	#include <stdio.h>
 	#include <stdlib.h>

@@ -8,6 +8,7 @@
 	#include "helpers/strmap.h"
 	#include "network/router.h"
 	#include "models/comment.h"
+	#include "controllers/macros.h"
 	#include "db.h"
 	#include "helpers/json.h"
 	

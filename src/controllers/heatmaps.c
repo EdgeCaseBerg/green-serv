@@ -4,17 +4,6 @@ static inline int min(const int a, const int b){
 	return a < b ? a : b;
 }
 
-#ifndef FREE_NON_NULL_DEGREES_AND_OFFSETS
-	#define FREE_NON_NULL_DEGREES_AND_OFFSETS \
-		if(latDegrees != NULL)\
-			free(latDegrees);\
-		if(lonDegrees != NULL)\
-			free(lonDegrees); \
-		if(latOffset != NULL)\
-			free(latOffset);\
-		if(lonOffset != NULL)\
-			free(lonOffset);
-#endif
 
 int heatmap_controller(const struct http_request * request, char * stringToReturn, int strLength){
 	int status;
@@ -168,7 +157,6 @@ int heatmap_controller(const struct http_request * request, char * stringToRetur
 				sm_delete(sm);
 				free(buffer);
 				FREE_NON_NULL_DEGREES_AND_OFFSETS
-				
 				status = 422;
 				goto mh_bothOffsets;
 			}
@@ -187,7 +175,6 @@ int heatmap_controller(const struct http_request * request, char * stringToRetur
 					sm_delete(sm);
 					free(buffer); 
 					FREE_NON_NULL_DEGREES_AND_OFFSETS
-					
 					status = 422;
 					goto mh_badlon;			
 				}
@@ -195,7 +182,6 @@ int heatmap_controller(const struct http_request * request, char * stringToRetur
 			if(status == -1){
 				free(buffer); 
 				FREE_NON_NULL_DEGREES_AND_OFFSETS
-				
 				sm_delete(sm);
 				goto mh_nomem;
 			}
@@ -205,7 +191,6 @@ int heatmap_controller(const struct http_request * request, char * stringToRetur
 			if(status == -1){
 				free(buffer); 
 				FREE_NON_NULL_DEGREES_AND_OFFSETS
-				
 				sm_delete(sm);	
 				goto mh_nomem;
 			}
@@ -216,7 +201,6 @@ int heatmap_controller(const struct http_request * request, char * stringToRetur
 			status = 501;	
 			free(buffer); 
 			FREE_NON_NULL_DEGREES_AND_OFFSETS
-			
 			sm_delete(sm);
 			goto mh_unsupportedMethod;
 	}
@@ -228,33 +212,13 @@ int heatmap_controller(const struct http_request * request, char * stringToRetur
 	sm_delete(sm);
 	return status;
 
-	mh_unsupportedMethod:
-		snprintf(stringToReturn, strLength, ERROR_STR_FORMAT, status, BAD_METHOD_ERR);
-		return status;
-
-	mh_nomem:
-		snprintf(stringToReturn, strLength, ERROR_STR_FORMAT, status, NOMEM_ERROR);
-		return status;
-
-	mh_badpage:
-		snprintf(stringToReturn, strLength, ERROR_STR_FORMAT, status, BAD_PAGE_ERR);
-		return status;		
-
-	mh_badlat:
-		snprintf(stringToReturn,strLength,ERROR_STR_FORMAT,status,LATITUDE_OUT_OF_RANGE_ERR);
-		return status;
-
-	mh_badlon:
-		snprintf(stringToReturn,strLength,ERROR_STR_FORMAT,status,LONGITUDE_OUT_OF_RANGE_ERR);
-		return status;
-
-	mh_bothOffsets:
-		snprintf(stringToReturn, strLength, ERROR_STR_FORMAT, status, BOTH_OFFSET_ERR);
-		return status;
-
-	bad_precision:
-		snprintf(stringToReturn, strLength, ERROR_STR_FORMAT, status, PRECISION_ERR);
-		return status;
+	ERR_LABEL_STRING_TO_RETURN(mh_unsupportedMethod,BAD_METHOD_ERR)
+	ERR_LABEL_STRING_TO_RETURN(mh_nomem, NOMEM_ERROR)
+	ERR_LABEL_STRING_TO_RETURN(mh_badpage, BAD_PAGE_ERR)
+	ERR_LABEL_STRING_TO_RETURN(mh_badlat, LATITUDE_OUT_OF_RANGE_ERR)
+	ERR_LABEL_STRING_TO_RETURN(mh_badlon, LONGITUDE_OUT_OF_RANGE_ERR)
+	ERR_LABEL_STRING_TO_RETURN(mh_bothOffsets, BOTH_OFFSET_ERR)
+	ERR_LABEL_STRING_TO_RETURN(bad_precision, PRECISION_ERR)
 
 }
 

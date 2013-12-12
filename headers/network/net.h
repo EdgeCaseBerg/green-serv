@@ -13,7 +13,9 @@
 	    int clientfd;
 	};
 
+	
 	#include <unistd.h>
+	#include <signal.h>
 	#include <stdio.h>
 	#include <stdlib.h>
 	#include <string.h>
@@ -61,9 +63,6 @@
 	 *to test_network function.
 	*/
 	void* doNetWork(struct threadData* td);
-
-	/* This function is unlikely to live beyond testing things */
-	int test_network(char * buffer, int bufferLength, void*( *func )(void*) );
 
 	int run_network(char * buffer, int bufferLength, void*( *func )(void*) );
 

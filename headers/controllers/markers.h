@@ -10,6 +10,7 @@
 	#include "db.h"
 	#include "models/marker.h"
 	#include "models/comment.h"
+	#include "controllers/macros.h"
 	
 	#ifndef COMMENTS_CTYPE_SIZE
 	#define COMMENTS_CTYPE_SIZE 10

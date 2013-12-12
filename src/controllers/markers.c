@@ -18,8 +18,8 @@ int marker_controller(const struct http_request * request, char * stringToReturn
 	Decimal * latOffset;
 	Decimal * lonOffset;
 	StrMap * sm;
-
-	status = 503;
+	
+	status = 500;
 	convertSuccess = NULL;
 	buffSize = (MARKER_LIMIT * sizeof(struct gs_marker))*4+1+(2*MAX_URL_LENGTH);
 	bzero(tempBuf, sizeof tempBuf);
@@ -27,48 +27,42 @@ int marker_controller(const struct http_request * request, char * stringToReturn
 
 	/*Buffer up a good size that will probably not get filled (hopefully)*/
 	buffer = malloc(buffSize);
-	if(buffer == NULL){
-		status = 500;
+	if(buffer == NULL){		
 		goto mc_nomem;
 	}
 	buffer = memset(buffer,0,buffSize);
 
 	latDegrees = malloc(sizeof(Decimal));
 	if (latDegrees == NULL) {
-		free(buffer);
-		status = 500;
+		free(buffer);		
 		goto mc_nomem;
 	} else {
 		latDegrees = memset(latDegrees,0,sizeof(Decimal));
 	}
 	lonDegrees = malloc(sizeof(Decimal));
 	if (lonDegrees == NULL) {
-		free(buffer); free(latDegrees);		
-		status = 500;
+		free(buffer); free(latDegrees);				
 		goto mc_nomem;
 	} else {
 		lonDegrees = memset(lonDegrees,0,sizeof(Decimal));
 	}
 	latOffset = malloc(sizeof(Decimal));
 	if (latOffset == NULL) {
-		free(buffer); free(latDegrees); free(lonDegrees);
-		status = 500;
+		free(buffer); free(latDegrees); free(lonDegrees);		
 		goto mc_nomem;
 	} else {
 		latOffset = memset(latOffset,0,sizeof(Decimal));
 	}
 	lonOffset = malloc(sizeof(Decimal));
 	if (latDegrees == NULL) {
-		free(buffer); free(latDegrees); free(lonDegrees); free(latOffset);
-		status = 500;
+		free(buffer); free(latDegrees); free(lonDegrees); free(latOffset);		
 		goto mc_nomem;
 	} else {
 		latDegrees = memset(latDegrees,0,sizeof(Decimal));
 	}
 
 	sm = sm_new(HASH_TABLE_CAPACITY);
-	if(sm == NULL){
-		status = 500;
+	if(sm == NULL){		
 		free(buffer); free(latDegrees); free(lonDegrees); free(latOffset); free(lonOffset);
 		goto mc_nomem;
 	}
@@ -155,14 +149,7 @@ int marker_controller(const struct http_request * request, char * stringToReturn
 				/*Err! if one is used, both must be used! */
 				sm_delete(sm);
 				free(buffer);
-				if(latDegrees != NULL)
-					free(latDegrees); 
-				if(lonDegrees != NULL)
-					free(lonDegrees); 
-				if(latOffset != NULL)
-					free(latOffset); 
-				if(lonOffset != NULL)
-					free(lonOffset);
+				FREE_NON_NULL_DEGREES_AND_OFFSETS
 				status = 422;
 				goto mc_bothOffsets;
 			}
@@ -171,12 +158,7 @@ int marker_controller(const struct http_request * request, char * stringToReturn
 				if(*latDegrees < -90L || *latDegrees > 90L){
 					sm_delete(sm);
 					free(buffer);
-					free(latDegrees); 
-					if(lonDegrees != NULL)
-						free(lonDegrees); 
-					free(latOffset); 
-					if(lonOffset != NULL)
-						free(lonOffset);
+					FREE_NON_NULL_DEGREES_AND_OFFSETS
 					status = 422;
 					goto mc_bothOffsets;		
 				}
@@ -185,14 +167,7 @@ int marker_controller(const struct http_request * request, char * stringToReturn
 				if(*lonDegrees < -180L || *lonDegrees > 180L){
 					sm_delete(sm);
 					free(buffer); 
-					if(latDegrees != NULL)
-						free(latDegrees); 
-					if(lonDegrees != NULL)
-						free(lonDegrees); 
-					if(latOffset != NULL)
-						free(latOffset); 
-					if(lonOffset != NULL)
-						free(lonOffset);
+					FREE_NON_NULL_DEGREES_AND_OFFSETS
 					status = 422;
 					goto mc_bothOffsets;			
 				}
@@ -214,14 +189,7 @@ int marker_controller(const struct http_request * request, char * stringToReturn
 				/* Something went terribly wrong */
 				sm_delete(sm);
 				free(buffer); 
-				if(latDegrees != NULL)
-					free(latDegrees); 
-				if(lonDegrees != NULL)
-					free(lonDegrees); 
-				if(latOffset != NULL)
-					free(latOffset); 
-				if(lonOffset != NULL)
-					free(lonOffset);
+				FREE_NON_NULL_DEGREES_AND_OFFSETS
 				goto mc_nomem;
 			}
 			break;
@@ -230,14 +198,7 @@ int marker_controller(const struct http_request * request, char * stringToReturn
 				status = 400;
 				sm_delete(sm);
 				free(buffer); 
-				if(latDegrees != NULL)
-					free(latDegrees); 
-				if(lonDegrees != NULL)
-					free(lonDegrees); 
-				if(latOffset != NULL)
-					free(latOffset); 
-				if(lonOffset != NULL)
-					free(lonOffset);
+				FREE_NON_NULL_DEGREES_AND_OFFSETS
 				goto mc_missing_key;
 			}
 			sm_get(sm, "id", tempBuf, sizeof tempBuf);
@@ -249,14 +210,7 @@ int marker_controller(const struct http_request * request, char * stringToReturn
 				status = 400;
 				sm_delete(sm);
 				free(buffer); 
-				if(latDegrees != NULL)
-					free(latDegrees); 
-				if(lonDegrees != NULL)
-					free(lonDegrees); 
-				if(latOffset != NULL)
-					free(latOffset); 
-				if(lonOffset != NULL)
-					free(lonOffset);
+				FREE_NON_NULL_DEGREES_AND_OFFSETS
 				goto mc_missing_key;
 			}
 			sm_get(sm, "id", tempBuf, sizeof tempBuf);
@@ -265,73 +219,31 @@ int marker_controller(const struct http_request * request, char * stringToReturn
 			if(status == -1){
 				sm_delete(sm);
 				free(buffer); 
-				if(latDegrees != NULL)
-					free(latDegrees); 
-				if(lonDegrees != NULL)
-					free(lonDegrees); 
-				if(latOffset != NULL)
-					free(latOffset); 
-				if(lonOffset != NULL)
-					free(lonOffset);
+				FREE_NON_NULL_DEGREES_AND_OFFSETS
 				goto mc_nomem;	
 			}
 			break;
 		default:
 			status = 501;	
 			free(buffer); 
-			if(latDegrees != NULL)
-				free(latDegrees); 
-			if(lonDegrees != NULL)
-				free(lonDegrees); 
-			if(latOffset != NULL)
-				free(latOffset); 
-			if(lonOffset != NULL)
-				free(lonOffset);
+			FREE_NON_NULL_DEGREES_AND_OFFSETS
 			sm_delete(sm);
 			goto mc_unsupportedMethod;
 	}
 
 	snprintf(stringToReturn, strLength, "%s", buffer);
 	free(buffer); 
-	if(latDegrees != NULL)
-		free(latDegrees); 
-	if(lonDegrees != NULL)
-		free(lonDegrees); 
-	if(latOffset != NULL)
-		free(latOffset); 
-	if(lonOffset != NULL)
-		free(lonOffset);
+	FREE_NON_NULL_DEGREES_AND_OFFSETS
 	sm_delete(sm);	
 	return status;
 
-	mc_nomem:
-		snprintf(stringToReturn, strLength, ERROR_STR_FORMAT, 500, NOMEM_ERROR);
-		return status;
-
-	mc_unsupportedMethod:
-		snprintf(stringToReturn, strLength, ERROR_STR_FORMAT, status, BAD_METHOD_ERR);
-		return status;		
-	
-	mc_missing_key:
-		snprintf(stringToReturn, strLength, ERROR_STR_FORMAT, status, MISSING_ID_KEY);
-		return status;	
-
-	mc_badLonOffset:
-		snprintf(stringToReturn, strLength, ERROR_STR_FORMAT, status, BAD_LON_OFFSET);
-		return status;		
-	
-	mc_badLatOffset:
-		snprintf(stringToReturn, strLength, ERROR_STR_FORMAT, status, BAD_LAT_OFFSET);
-		return status;		
-
-	mc_bothOffsets:
-		snprintf(stringToReturn, strLength, ERROR_STR_FORMAT, status, BOTH_OFFSET_ERR);
-		return status;
-
-	mc_badpage:
-		snprintf(stringToReturn, strLength, ERROR_STR_FORMAT, status, BAD_PAGE_ERR);
-		return status;	
-
+	ERR_LABEL_STRING_TO_RETURN(mc_nomem, NOMEM_ERROR)
+	ERR_LABEL_STRING_TO_RETURN(mc_unsupportedMethod, BAD_METHOD_ERR)
+	ERR_LABEL_STRING_TO_RETURN(mc_missing_key, MISSING_ID_KEY)
+	ERR_LABEL_STRING_TO_RETURN(mc_badLonOffset, BAD_LON_OFFSET)
+	ERR_LABEL_STRING_TO_RETURN(mc_badLatOffset, BAD_LAT_OFFSET)
+	ERR_LABEL_STRING_TO_RETURN(mc_bothOffsets, BOTH_OFFSET_ERR)
+	ERR_LABEL_STRING_TO_RETURN(mc_badpage, BAD_PAGE_ERR)
 
 }
 
@@ -652,6 +564,9 @@ int marker_get(char * buffer,int buffSize,Decimal * latDegrees, Decimal * lonDeg
 		fprintf(stderr, "--%s\n", "Possible to hit here?");
 	}
 
+	mysql_close(conn);
+	mysql_thread_end();
+
 	if( numMarkers > MARKER_RETURNED ){
 		nextPage = page+1;
 		/*Need to tack on url parameters if present*/
@@ -686,10 +601,7 @@ int marker_get(char * buffer,int buffSize,Decimal * latDegrees, Decimal * lonDeg
 
 	free(comments);
 	free(markers);
-	mysql_close(conn);
-	mysql_thread_end();
-
-	return -1;
+	return 200;
 }
 
 /* /api/pins?id=<pin id> */

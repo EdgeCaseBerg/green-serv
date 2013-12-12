@@ -123,21 +123,11 @@ int report_controller(const struct http_request * request, char * stringToReturn
 	free(buffer); 
 	return status;
 
-	rc_nomem:
-		snprintf(stringToReturn, strLength, ERROR_STR_FORMAT, status, NOMEM_ERROR);
-		return status;
-	rc_badpage:
-		snprintf(stringToReturn, strLength, ERROR_STR_FORMAT, status, BAD_PAGE_ERR);
-		return status;
-	rc_mutual_exclusion:
-		snprintf(stringToReturn, strLength, ERROR_STR_FORMAT, status, BAD_PAGE_SINCE_ERR);
-		return status;
-	rc_bad_date:
-		snprintf(stringToReturn, strLength, ERROR_STR_FORMAT, status, BAD_FORMAT_DATE_ERR);
-		return status;
-	rc_unsupportedMethod:
-		snprintf(stringToReturn, strLength, ERROR_STR_FORMAT, status, BAD_METHOD_ERR);
-		return status;
+	ERR_LABEL_STRING_TO_RETURN(rc_nomem, NOMEM_ERROR)
+	ERR_LABEL_STRING_TO_RETURN(rc_badpage, BAD_PAGE_ERR)
+	ERR_LABEL_STRING_TO_RETURN(rc_mutual_exclusion, BAD_PAGE_SINCE_ERR)
+	ERR_LABEL_STRING_TO_RETURN(rc_bad_date, BAD_FORMAT_DATE_ERR)
+	ERR_LABEL_STRING_TO_RETURN(rc_unsupportedMethod, BAD_METHOD_ERR)
 
 }
 
@@ -344,6 +334,9 @@ int report_get(char * buffer,int buffSize, char * hash, char * since, int page){
 
 		numReports = db_getReports(page-1, since, _shared_campaign_id, reports, conn);
 
+		mysql_close(conn);
+		mysql_thread_end();
+
 		if( numReports > RESULTS_RETURNED ){
 			nextPage = page+1;
 			snprintf(nextStr,MAX_URL_LENGTH, "%sdebug?page=%d&since=%s", BASE_API_URL, nextPage, since );
@@ -372,7 +365,5 @@ int report_get(char * buffer,int buffSize, char * hash, char * since, int page){
 		free(reports);
 	}
 
-	mysql_close(conn);
-	mysql_thread_end();
 	return 200;
 }

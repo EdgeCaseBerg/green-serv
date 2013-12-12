@@ -7,6 +7,7 @@
 	#include "db.h"
 	#include "helpers/json.h"
 	#include "helpers/mlist.h"
+	#include "controllers/macros.h"
 	
 	#include <stdio.h>
 	#include <stdlib.h>

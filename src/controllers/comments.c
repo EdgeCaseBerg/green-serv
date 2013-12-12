@@ -55,10 +55,6 @@ int comment_controller(const struct http_request * request, char * stringToRetur
 
 }
 
-/*Accepts NULL for cType if no filter
- *page will default to 1 if negative values passed in or 0
- *
-*/
 int comments_get(char * buffer, int buffSize ,const struct http_request * request){
 	struct gs_comment * commentPage;
 	int numComments;
@@ -127,7 +123,7 @@ int comments_get(char * buffer, int buffSize ,const struct http_request * reques
 	sm_delete(sm);
 
 	
-	/* For the client we start numbering from 1, for interal use we need to use
+	/* For the client we start numbering from 1, for internal use we need to use
 	 * page-1 because the page is part of the calculation of the limit term in
 	 * the query. So to get the first page it needs to be 0.
 	*/
@@ -150,6 +146,9 @@ int comments_get(char * buffer, int buffSize ,const struct http_request * reques
 		numComments = db_getComments(page, _shared_campaign_id ,commentPage, conn);
 	else
 		numComments = db_getCommentsByType(page, _shared_campaign_id, commentPage, cType, conn);
+
+	mysql_close(conn);
+	mysql_thread_end();
 
 	if( numComments > RESULTS_RETURNED ){
 		nextPage = page+1;
@@ -193,8 +192,7 @@ int comments_get(char * buffer, int buffSize ,const struct http_request * reques
 	free(commentPage);
 	snprintf(buffer,buffSize, COMMENT_PAGE_STR, 200, commentBuffer, min(numComments,RESULTS_RETURNED), page+1, nextStr,prevStr);
 	
-	mysql_close(conn);
-	mysql_thread_end();
+	
 	return 200;
 }
 
@@ -291,10 +289,7 @@ int comment_post(char * buffer, int buffSize, const struct http_request * reques
 		fprintf(stderr, "%s\n", "Could not connect to mySQL on worker thread");
 		return -1;
 	}
-
-	/* Insert the comment */
 	db_insertComment(&insComment, conn);
-
 	mysql_close(conn);
 	mysql_thread_end();
 
