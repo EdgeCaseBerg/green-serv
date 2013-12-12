@@ -30,6 +30,7 @@
 	#include "controllers/markers.h"
 	#include "controllers/heatmaps.h"
 	#include "controllers/reports.h"
+	#include <sys/wait.h>
 	
 
 	/*Create an HTTP Json response

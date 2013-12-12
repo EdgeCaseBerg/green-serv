@@ -391,10 +391,18 @@ int run_network(char * buffer, int bufferLength, void*(*func)(void*)){
     #ifdef DETACHED_THREADS
     pthread_attr_t attr;
     #endif
+    fd_set rfds;
+    struct timeval tv;
+    int retval;
+    int sec;
+    int usec;
     
     clientfd = socketfd = 0; 
     bzero(buff,BUFSIZ);
     bzero(&sockserv,sizeof(sockserv));
+    sec = 0;
+    usec = 10;
+
 
     socketfd = createSocket();
     BOOT_LOG_STR("Socket Creation: ", strerror(errno));
@@ -416,10 +424,37 @@ int run_network(char * buffer, int bufferLength, void*(*func)(void*)){
     signal(SIGQUIT, stop_server);
     signal(SIGHUP, stop_server);    
 
+    FD_ZERO(&rfds);
+    FD_SET(socketfd, &rfds);
+    tv.tv_sec = sec;
+    tv.tv_usec = usec;
+
+
     i=j=0;
     if(errno != 13){
         while(stop == 0){
             for(i=0; i < NUMTHREADS && stop == 0; i++){
+                retval = select((socketfd+1)/*see "man select_tut"*/, &rfds, NULL, NULL, &tv);
+                /* Reset select */
+                tv.tv_sec = sec;
+                tv.tv_usec = usec;
+                if(retval == -1 || ! FD_ISSET(socketfd, &rfds)){
+                    /* From select_tut: 
+                     *
+                     *   After select() has returned, readfds will  be  cleared
+                     *   of all file descriptors except for those that are immediately 
+                     *   available for reading.
+                     *
+                     *  Because we always want to monitor the setwe add the socket back in.
+                     */
+                    FD_SET(socketfd, &rfds);
+                    i--;
+                    continue;
+                }
+                FD_SET(socketfd, &rfds);
+
+                fprintf(stderr, "%s\n", "data");
+
                 clientfd = accept(socketfd,(struct sockaddr*)&sockclient,&clientsocklen);
                 if(clientfd != -1){
                     NETWORK_LOG_LEVEL_2_NUM("Accepted Client Request on File Descriptor ", clientfd);
@@ -464,9 +499,9 @@ int run_network(char * buffer, int bufferLength, void*(*func)(void*)){
      * this point in the program is by being interupted by said signal
      * which will have already closed the file descriptor open.
     */
-    /* Sleep a moment to hope that any running threads will finish */
     BOOT_LOG_STR("Exiting Server...", "");
-    sleep(2);
+    wait(NULL);
+    
 
     return 0;
 }
