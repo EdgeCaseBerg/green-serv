@@ -28,6 +28,7 @@ int main(){
 		close(STDERR_FILENO);
 	  	return 1;
    	}
+   	db_start_transaction(conn);
 
 	gs_report_ZeroStruct(&testReport);
 
@@ -63,6 +64,8 @@ int main(){
 
 	printf("%d deleted\n", db_deleteReport(&testReport,  conn));
 
+	db_abort_transaction(conn);
+   	db_end_transaction(conn);
 	mysql_close(conn);
 	mysql_library_end();
 

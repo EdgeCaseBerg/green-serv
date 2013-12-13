@@ -19,6 +19,7 @@ int main(){
 	  	fprintf(stderr, "%s\n", "Could not connect to mySQL");
 	  	return 1;
    	}
+   	db_start_transaction(conn);
 
    	gs_comment_ZeroStruct(&testComment);
    	gs_comment_setContent("Test Comment", &testComment);
@@ -50,6 +51,9 @@ int main(){
    	}else{
 	  	fprintf(stderr, "%s\n", "Could not allocate enough memory for comment page");
    	}
+
+   	db_abort_transaction(conn);
+   	db_end_transaction(conn);
 
    	mysql_close(conn);
 	mysql_library_end();

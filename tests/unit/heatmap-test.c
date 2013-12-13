@@ -29,6 +29,7 @@ int main(){
 		close(STDERR_FILENO);
 	  	return 1;
    	}
+   	db_start_transaction(conn);
 	gs_heatmap_ZeroStruct(&testHeatmap);
 	gs_heatmapNToJSON(testHeatmap, json,HEATMAP_JSON_LENGTH);
 	printf("%s\n", json);
@@ -71,7 +72,9 @@ int main(){
 	}else{
 		fprintf(stderr, "%s\n", "Could not allocate enough memory for heatmap page");
 	}
-
+	
+	db_abort_transaction(conn);
+   	db_end_transaction(conn);
 	mysql_close(conn);
 	mysql_library_end();
 	close(STDIN_FILENO);

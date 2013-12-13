@@ -26,7 +26,8 @@ int main(){
 		close(STDERR_FILENO);
 	  	return 1;
    	}
-
+   	db_start_transaction(conn);
+   	
    	/* Setup referenced comment */
    	gs_comment_ZeroStruct(&testComment);
    	gs_comment_setContent("Test Comment", &testComment);
@@ -68,6 +69,8 @@ int main(){
 	  	fprintf(stderr, "%s\n", "Could not allocate enough memory for marker page");
 	}
 
+	db_abort_transaction(conn);
+   	db_end_transaction(conn);
 	mysql_close(conn);
 	mysql_library_end();
 	

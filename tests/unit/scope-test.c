@@ -22,6 +22,7 @@ int main(){
 		close(STDERR_FILENO);
 		return 1;
 	}
+	db_start_transaction(conn);
 
 	/* Setup Campaign for all querying. */
 	db_getScopeById(CAMPAIGN_ID, &campaign, conn);
@@ -33,6 +34,9 @@ int main(){
 	gs_scopeNToJSON(campaign,toSmall,8);
 	printf("%s\n", toSmall);
 
+	db_abort_transaction(conn);
+   	db_end_transaction(conn);
+   	
 	mysql_close(conn);
 	mysql_library_end();   	
 
