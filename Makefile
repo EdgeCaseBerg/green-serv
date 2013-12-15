@@ -79,6 +79,13 @@ mlist.o: src/helpers/mlist.c
 clean:
 	rm obj/*.o *.out
 
+seed: seed-scope
+	./seeds/bin/scope.out
+
+seed-scope: seeds/scope.c db.o scope.o
+	$(CC) $(gflags) $(mysqlflags) seeds/scope.c $(unittestobj) -o seeds/bin/scope.out $(mysqllibs) -lcrypto
+
+
 tests: units controllers	
 
 #Unit Tests

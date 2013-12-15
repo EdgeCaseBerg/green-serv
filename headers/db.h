@@ -78,6 +78,8 @@
 	/* Given a struct and an id, return a structure populate from db*/
 	void db_getScopeById(long id, struct gs_scope * gss, MYSQL * conn);
 
+	void db_insertScope(struct gs_scope * gss, MYSQL * conn);
+
 	/* Insert a comment struct and return the database's version of it*/
 	void db_insertComment(struct gs_comment * gsc, MYSQL * conn);
 

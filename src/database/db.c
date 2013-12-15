@@ -76,6 +76,56 @@ void db_getScopeById(long id, struct gs_scope * gss, MYSQL * conn){
 	mysql_free_result(result);
 }
 
+void db_insertScope(struct gs_scope * gss, MYSQL * conn){
+	MYSQL_RES * result;
+	MYSQL_ROW row; 
+	long affected;
+	char query[ (sizeof GS_SCOPE_INSERT) + sizeof(long) + 10 ]; /* Query, content, id, some extra padding*/
+
+	bzero(query,sizeof query);
+	sprintf(query, GS_SCOPE_INSERT, gss->description );
+	LOGDB
+	if(0 != mysql_query(conn, query) ){
+		fprintf(stderr, "%s\n", mysql_error(conn));
+		gss->id = GS_SCOPE_INVALID_ID;
+		return;
+	}
+
+	affected = mysql_insert_id(conn);
+	if( affected == 0){
+		fprintf(stderr, "%s\n", mysql_error(conn));
+		return;
+	}
+
+	/* Set the id of the comment to be what it is now  */
+	gss->id = affected;
+
+	
+	/* Fresh Start and we want to return to the user EXACTLY what's in the db */
+	bzero(query,sizeof query);
+	sprintf(query,GS_SCOPE_GET_BY_ID, affected);
+	gs_scope_ZeroStruct(gss);
+	LOGDB
+	if(0 != mysql_query(conn, query) ){
+		gss->id = GS_SCOPE_INVALID_ID;
+		fprintf(stderr, "%s\n", mysql_error(conn));
+		return;
+	}
+
+	result = mysql_use_result(conn);
+	row = mysql_fetch_row(result);
+	if(row == NULL){
+		gss->id = GS_SCOPE_INVALID_ID;
+		mysql_free_result(result);
+		return;    
+	}
+
+	/* Fill er up */
+	gs_scope_setId( atol(row[0]), gss);
+	gs_scope_setDesc(row[1], gss);
+	mysql_free_result(result);  
+}
+
 /* We assume the calling party has used the page size to set the size of gsc */
 int db_getComments(int page, long scopeId, struct gs_comment * gsc, MYSQL * conn){
 	MYSQL_RES * result;
