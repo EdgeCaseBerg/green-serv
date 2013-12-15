@@ -148,10 +148,14 @@ test-hb-controller: tests/controllers/heartbeat-test.c heartbeatC.o json.o strma
 #Run spec-check to actually execute tests
 spec-check: all specs
 	./tests/bin/routing-spec.out
+	./tests/bin/get-comments-spec.out
+	./tests/bin/put-comments-spec.out
 
 #Run specs to compile spec tests.
-specs: all routing-spec
+specs: all routing-spec comments-put-spec
 
 routing-spec: tests/spec/routing.c
 	$(CC) $(gflags) $(mysqlflags) tests/spec/routing.c obj/*.o -o tests/bin/routing-spec.out $(mysqllibs) -lcrypto
 
+comments-put-spec: tests/spec/putcomments.c
+	$(CC) $(gflags) $(mysqlflags) tests/spec/putcomments.c obj/*.o -o tests/bin/put-comments-spec.out $(mysqllibs) -lcrypto
