@@ -37,7 +37,6 @@ int main(){
 	expected("/aasspi/asd",	INVALID_CONTROLLER);
 
 	/* Be sure to flush before closing the lid on the i/o */
-	fprintf(stdout, "\n" );
 	fflush(stdout);
 	fflush(stderr);
 	close(STDIN_FILENO);
