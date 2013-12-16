@@ -17,7 +17,7 @@ int main(){
 		fprintf(stdout, "." );
 	else{
 		fprintf(stdout, "F" );
-		fprintf(stderr, "GET COMMENTS: Plain failed to return status of 200\n" );
+		fprintf(stderr, "GET COMMENTS: request failed to return status of 200\n" );
 	}
 	
 	/* We could automate the requests below by putting the types into a loop 
@@ -30,7 +30,7 @@ int main(){
 		fprintf(stdout, "." );
 	else{
 		fprintf(stdout, "F" );
-		fprintf(stderr, "GET COMMENTS: Plain failed to return status of 200 when queried for type=comment\n" );
+		fprintf(stderr, "GET COMMENTS: request failed to return status of 200 when queried for type=comment\n" );
 	}
 
 	sprintf(request.url, "/api/comments?type=ADMIN");
@@ -39,7 +39,7 @@ int main(){
 		fprintf(stdout, "." );
 	else{
 		fprintf(stdout, "F" );
-		fprintf(stderr, "GET COMMENTS: Plain failed to return status of 200 when queried for type=admin\n" );
+		fprintf(stderr, "GET COMMENTS: request failed to return status of 200 when queried for type=admin\n" );
 	}	
 
 	sprintf(request.url, "/api/comments?type=MARKER");
@@ -48,7 +48,7 @@ int main(){
 		fprintf(stdout, "." );
 	else{
 		fprintf(stdout, "F" );
-		fprintf(stderr, "GET COMMENTS: Plain failed to return status of 200 when queried for type=marker\n" );
+		fprintf(stderr, "GET COMMENTS: request failed to return status of 200 when queried for type=marker\n" );
 	}
 
 	sprintf(request.url, "/api/comments?page=1");
@@ -57,7 +57,7 @@ int main(){
 		fprintf(stdout, "." );
 	else{
 		fprintf(stdout, "F" );
-		fprintf(stderr, "GET COMMENTS: Plain failed to return status of 200\n" );
+		fprintf(stderr, "GET COMMENTS: request failed to return status of 200\n" );
 	}
 
 
@@ -67,7 +67,7 @@ int main(){
 		fprintf(stdout, "." );
 	else{
 		fprintf(stdout, "F" );
-		fprintf(stderr, "GET COMMENTS: Plain failed to return status of 200 when queried for type=comment\n" );
+		fprintf(stderr, "GET COMMENTS: request failed to return status of 200 when queried for type=comment\n" );
 	}
 
 	sprintf(request.url, "/api/comments?type=ADMIN&page=1");
@@ -76,7 +76,7 @@ int main(){
 		fprintf(stdout, "." );
 	else{
 		fprintf(stdout, "F" );
-		fprintf(stderr, "GET COMMENTS: Plain failed to return status of 200 when queried for type=admin\n" );
+		fprintf(stderr, "GET COMMENTS: request failed to return status of 200 when queried for type=admin\n" );
 	}	
 
 	sprintf(request.url, "/api/comments?type=MARKER&page=1");
@@ -85,7 +85,7 @@ int main(){
 		fprintf(stdout, "." );
 	else{
 		fprintf(stdout, "F" );
-		fprintf(stderr, "GET COMMENTS: Plain failed to return status of 200 when queried for type=marker\n" );
+		fprintf(stderr, "GET COMMENTS: request failed to return status of 200 when queried for type=marker\n" );
 	}
 
 
@@ -96,7 +96,7 @@ int main(){
 		fprintf(stdout, "." );
 	else{
 		fprintf(stdout, "F" );
-		fprintf(stderr, "GET COMMENTS: Plain failed to return status of 422 when queried with bad type\n" );
+		fprintf(stderr, "GET COMMENTS: request failed to return status of 422 when queried with bad type\n" );
 	}
 
 	sprintf(request.url, "api/comments?page=-1");
@@ -105,7 +105,7 @@ int main(){
 		fprintf(stdout, "." );
 	else{
 		fprintf(stdout, "F" );
-		fprintf(stderr, "GET COMMENTS: Plain failed to return status of 422 when queried with negative page\n" );
+		fprintf(stderr, "GET COMMENTS: request failed to return status of 422 when queried with negative page\n" );
 	}
 
 	sprintf(request.url, "api/comments?page=derp");
@@ -114,7 +114,7 @@ int main(){
 		fprintf(stdout, "." );
 	else{
 		fprintf(stdout, "F" );
-		fprintf(stderr, "GET COMMENTS: Plain failed to return status of 422 when queried with alphabetical page\n" );
+		fprintf(stderr, "GET COMMENTS: request failed to return status of 422 when queried with alphabetical page\n" );
 	}
 
 
