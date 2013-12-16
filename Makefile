@@ -151,9 +151,10 @@ spec-check: all specs
 	@./tests/bin/get-comments-spec.out
 	@./tests/bin/put-comments-spec.out
 	@./tests/bin/get-heatmap-spec.out
+	@./tests/bin/get-pins-spec.out
 
 #Run specs to compile spec tests.
-specs: all routing-spec comments-get-spec comments-put-spec heatmap-get-spec
+specs: all routing-spec comments-get-spec comments-put-spec heatmap-get-spec pins-get-spec
 
 routing-spec: tests/spec/routing.c
 	$(CC) $(gflags) $(mysqlflags) tests/spec/routing.c obj/*.o -o tests/bin/routing-spec.out $(mysqllibs) -lcrypto
@@ -166,3 +167,6 @@ comments-put-spec: tests/spec/putcomments.c
 
 heatmap-get-spec: tests/spec/getheatmap.c
 	$(CC) $(gflags) $(mysqlflags) tests/spec/getheatmap.c obj/*.o -o tests/bin/get-heatmap-spec.out $(mysqllibs) -lcrypto
+
+pins-get-spec: tests/spec/getpins.c
+	$(CC) $(gflags) $(mysqlflags) tests/spec/getpins.c obj/*.o -o tests/bin/get-pins-spec.out $(mysqllibs) -lcrypto
