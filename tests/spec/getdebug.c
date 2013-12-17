@@ -61,15 +61,15 @@ int main(){
 
 	sprintf(request.url, "/api/debug?since=2013-12-13-00:00");
 	status = report_controller(&request, stringToReturn, size);
-	EXPECTED(200,status, "Failed on non-parameterized pins get.")
+	EXPECTED(200,status, "Should have succeeded with valid since parameter")
 
 	sprintf(request.url, "/api/debug?hash=%s", testReport.authorize);
 	status = report_controller(&request, stringToReturn, size);
-	EXPECTED(200,status, "Failed on non-parameterized pins get.")
+	EXPECTED(200,status, "Should have succeeded with valid hash to retrieve")
 
 	sprintf(request.url, "/api/debug?since=2013-12-13-00:00?page=1");
 	status = report_controller(&request, stringToReturn, size);
-	EXPECTED(200,status, "Failed on non-parameterized pins get.")	
+	EXPECTED(200,status, "Should have succeeded with page and since parameters")	
 
 	/* 4xx */
 
