@@ -7,7 +7,7 @@
 		fprintf(stdout, "." );\
 	else{\
 		fprintf(stdout, "F" );\
-		fprintf(stderr, "GET COMMENTS: Expected status of %d, recieved %d. %s\n", expected,status, errmessage );\
+		fprintf(stderr, "GET COMMENTS: Expected status of %d, recieved %d. %s (%s::%i)\n", expected,status, errmessage, __FILE__, __LINE__ );\
 	}
 
 int main(){

@@ -7,7 +7,7 @@
 		fprintf(stdout, "." );\
 	else{\
 		fprintf(stdout, "F" );\
-		fprintf(stderr, "GET HEATMAP: Expected status of %d, recieved %d. %s\n", expected,status, errmessage );\
+		fprintf(stderr, "GET HEATMAP: Expected status of %d, recieved %d. %s (%s::%d)\n", expected,status, errmessage, __FILE__, __LINE__ );\
 	}
 
 int main(){
