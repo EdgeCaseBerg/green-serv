@@ -1,6 +1,6 @@
 #include <unistd.h>
-#include "controllers/reports.h"
-#include "network/router.h"
+#include "controllers/heatmaps.h"
+
 
 int main(){
 	char * stringToReturn;
@@ -8,16 +8,16 @@ int main(){
 	int status;
 
 	
-	sprintf(request.url, "/api/debug");
+	sprintf(request.url, "/api/heatmap");
 	stringToReturn = malloc(1000);
-	request.method = PUT;
+	request.method = POST;
 	/* Expect invalid method */
-	status = report_controller(&request, stringToReturn, 1000);
+	status = heatmap_controller(&request, stringToReturn, 1000);
 	if( status == 501 )
 		fprintf(stdout, "." );
 	else{
 		fprintf(stdout, "F" );
-		fprintf(stderr, "PUT DEBUG: Request failed to return invalid status on invalid Method, returned: %d\n", status );	
+		fprintf(stderr, "POST HEATMAP: Request failed to return invalid status on invalid Method, returned: %d\n", status );	
 	}
 		
 
