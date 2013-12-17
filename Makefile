@@ -149,22 +149,21 @@ test-hb-controller: tests/controllers/heartbeat-test.c heartbeatC.o json.o strma
 spec-check: all specs
 	@./tests/bin/routing-spec.out
 	@./tests/bin/get-comments-spec.out
-	@./tests/bin/put-comments-spec.out
 	@./tests/bin/get-heatmap-spec.out
 	@./tests/bin/get-pins-spec.out
 	@./tests/bin/get-debug-spec.out
+	@./tests/bin/put-comments-spec.out
+	@./tests/bin/put-debug-spec.out
+
 
 #Run specs to compile spec tests.
-specs: all routing-spec comments-get-spec comments-put-spec heatmap-get-spec pins-get-spec debug-get-spec
+specs: all routing-spec comments-get-spec comments-put-spec heatmap-get-spec pins-get-spec debug-get-spec debug-put-spec
 
 routing-spec: tests/spec/routing.c
 	$(CC) $(gflags) $(mysqlflags) tests/spec/routing.c obj/*.o -o tests/bin/routing-spec.out $(mysqllibs) -lcrypto
 
 comments-get-spec: tests/spec/getcomments.c
 	$(CC) $(gflags) $(mysqlflags) tests/spec/getcomments.c obj/*.o -o tests/bin/get-comments-spec.out $(mysqllibs) -lcrypto
-
-comments-put-spec: tests/spec/putcomments.c
-	$(CC) $(gflags) $(mysqlflags) tests/spec/putcomments.c obj/*.o -o tests/bin/put-comments-spec.out $(mysqllibs) -lcrypto
 
 heatmap-get-spec: tests/spec/getheatmap.c
 	$(CC) $(gflags) $(mysqlflags) tests/spec/getheatmap.c obj/*.o -o tests/bin/get-heatmap-spec.out $(mysqllibs) -lcrypto
@@ -174,3 +173,9 @@ pins-get-spec: tests/spec/getpins.c
 
 debug-get-spec: tests/spec/getdebug.c
 	$(CC) $(gflags) $(mysqlflags) tests/spec/getdebug.c obj/*.o -o tests/bin/get-debug-spec.out $(mysqllibs) -lcrypto	
+
+comments-put-spec: tests/spec/putcomments.c
+	$(CC) $(gflags) $(mysqlflags) tests/spec/putcomments.c obj/*.o -o tests/bin/put-comments-spec.out $(mysqllibs) -lcrypto
+
+debug-put-spec: tests/spec/putdebug.c
+	$(CC) $(gflags) $(mysqlflags) tests/spec/putdebug.c obj/*.o -o tests/bin/put-debug-spec.out $(mysqllibs) -lcrypto

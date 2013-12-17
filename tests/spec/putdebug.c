@@ -1,5 +1,5 @@
 #include <unistd.h>
-#include "controllers/comments.h"
+#include "controllers/reports.h"
 #include "network/router.h"
 
 int main(){
@@ -8,16 +8,16 @@ int main(){
 	int status;
 
 	
-	sprintf(request.url, "/api/comments");
+	sprintf(request.url, "/api/debug");
 	stringToReturn = malloc(1000);
 	request.method = PUT;
 	/* Expect invalid method */
-	status = comment_controller(&request, stringToReturn, 1000);
+	status = report_controller(&request, stringToReturn, 1000);
 	if( status == 501 )
 		fprintf(stdout, "." );
 	else{
 		fprintf(stdout, "F" );
-		fprintf(stderr, "PUT COMMENTS: Request failed to return expected status on invalid Method, returned: %d\n", status );	
+		fprintf(stderr, "PUT HEATMAP: Request failed to return invalid status on invalid Method, returned: %d\n", status );	
 	}
 		
 
