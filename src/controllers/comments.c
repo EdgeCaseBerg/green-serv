@@ -309,7 +309,7 @@ int comment_delete(char * buffer, int buffSize, const struct http_request * requ
 	sm = sm_new(HASH_TABLE_CAPACITY);
 	if(sm == NULL){
 		fprintf(stderr, "sm err\n");
-		return -1;
+		return 500;
 	}
 	parseURL(request->url, strlen(request->url), sm);
 	if(sm_exists(sm,"id")!=1){

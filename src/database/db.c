@@ -30,6 +30,13 @@ MYSQL * _getMySQLConnection(){
 	return mysql_real_connect(conn, server, user, password, database, 0, NULL, 0);
 }
 
+/* Word of warning. 
+ * If you begin a transaction, you may NOT insert, read, and delete the same
+ * row in the database within the same transaction. Why? Because you'll dead
+ * -lock the whole shebang for 50 seconds or whatever the lock time out is. 
+ * Why does this occur? Because we've locked the row when we select it by it's
+ * ID, or if it's queried for at all, so we can't delete it after that.
+ */
 void db_start_transaction(MYSQL * conn){
 	mysql_autocommit(conn, 0);
 	LOGDBTRANS("started");
