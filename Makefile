@@ -157,10 +157,11 @@ spec-check: all specs
 	@./tests/bin/post-heatmap-spec.out
 	@./tests/bin/delete-heatmap-spec.out
 	@./tests/bin/delete-comments-spec.out
+	@./tests/bin/delete-debug-spec.out
 
 
 #Run specs to compile spec tests.
-specs: all routing-spec comments-delete-spec comments-get-spec comments-put-spec heatmap-get-spec pins-get-spec debug-get-spec debug-put-spec heatmap-post-spec heatmap-delete-spec 
+specs: all routing-spec comments-delete-spec comments-get-spec comments-put-spec heatmap-get-spec pins-get-spec debug-get-spec debug-put-spec heatmap-post-spec heatmap-delete-spec  debug-delete-spec
 
 routing-spec: tests/spec/routing.c
 	$(CC) $(gflags) $(mysqlflags) tests/spec/routing.c obj/*.o -o tests/bin/routing-spec.out $(mysqllibs) -lcrypto
@@ -191,3 +192,6 @@ heatmap-delete-spec: tests/spec/deleteheatmap.c
 
 comments-delete-spec: tests/spec/deletecomments.c
 	$(CC) $(gflags) $(mysqlflags) tests/spec/deletecomments.c obj/*.o -o tests/bin/delete-comments-spec.out $(mysqllibs) -lcrypto			
+
+debug-delete-spec: tests/spec/deletedebug.c
+	$(CC) $(gflags) $(mysqlflags) tests/spec/deletedebug.c obj/*.o -o tests/bin/delete-debug-spec.out $(mysqllibs) -lcrypto				
