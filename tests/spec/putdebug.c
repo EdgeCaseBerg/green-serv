@@ -21,6 +21,7 @@ int main(){
 	}
 		
 
+	free(stringToReturn);
 	fflush(stdout);
 	fflush(stderr);
 	close(STDIN_FILENO);

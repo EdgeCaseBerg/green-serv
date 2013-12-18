@@ -95,6 +95,7 @@ int main(){
 	mysql_close(conn);
 	mysql_library_end();
 
+	free(stringToReturn);
 	fflush(stdout);
 	fflush(stderr);
 	close(STDIN_FILENO);

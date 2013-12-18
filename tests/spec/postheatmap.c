@@ -20,7 +20,8 @@ int main(){
 		fprintf(stderr, "POST HEATMAP: Request failed to return invalid status on invalid Method, returned: %d\n", status );	
 	}
 		
-
+		
+	free(stringToReturn);
 	fflush(stdout);
 	fflush(stderr);
 	close(STDIN_FILENO);

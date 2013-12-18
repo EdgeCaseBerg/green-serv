@@ -79,7 +79,7 @@ int main(){
 	status = comment_controller(&request, stringToReturn, size);
 	EXPECTED(422, status, "Queried with alphabetical page instead of number")
 			
-
+	free(stringToReturn);
 	fflush(stdout);
 	fflush(stderr);
 	close(STDIN_FILENO);

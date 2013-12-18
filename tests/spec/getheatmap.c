@@ -134,7 +134,7 @@ int main(){
 	EXPECTED(400, status, "Queried with non-numeric offset (lng")
 	
 		
-
+	free(stringToReturn);
 	fflush(stdout);
 	fflush(stderr);
 	close(STDIN_FILENO);

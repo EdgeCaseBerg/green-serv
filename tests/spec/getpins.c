@@ -88,6 +88,7 @@ int main(){
 	EXPECTED(400,status, "Should have Failed with only one offset")	
 
 
+	free(stringToReturn);
 	fflush(stdout);
 	fflush(stderr);
 	close(STDIN_FILENO);
