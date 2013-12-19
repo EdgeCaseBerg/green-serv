@@ -20,27 +20,27 @@ int main(){
 	char * stringToReturn;
 	struct http_request request;
 	int status;
-   	MYSQL * conn;
-   	char * valid = "[{\"latDegrees\" : 24.53,\"lonDegrees\" : 43.2,\"secondsWorked\" : 120}]";
-   	char * invalid = "[{{}]";
-   	char * invalidKeys = "[{\"Degrees\" : 24.53,\"lonDegrees\" : 43.2,\"secondsWorked\" : 120}]";
-   	char * nullData = "[{\"Degrees\" : null,\"lonDegrees\" : null,\"secondsWorked\" : 120}]";
-   	char * latDegreesOOB = "[{\"latDegrees\" : 224.53,\"lonDegrees\" : 43.2,\"secondsWorked\" : 120}]";
-   	char * latDegreesNAN = "[{\"latDegrees\" : abc,\"lonDegrees\" : 43.2,\"secondsWorked\" : 120}]";
-   	char * lonDegreesOOB = "[{\"latDegrees\" : 24.53,\"lonDegrees\" : 243.2,\"secondsWorked\" : 120}]";
-   	char * lonDegreesNAN = "[{\"latDegrees\" : 24.53,\"lonDegrees\" : avc,\"secondsWorked\" : 120}]";
-   	char * negativeSeconds = "[{\"latDegrees\" : 24.53,\"lonDegrees\" : 43.2,\"secondsWorked\" : -120}]";
-   	char * invalidSeconds = "[{\"latDegrees\" : 24.53,\"lonDegrees\" : 43.2,\"secondsWorked\" : derp}]";
+	MYSQL * conn;
+	char * valid = "[{\"latDegrees\" : 24.53,\"lonDegrees\" : 43.2,\"secondsWorked\" : 120}]";
+	char * invalid = "[{{}]";
+	char * invalidKeys = "[{\"Degrees\" : 24.53,\"lonDegrees\" : 43.2,\"secondsWorked\" : 120}]";
+	char * nullData = "[{\"Degrees\" : null,\"lonDegrees\" : null,\"secondsWorked\" : 120}]";
+	char * latDegreesOOB = "[{\"latDegrees\" : 224.53,\"lonDegrees\" : 43.2,\"secondsWorked\" : 120}]";
+	char * latDegreesNAN = "[{\"latDegrees\" : abc,\"lonDegrees\" : 43.2,\"secondsWorked\" : 120}]";
+	char * lonDegreesOOB = "[{\"latDegrees\" : 24.53,\"lonDegrees\" : 243.2,\"secondsWorked\" : 120}]";
+	char * lonDegreesNAN = "[{\"latDegrees\" : 24.53,\"lonDegrees\" : avc,\"secondsWorked\" : 120}]";
+	char * negativeSeconds = "[{\"latDegrees\" : 24.53,\"lonDegrees\" : 43.2,\"secondsWorked\" : -120}]";
+	char * invalidSeconds = "[{\"latDegrees\" : 24.53,\"lonDegrees\" : 43.2,\"secondsWorked\" : derp}]";
 
 
-   	conn = _getMySQLConnection();
-   	if(!conn){
-	  	fprintf(stderr, "%s\n", "Could not connect to mySQL");
-	  	close(STDIN_FILENO);
+	conn = _getMySQLConnection();
+	if(!conn){
+		fprintf(stderr, "%s\n", "Could not connect to mySQL");
+		close(STDIN_FILENO);
 		close(STDOUT_FILENO);
 		close(STDERR_FILENO);
-	  	return 1;
-   	}	
+		return 1;
+	}	
 	db_start_transaction(conn);
 
 	stringToReturn = malloc(1000);
@@ -100,7 +100,7 @@ int main(){
 
 
 	db_abort_transaction(conn);
-   	db_end_transaction(conn);
+	db_end_transaction(conn);
 	free(stringToReturn);
 	fflush(stdout);
 	fflush(stderr);
