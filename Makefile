@@ -160,10 +160,11 @@ spec-check: all specs
 	@./tests/bin/delete-debug-spec.out
 	@./tests/bin/delete-pin-spec.out
 	@./tests/bin/put-pin-spec.out
+	@./tests/bin/put-heatmap-spec.out
 
 
 #Run specs to compile spec tests.
-specs: all routing-spec comments-delete-spec comments-get-spec comments-put-spec heatmap-get-spec marker-get-spec debug-get-spec debug-put-spec heatmap-post-spec heatmap-delete-spec  debug-delete-spec marker-delete-spec marker-put-spec
+specs: all routing-spec comments-delete-spec comments-get-spec comments-put-spec heatmap-get-spec marker-get-spec debug-get-spec debug-put-spec heatmap-post-spec heatmap-delete-spec  debug-delete-spec marker-delete-spec marker-put-spec heatmap-put-spec
 
 routing-spec: tests/spec/routing.c
 	$(CC) $(gflags) $(mysqlflags) tests/spec/routing.c obj/*.o -o tests/bin/routing-spec.out $(mysqllibs) -lcrypto
@@ -203,3 +204,6 @@ marker-delete-spec: tests/spec/deletepin.c
 
 marker-put-spec: tests/spec/putpins.c
 	$(CC) $(gflags) $(mysqlflags) tests/spec/putpins.c obj/*.o -o tests/bin/put-pin-spec.out $(mysqllibs) -lcrypto				
+
+heatmap-put-spec: tests/spec/putheatmap.c
+	$(CC) $(gflags) $(mysqlflags) tests/spec/putheatmap.c obj/*.o -o tests/bin/put-heatmap-spec.out $(mysqllibs) -lcrypto					
