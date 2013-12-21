@@ -70,22 +70,22 @@ int main(){
 	sprintf(request.url, "/api/comments");
 	SETDATA(valid1)
 	status = comment_controller(&request, stringToReturn, 1000);
-	EXPECTED(200, status, "Request failed to return no content")
+	EXPECTED(200, status, "Request failed to succeed")
 
 	sprintf(request.url, "/api/comments");
 	SETDATA(valid2)
 	status = comment_controller(&request, stringToReturn, 1000);
-	EXPECTED(200, status, "Request failed to return no content")
+	EXPECTED(200, status, "Request failed to succeed")
 
 	sprintf(request.url, "/api/comments");
 	SETDATA(valid3)
 	status = comment_controller(&request, stringToReturn, 1000);
-	EXPECTED(200, status, "Request failed to return no content")
+	EXPECTED(200, status, "Request failed to succeed")
 
 	sprintf(request.url, "/api/comments");
 	SETDATA(validWithPin)
 	status = comment_controller(&request, stringToReturn, 1000);
-	EXPECTED(200, status, "Request failed to return no content")
+	EXPECTED(200, status, "Request failed to succeed")
 
 	/* Invalids */
 	sprintf(request.url, "/api/comments");
@@ -128,6 +128,7 @@ int main(){
 	mysql_library_end();
 		
 	free(stringToReturn);
+	free(validWithPin);
 	fflush(stdout);
 	fflush(stderr);
 	close(STDIN_FILENO);
