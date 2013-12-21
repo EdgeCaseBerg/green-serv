@@ -380,7 +380,7 @@ void db_insertMarker(struct gs_marker * gsm, MYSQL * conn){
 		return;
 	}
 
-	/* Set the id of the comment to be what it is now  */
+	/* Set the id of the marker to be what it is now  */
 	gsm->id = affected;
 
 	/* Now we could either compute the time stamp or ask the db for it. */
