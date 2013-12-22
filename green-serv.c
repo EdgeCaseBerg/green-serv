@@ -36,7 +36,7 @@ void parseArgs(int argc, const char * argv[], struct gs_scope * campaign, MYSQL 
 	}
 }
 
-int main(int argc, const char* argv[]) {
+int green_serv(int argc, const char* argv[]) {
 	MYSQL * conn;
 	struct gs_scope campaign;
 	

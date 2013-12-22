@@ -14,10 +14,14 @@ unittests = test-decimal test-comment test-scope test-marker test-report test-he
 unittestobj = obj/comment.o  obj/db.o  obj/decimal.o  obj/heatmap.o  obj/json.o obj/strmap.o obj/marker.o  obj/report.o  obj/scope.o  obj/sha256.o
 controllertests = test-hb-controller
 
-all: a.out
+#This will actually create the program.
+install: a.out
 
-a.out: gs.o
-	$(CC)  obj/*.o  -o a.out $(mysqllibs) -g -lcrypto -lpthread
+a.out: gs.o main.c
+	$(CC)  main.c obj/*.o  -o a.out $(mysqllibs) -g -lcrypto -lpthread
+
+#This builds everything neccesary for the program
+all: gs.o
 
 gs.o: green-serv.c json.o db.o network.o
 	$(CC) $(gflags) -c green-serv.c -o obj/gs.o  	
@@ -140,4 +144,78 @@ test-hb-controller: tests/controllers/heartbeat-test.c heartbeatC.o json.o strma
 	$(CC) $(gflags) tests/controllers/heartbeat-test.c obj/heartbeatC.o obj/json.o obj/strmap.o obj/decimal.o -o tests/bin/heartbeatC.out
 
 
-#Integration Tests with network 
+#Specification Testing:
+#Run spec-check to actually execute tests
+spec-check: all specs
+	@./tests/bin/routing-spec.out
+	@./tests/bin/get-comments-spec.out
+	@./tests/bin/get-heatmap-spec.out
+	@./tests/bin/get-pins-spec.out
+	@./tests/bin/get-debug-spec.out
+	@./tests/bin/put-comments-spec.out
+	@./tests/bin/put-debug-spec.out
+	@./tests/bin/post-heatmap-spec.out
+	@./tests/bin/delete-heatmap-spec.out
+	@./tests/bin/delete-comments-spec.out
+	@./tests/bin/delete-debug-spec.out
+	@./tests/bin/delete-pin-spec.out
+	@./tests/bin/put-pin-spec.out
+	@./tests/bin/put-heatmap-spec.out
+	@./tests/bin/post-comments-spec.out
+	@./tests/bin/post-pins-spec.out
+	@./tests/bin/post-debug-spec.out
+
+
+#Run specs to compile spec tests.
+specs: all debug-post-spec pins-post-spec comments-post-spec routing-spec comments-delete-spec comments-get-spec comments-put-spec heatmap-get-spec marker-get-spec debug-get-spec debug-put-spec heatmap-post-spec heatmap-delete-spec  debug-delete-spec marker-delete-spec marker-put-spec heatmap-put-spec
+
+routing-spec: tests/spec/routing.c
+	$(CC) $(gflags) $(mysqlflags) tests/spec/routing.c obj/*.o -o tests/bin/routing-spec.out $(mysqllibs) -lcrypto
+
+comments-get-spec: tests/spec/getcomments.c
+	$(CC) $(gflags) $(mysqlflags) tests/spec/getcomments.c obj/*.o -o tests/bin/get-comments-spec.out $(mysqllibs) -lcrypto
+
+heatmap-get-spec: tests/spec/getheatmap.c
+	$(CC) $(gflags) $(mysqlflags) tests/spec/getheatmap.c obj/*.o -o tests/bin/get-heatmap-spec.out $(mysqllibs) -lcrypto
+
+marker-get-spec: tests/spec/getpins.c
+	$(CC) $(gflags) $(mysqlflags) tests/spec/getpins.c obj/*.o -o tests/bin/get-pins-spec.out $(mysqllibs) -lcrypto
+
+debug-get-spec: tests/spec/getdebug.c
+	$(CC) $(gflags) $(mysqlflags) tests/spec/getdebug.c obj/*.o -o tests/bin/get-debug-spec.out $(mysqllibs) -lcrypto	
+
+comments-put-spec: tests/spec/putcomments.c
+	$(CC) $(gflags) $(mysqlflags) tests/spec/putcomments.c obj/*.o -o tests/bin/put-comments-spec.out $(mysqllibs) -lcrypto
+
+debug-put-spec: tests/spec/putdebug.c
+	$(CC) $(gflags) $(mysqlflags) tests/spec/putdebug.c obj/*.o -o tests/bin/put-debug-spec.out $(mysqllibs) -lcrypto
+
+heatmap-post-spec: tests/spec/postheatmap.c
+	$(CC) $(gflags) $(mysqlflags) tests/spec/postheatmap.c obj/*.o -o tests/bin/post-heatmap-spec.out $(mysqllibs) -lcrypto	
+
+heatmap-delete-spec: tests/spec/deleteheatmap.c
+	$(CC) $(gflags) $(mysqlflags) tests/spec/deleteheatmap.c obj/*.o -o tests/bin/delete-heatmap-spec.out $(mysqllibs) -lcrypto		
+
+comments-delete-spec: tests/spec/deletecomments.c
+	$(CC) $(gflags) $(mysqlflags) tests/spec/deletecomments.c obj/*.o -o tests/bin/delete-comments-spec.out $(mysqllibs) -lcrypto			
+
+debug-delete-spec: tests/spec/deletedebug.c
+	$(CC) $(gflags) $(mysqlflags) tests/spec/deletedebug.c obj/*.o -o tests/bin/delete-debug-spec.out $(mysqllibs) -lcrypto				
+
+marker-delete-spec: tests/spec/deletepin.c
+	$(CC) $(gflags) $(mysqlflags) tests/spec/deletepin.c obj/*.o -o tests/bin/delete-pin-spec.out $(mysqllibs) -lcrypto			
+
+marker-put-spec: tests/spec/putpins.c
+	$(CC) $(gflags) $(mysqlflags) tests/spec/putpins.c obj/*.o -o tests/bin/put-pin-spec.out $(mysqllibs) -lcrypto				
+
+heatmap-put-spec: tests/spec/putheatmap.c
+	$(CC) $(gflags) $(mysqlflags) tests/spec/putheatmap.c obj/*.o -o tests/bin/put-heatmap-spec.out $(mysqllibs) -lcrypto
+
+comments-post-spec: tests/spec/postcomments.c
+	$(CC) $(gflags) $(mysqlflags) tests/spec/postcomments.c obj/*.o -o tests/bin/post-comments-spec.out $(mysqllibs) -lcrypto	
+
+pins-post-spec: tests/spec/postpins.c
+	$(CC) $(gflags) $(mysqlflags) tests/spec/postpins.c obj/*.o -o tests/bin/post-pins-spec.out $(mysqllibs) -lcrypto		
+
+debug-post-spec: tests/spec/postdebug.c
+	$(CC) $(gflags) $(mysqlflags) tests/spec/postdebug.c obj/*.o -o tests/bin/post-debug-spec.out $(mysqllibs) -lcrypto		

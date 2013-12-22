@@ -66,7 +66,6 @@ int report_controller(const struct http_request * request, char * stringToReturn
 		if(sm_exists(sm,"since") == 1){
 			sm_get(sm,"since",since, sizeof since);
 			for (i = 0; since[i] != '\0' && i < sizeof since; ++i){
-				fprintf(stderr, "%d %d\n", i, valid);
 				if(i==4 || i == 7 || i ==10 || i ==13){
 					if(since[i] != '-')
 						valid = 0;
@@ -84,7 +83,6 @@ int report_controller(const struct http_request * request, char * stringToReturn
 				}
 			}
 			if(!valid){
-				fprintf(stderr, "--:%s\n", since );
 				free(buffer);
 				sm_delete(sm);
 				goto rc_bad_date;

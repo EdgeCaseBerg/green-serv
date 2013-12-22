@@ -369,7 +369,7 @@ int heatmap_put(char * buffer, int buffSize, const struct http_request * request
 			}
 			for(j=0; i < request->contentLength && request->data[i] != '\0'; ++j,++i){
 				if(strFlag == 0){
-					if(request->data[i] == ' ' || request->data[i] == '\n')
+					if(request->data[i] == ' ' || request->data[i] == '\n' || request->data[i] == ',' || request->data[i] == '}' || request->data[i] == ']')
 						break; /*break out if num data*/
 				}else{
 					if(request->data[i] == '"' && request->data[i-1] != '\\')

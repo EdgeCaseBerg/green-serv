@@ -183,12 +183,12 @@ int marker_controller(const struct http_request * request, char * stringToReturn
 
 			break;
 		case POST:
-			fprintf(stderr, "%s\n", "processing as post");
 			status = marker_post(buffer,buffSize,request);
 			if(status == -1){
 				/* Something went terribly wrong */
 				sm_delete(sm);
 				free(buffer); 
+				status= 500;
 				FREE_NON_NULL_DEGREES_AND_OFFSETS
 				goto mc_nomem;
 			}
