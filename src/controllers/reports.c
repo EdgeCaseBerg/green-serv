@@ -205,13 +205,19 @@ int report_post(char * buffer, int buffSize, const struct http_request * request
 	/*Parse the JSON for the information we desire */
 	parseJSON(request->data,request->contentLength, sm);
 
+	if( sm_get_count(sm) < 1 ){
+		sm_delete(sm);
+		snprintf(buffer,buffSize,ERROR_STR_FORMAT,400,MALFORMED_JSON);
+		return 400;		
+	}
+
 	/* Verify that the data is valid */
 	if(	sm_exists(sm, "stacktrace") !=1 || 
 		sm_exists(sm, "message") 	!=1 ||
 		sm_exists(sm, "origin") !=1 	){
 		sm_delete(sm);
-		snprintf(buffer,buffSize,ERROR_STR_FORMAT,400,KEYS_MISSING);
-		return 400;		
+		snprintf(buffer,buffSize,ERROR_STR_FORMAT,422,KEYS_MISSING);
+		return 422;		
 	}else{
 		/* Extract and create the two structs */
 		
@@ -275,7 +281,7 @@ int report_post(char * buffer, int buffSize, const struct http_request * request
 		mysql_close(conn);
 		mysql_thread_end();
 		sm_delete(sm);
-		return -1;
+		return 500;
 }
 
 int report_get(char * buffer,int buffSize, char * hash, char * since, int page){
