@@ -35,7 +35,7 @@ int main(){
 	char * invalidType = "{\"type\":\"Invalid\", \"message\":\"test message from post comments\"}";
 	char * invalidPin = "{\"type\":\"COMMENT\", \"message\":\"test message from post comments\", \"pin\" : abc}";
 	char * emptyMsg = "{\"type\":\"COMMENT\", \"message\":\"\"}";
-	char * msgTooLarge = "\"type\":\"COMMENT\", \"message\":\"abcdefghijklmnopqrstuvwxyz01234567890abcdefghijklmnopqrstuvwxyz01234567890abcdefghijklmnopqrstuvwxyz01234567890abcdefghijklmnopqrstuvwxyz01234567890\"}";
+	char * msgTooLarge = "{\"type\":\"COMMENT\", \"message\":\"abcdefghijklmnopqrstuvwxyz01234567890abcdefghijklmnopqrstuvwxyz01234567890abcdefghijklmnopqrstuvwxyz0123456stuvwxyz01234567890abcdefghijklmnopqrstuvwxyz01234567890abcdefghijklmnopqrstuvwxyz01234567890abcdefghijklmnopqrstuvwxyz01234567890\"}";
 
 
 	conn = _getMySQLConnection();

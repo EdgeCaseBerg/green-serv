@@ -39,6 +39,12 @@
 	#endif
 	#define EMPTY_COMMENT_MESSAGE "Message may not be empty"
 	#define MISSING_PIN_ERR "If pin key present, pin ID must be an integral numeric identifier"
+	#ifndef MALFORMED_JSON
+		#define MALFORMED_JSON "JSON Message cannot be interpreted due to malformed JSON"
+	#endif
+	#ifndef MESSAGE_TOO_LARGE
+		#define MESSAGE_TOO_LARGE "Message may not be more than " STRINGIFY(GS_COMMENT_MAX_LENGTH)  " characters long."
+	#endif
 
 	int comment_controller(const struct http_request * request, char * stringToReturn, int strLength);
 

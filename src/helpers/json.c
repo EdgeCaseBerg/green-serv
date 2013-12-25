@@ -6,6 +6,26 @@
 
 #include "helpers/json.h"
 
+/*  validate JSON for opening and closing objects/arrays
+*/
+int validateJSON(const char * input, int input_length){
+    int objects;
+    int arrays;
+    int i;
+    objects=arrays=0;
+
+    for( i=0; i < input_length && input[i] != '\0'; ++i ){
+        if(input[i] == '{')
+            objects++;
+        if(input[i] == '}')
+            objects--;
+        if(input[i] == '[')
+            arrays++;
+        if(input[i] == ']')
+            arrays--;
+    }
+    return objects == 0 && arrays == 0;
+}   
 
 /* Places all key pairs into strmap, all lowercase keys */
 void parseJSON(const char * input, int input_length, StrMap * sm){
