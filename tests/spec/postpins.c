@@ -1,3 +1,4 @@
+#define GREENSERV 1
 #include "config.h"
 #include <unistd.h>
 #include "controllers/markers.h"
@@ -19,6 +20,8 @@ int main(){
 	struct http_request request;
 	int status;
 	MYSQL * conn;
+
+	_shared_campaign_id =1 ;
 
 	char * valid1 = "{\"latDegrees\" : 24.53,\"lonDegrees\" : 43.2,\"type\" : \"ADMIN\",\"message\" : \"I had to run to feed my cat, had to leave my Trash here sorry! Can someone pick it up?\",\"addressed\" : true}";
 	char * valid2 = "{\"latDegrees\" : 24.53,\"lonDegrees\" : 43.2,\"type\" : \"MARKER\",\"message\" : \"I had to run to feed my cat, had to leave my Trash here sorry! Can someone pick it up?\",\"addressed\" : true}";

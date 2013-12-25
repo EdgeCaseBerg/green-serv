@@ -1,4 +1,4 @@
-
+    
 /* JSON Escaping function and encoding */
 #include <stdlib.h>
 #include <stdio.h>
@@ -7,10 +7,11 @@
 #include "helpers/json.h"
 
 
+/* Places all key pairs into strmap, all lowercase keys */
 void parseJSON(const char * input, int input_length, StrMap * sm){
     int strFlag, i, j;
-    char keyBuffer[COMMENT_JSON_LENGTH+1];
-    char valBuffer[COMMENT_JSON_LENGTH+1];
+    char keyBuffer[256];
+    char valBuffer[256];
     bzero(keyBuffer, sizeof keyBuffer);
     bzero(valBuffer, sizeof valBuffer);
 
@@ -21,7 +22,7 @@ void parseJSON(const char * input, int input_length, StrMap * sm){
             /*Go until we hit the closing qoute*/
             i++;
             for(j=0; i < input_length && input[i] != '\0' && input[i] != '"' && (unsigned int)j < sizeof keyBuffer; ++j,++i){
-                keyBuffer[j] = (int)input[i] > 64 && input[i] < 91 ? input[i] + 32 : input[i];
+                keyBuffer[j] = (int)input[i] > 64 && input[i] < 91 ? input[i] + 32 : input[i]; /* Lowercase Keys, only ascii */
             }
             keyBuffer[j] = '\0';
             /*find the beginning of the value
@@ -36,19 +37,19 @@ void parseJSON(const char * input, int input_length, StrMap * sm){
             }
             for(j=0; i < input_length && input[i] != '\0' && i < (int)(sizeof valBuffer)-1; ++j,++i){
                 if(strFlag == 0){
-                    if(input[i] == ' ' || input[i] == '\n')
+                    if(input[i] == ' ' || input[i] == '\n' || input[i] == '}' || input[i] == ',')
                         break; /*break out if num data*/
                 }else{
-                    if(input[i] == '"' && input[i-1] != '\\')
+                    if( ( input[i] == '"' && input[i-1] != '\\') || input[i] == '}' )
                         break;
                 }
                 valBuffer[j] = input[i];
-            }
+            }   
             valBuffer[j] = '\0';
             /* Skip any closing paren. */
             if(i < (int)(sizeof valBuffer) && input[i] == '"')
                 i++;
-            if(strlen(keyBuffer) > 0 && strlen(valBuffer) > 0){
+            if(strlen(keyBuffer) > 0){
                 if(sm_put(sm, keyBuffer, valBuffer) == 0)
                     fprintf(stderr, "Failed to copy parameters into hash table while parsing JSON Data: Key: %s, Val: %s\n", keyBuffer, valBuffer);
             }
