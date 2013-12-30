@@ -317,20 +317,28 @@ int comment_delete(char * buffer, int buffSize, const struct http_request * requ
 	MYSQL *conn;
 	long affected; 
 	long id;
+	char **convertSuccess;
 
 	sm = sm_new(HASH_TABLE_CAPACITY);
 	if(sm == NULL){
 		fprintf(stderr, "sm err\n");
 		return 500;
 	}
+	convertSuccess = NULL;
 	parseURL(request->url, strlen(request->url), sm);
 	if(sm_exists(sm,"id")!=1){
 		sm_delete(sm);
-		snprintf(buffer, buffSize, ERROR_STR_FORMAT, 400, MISSING_ID_KEY);
-		return 400;
+		snprintf(buffer, buffSize, ERROR_STR_FORMAT, 422, MISSING_ID_KEY);
+		return 422;
 	}
 	sm_get(sm, "id", buffer, sizeof buffer);
-	id = atol(buffer);
+	if(strtold(buffer,convertSuccess) != 0 && convertSuccess == NULL)
+		id = atol(buffer);
+	else{
+		sm_delete(sm);
+		snprintf(buffer, buffSize, ERROR_STR_FORMAT, 422, NAN_ID_KEY);
+		return 422;
+	}
 	sm_delete(sm);
 
 	mysql_thread_init();

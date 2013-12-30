@@ -45,6 +45,9 @@
 	#ifndef MESSAGE_TOO_LARGE
 		#define MESSAGE_TOO_LARGE "Message may not be more than " STRINGIFY(GS_COMMENT_MAX_LENGTH)  " characters long."
 	#endif
+	#ifndef NAN_ID_KEY
+		#define NAN_ID_KEY "ID must be a numeric identifier"
+	#endif
 
 	int comment_controller(const struct http_request * request, char * stringToReturn, int strLength);
 

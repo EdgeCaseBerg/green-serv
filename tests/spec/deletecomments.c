@@ -1,3 +1,4 @@
+#define GREEN_SERV 1
 #include "config.h"
 #include <unistd.h>
 #include "controllers/comments.h"
@@ -7,7 +8,7 @@
 		fprintf(stdout, "." );\
 	else{\
 		fprintf(stdout, "F" );\
-		fprintf(stderr, "DELETE COMMENT: Expected status of %d, recieved %d. %s (%s::%d)\n", expected,status, errmessage, __FILE__, __LINE__ );\
+		fprintf(stderr, "DELETE COMMENT: Expected status of %d, recieved %d. %s (%s::%d)\n%s\n", expected,status, errmessage,__FILE__,__LINE__, stringToReturn );\
 	}
 
 int main(){
@@ -25,6 +26,7 @@ int main(){
 		close(STDERR_FILENO);
 	  	return 1;
    	}
+   	_shared_campaign_id = 1;
    	
 
    	gs_comment_ZeroStruct(&testComment);
@@ -44,7 +46,7 @@ int main(){
 
 	/* Invalids */
 
-	sprintf(request.url, "/api/comments?id=123234324");
+	sprintf(request.url, "/api/comments?id=1232343");
 	status = comment_controller(&request, stringToReturn, 1000);
 	EXPECTED(404, status, "Request failed to return not found status")
 
