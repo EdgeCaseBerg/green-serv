@@ -55,6 +55,7 @@
 	#define OOB_LONGITUDE "Longitude must be between -181 and 181 (non-inclusive)"
 	#define NAN_LATITUDE "Latitude must be a number"
 	#define NAN_LONGITUDE "Longitude must be a number"
+	#define NAN_ID "id must be a numeric value"
 
 	int marker_controller(const struct http_request * request, char * stringToReturn, int strLength);
 

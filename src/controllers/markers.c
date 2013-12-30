@@ -201,14 +201,22 @@ int marker_controller(const struct http_request * request, char * stringToReturn
 			break;
 		case PUT:
 			if(sm_exists(sm,"id")!=1){
-				status = 400;
+				status = 422;
 				sm_delete(sm);
 				free(buffer); 
 				FREE_NON_NULL_DEGREES_AND_OFFSETS
 				goto mc_missing_key;
 			}
 			sm_get(sm, "id", tempBuf, sizeof tempBuf);
-			id = atol(tempBuf);
+			if(strtod(tempBuf,convertSuccess) != 0 && convertSuccess == NULL)
+				id = atol(tempBuf);
+			else{
+				status = 422;
+				sm_delete(sm);
+				free(buffer);
+				FREE_NON_NULL_DEGREES_AND_OFFSETS
+				goto mc_nan_id;
+			}
 			status = marker_address(buffer,buffSize,id,request);
 			break;
 		case DELETE:
@@ -250,6 +258,7 @@ int marker_controller(const struct http_request * request, char * stringToReturn
 	ERR_LABEL_STRING_TO_RETURN(mc_badLatOffset, BAD_LAT_OFFSET)
 	ERR_LABEL_STRING_TO_RETURN(mc_bothOffsets, BOTH_OFFSET_ERR)
 	ERR_LABEL_STRING_TO_RETURN(mc_badpage, BAD_PAGE_ERR)
+	ERR_LABEL_STRING_TO_RETURN(mc_nan_id, NAN_ID)
 
 }
 
@@ -292,13 +301,11 @@ int marker_address(char * buffer, int buffSize, long id, const struct http_reque
 	if(request->contentLength > 0){
 		charP = strstr(request->data, "addressed");
 		if(charP == NULL){
-			snprintf(buffer, buffSize,ERROR_STR_FORMAT,422,NO_ADDRESSED_KEY);
-			return 422;
+			snprintf(buffer, buffSize,ERROR_STR_FORMAT,400,NO_ADDRESSED_KEY);
+			return 400;
 		} else {
 			/* Key was found, skip the field name and find the value*/
-			fprintf(stderr, "%s\n", charP);
 			charP+=9;
-			fprintf(stderr, "%s\n", charP);
 			boolVal = strstr(charP, "true");
 			if(boolVal == NULL){
 				boolVal = strstr(charP, "false");
