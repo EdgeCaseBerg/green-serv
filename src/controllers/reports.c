@@ -134,6 +134,16 @@ int report_delete(char * buffer, int buffSize, char * origin, char * hash){
 	struct gs_report report;
 	char orig[SHA_LENGTH+1]; 
 
+	if(strlen(origin) == 0){
+		snprintf(buffer,buffSize, ERROR_STR_FORMAT, 400, ORIGIN_REQUIRED);
+		return 400;
+	}
+
+	if(strlen(hash) == 0){
+		snprintf(buffer, buffSize, ERROR_STR_FORMAT, 400, HASH_REQUIRED);
+		return 400;
+	}
+
 	mysql_thread_init();
 	conn = _getMySQLConnection();
 	if(!conn){
