@@ -221,14 +221,22 @@ int marker_controller(const struct http_request * request, char * stringToReturn
 			break;
 		case DELETE:
 			if(sm_exists(sm,"id")!=1){
-				status = 400;
+				status = 422;
 				sm_delete(sm);
 				free(buffer); 
 				FREE_NON_NULL_DEGREES_AND_OFFSETS
 				goto mc_missing_key;
 			}
 			sm_get(sm, "id", tempBuf, sizeof tempBuf);
-			id = atol(tempBuf);
+			if(strtod(tempBuf,convertSuccess) != 0 && convertSuccess == NULL)
+				id = atol(tempBuf);
+			else{
+				status = 422;
+				sm_delete(sm);
+				free(buffer);
+				FREE_NON_NULL_DEGREES_AND_OFFSETS
+				goto mc_nan_id;
+			}
 			status = marker_delete(buffer, buffSize, id);
 			if(status == -1){
 				sm_delete(sm);
