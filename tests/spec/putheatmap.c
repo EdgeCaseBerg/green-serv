@@ -1,3 +1,4 @@
+#define GREENSERV 1
 #include <unistd.h>
 #include "controllers/heatmaps.h"
 #include "network/router.h"
@@ -24,7 +25,7 @@ int main(){
 	char * valid = "[{\"latDegrees\" : 24.53,\"lonDegrees\" : 43.2,\"secondsWorked\" : 120}]";
 	char * invalid = "[{{}]";
 	char * invalidKeys = "[{\"Degrees\" : 24.53,\"lonDegrees\" : 43.2,\"secondsWorked\" : 120}]";
-	char * nullData = "[{\"Degrees\" : null,\"lonDegrees\" : null,\"secondsWorked\" : 120}]";
+	char * nullData = "[{\"lonDegrees\" : null,\"latDegrees\" : null,\"secondsWorked\" : 120}]";
 	char * latDegreesOOB = "[{\"latDegrees\" : 224.53,\"lonDegrees\" : 43.2,\"secondsWorked\" : 120}]";
 	char * latDegreesNAN = "[{\"latDegrees\" : abc,\"lonDegrees\" : 43.2,\"secondsWorked\" : 120}]";
 	char * lonDegreesOOB = "[{\"latDegrees\" : 24.53,\"lonDegrees\" : 243.2,\"secondsWorked\" : 120}]";
@@ -32,7 +33,7 @@ int main(){
 	char * negativeSeconds = "[{\"latDegrees\" : 24.53,\"lonDegrees\" : 43.2,\"secondsWorked\" : -120}]";
 	char * invalidSeconds = "[{\"latDegrees\" : 24.53,\"lonDegrees\" : 43.2,\"secondsWorked\" : derp}]";
 
-
+	_shared_campaign_id =1 ;
 	conn = _getMySQLConnection();
 	if(!conn){
 		fprintf(stderr, "%s\n", "Could not connect to mySQL");
@@ -71,7 +72,7 @@ int main(){
 	sprintf(request.url, "/api/heatmap");
 	SETDATA(latDegreesOOB)
 	status = heatmap_controller(&request, stringToReturn, 1000);
-	EXPECTED(422,status, "latDegrees must be within the range of -180.0 and 180.")
+	EXPECTED(422,status, "latDegrees must be within the range of -90.0 and 90.")
 
 	sprintf(request.url, "/api/heatmap");
 	SETDATA(latDegreesNAN)
@@ -81,7 +82,7 @@ int main(){
 	sprintf(request.url, "/api/heatmap");
 	SETDATA(lonDegreesOOB)
 	status = heatmap_controller(&request, stringToReturn, 1000);
-	EXPECTED(422,status, "lonDegrees must be within the range of -90.0 and 90.")
+	EXPECTED(422,status, "lonDegrees must be within the range of -180.0 and 180.")
 
 	sprintf(request.url, "/api/heatmap");
 	SETDATA(lonDegreesNAN)

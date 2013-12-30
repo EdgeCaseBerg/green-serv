@@ -205,7 +205,7 @@ int report_post(char * buffer, int buffSize, const struct http_request * request
 	/*Parse the JSON for the information we desire */
 	parseJSON(request->data,request->contentLength, sm);
 
-	if( sm_get_count(sm) < 1 ){
+	if( validateJSON(request->data, request->contentLength) == 0 ){
 		sm_delete(sm);
 		snprintf(buffer,buffSize,ERROR_STR_FORMAT,400,MALFORMED_JSON);
 		return 400;		
