@@ -19,6 +19,7 @@ int report_controller(const struct http_request * request, char * stringToReturn
 	StrMap * sm;
 	unsigned int i;
 	int valid;
+	char **convertSuccess;
 
 	status = 503;
 	buffSize = RESULTS_PER_PAGE*(sizeof(struct gs_report)*4+1)+(2*MAX_URL_LENGTH);
@@ -28,6 +29,7 @@ int report_controller(const struct http_request * request, char * stringToReturn
 	bzero(since, sizeof since);
 	page = 1;
 	valid = 1;
+	convertSuccess = NULL;
 
 	buffer = malloc(buffSize);
 	if(buffer == NULL){
@@ -46,7 +48,14 @@ int report_controller(const struct http_request * request, char * stringToReturn
 	if(numParams > 0){
 		if(sm_exists(sm,"page") == 1){
 			sm_get(sm, "page", tempBuf, sizeof tempBuf);
-			page = atoi(tempBuf);
+			if(strtod(tempBuf,convertSuccess) != 0 && convertSuccess == NULL)
+				page = atoi(tempBuf);
+			else{
+				status = 422;
+				sm_delete(sm);
+				free(buffer);
+				goto rc_badpage;
+			}
 			if(page <= 0){
 				status = 400;		
 				sm_delete(sm);
@@ -77,12 +86,17 @@ int report_controller(const struct http_request * request, char * stringToReturn
 					if(!valid && i ==13)
 						if(since[i] == ':')
 							valid = 1;
+					if(!valid)
+						break;
 				}else{
-					if(!isdigit(since[i]))
+					if(!isdigit(since[i])){
 						valid = 0;
+						break;
+					}
 				}
 			}
 			if(!valid){
+				status  = 400;
 				free(buffer);
 				sm_delete(sm);
 				goto rc_bad_date;
@@ -304,7 +318,7 @@ int report_get(char * buffer,int buffSize, char * hash, char * since, int page){
 	char prevStr[MAX_URL_LENGTH];
 	char reports_buffer[buffSize];
 	long numReports;
-	char json[512];
+	char json[1024];
 	int i;
 	
 	nextPage = 1;
