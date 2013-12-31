@@ -91,27 +91,55 @@ int heatmap_controller(const struct http_request * request, char * stringToRetur
 		}
 		if( sm_exists(sm,"latdegrees") == 1){
 			sm_get(sm,"latdegrees",tempBuf,sizeof tempBuf);
-			(*latDegrees) = createDecimalFromString(tempBuf);
+			if(strtod(tempBuf,convertSuccess) != 0 && convertSuccess == NULL && strncasecmp(tempBuf, "nan", 3) != 0)
+				(*latDegrees) = createDecimalFromString(tempBuf);
+			else{
+				sm_delete(sm);
+				status = 400;
+				free(buffer); free(latDegrees); free(lonDegrees); free(latOffset); free(lonOffset);	
+				goto mh_badlat;
+			}
 		}else{
 			free(latDegrees);
 			latDegrees = NULL;
 		}
 		if( sm_exists(sm, "londegrees") == 1){
 			sm_get(sm,"londegrees",tempBuf,sizeof tempBuf);
-			(*lonDegrees) = createDecimalFromString(tempBuf);
+			if(strtod(tempBuf,convertSuccess) != 0 && convertSuccess == NULL && strncasecmp(tempBuf, "nan", 3) != 0)
+				(*lonDegrees) = createDecimalFromString(tempBuf);
+			else{
+				sm_delete(sm);
+				status = 400;
+				free(buffer); free(latDegrees); free(lonDegrees); free(latOffset); free(lonOffset);	
+				goto mh_badlon;
+			}
 		}else{
 			free(lonDegrees);
 			lonDegrees = NULL;
 		}
 		if( sm_exists(sm, "lonoffset") == 1){
 			sm_get(sm,"lonoffset",tempBuf,sizeof tempBuf);
-			(*lonOffset) = createDecimalFromString(tempBuf);
+			if(strtod(tempBuf,convertSuccess) != 0 && convertSuccess == NULL)
+				(*lonOffset) = createDecimalFromString(tempBuf);
+			else{
+				sm_delete(sm);
+				status = 400;
+				free(buffer); free(latDegrees); free(lonDegrees); free(latOffset); free(lonOffset);	
+				goto mh_badlonoffset;	
+			}
 		} else {
 			(*lonOffset) = createDecimalFromString(DEFAULT_OFFSET);
 		}
 		if( sm_exists(sm, "latoffset") == 1){
 			sm_get(sm,"latoffset",tempBuf,sizeof tempBuf);
-			(*latOffset) = createDecimalFromString(tempBuf);
+			if(strtod(tempBuf,convertSuccess) != 0 && convertSuccess == NULL)
+				(*latOffset) = createDecimalFromString(tempBuf);
+			else{
+				sm_delete(sm);
+				status = 400;
+				free(buffer); free(latDegrees); free(lonDegrees); free(latOffset); free(lonOffset);	
+				goto mh_badlatoffset;	
+			}
 		} else {
 			(*latOffset) = createDecimalFromString(DEFAULT_OFFSET);
 		}
@@ -130,6 +158,7 @@ int heatmap_controller(const struct http_request * request, char * stringToRetur
 				if(lonDegrees != NULL)
 					free(lonDegrees); 
 				free(latOffset); free(lonOffset);	
+				status = 400; 	
 				goto bad_precision;
 			}
 		}
@@ -219,6 +248,8 @@ int heatmap_controller(const struct http_request * request, char * stringToRetur
 	ERR_LABEL_STRING_TO_RETURN(mh_badlon, LONGITUDE_OUT_OF_RANGE_ERR)
 	ERR_LABEL_STRING_TO_RETURN(mh_bothOffsets, BOTH_OFFSET_ERR)
 	ERR_LABEL_STRING_TO_RETURN(bad_precision, PRECISION_ERR)
+	ERR_LABEL_STRING_TO_RETURN(mh_badlatoffset, "bad lat offset")
+	ERR_LABEL_STRING_TO_RETURN(mh_badlonoffset, "bad lon offset")
 
 }
 
