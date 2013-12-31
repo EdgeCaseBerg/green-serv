@@ -21,6 +21,7 @@ int main(){
 	int status;
 	MYSQL * conn;
 	struct gs_marker testMarker; 
+	struct gs_comment testComment;
 	Decimal latitude;
    	Decimal longitude;
    	_shared_campaign_id = 1;
@@ -53,8 +54,15 @@ int main(){
    	latitude = createDecimalFromString( "-44.050");
 	longitude= createDecimalFromString( "-44.70");
    
+
+	gs_comment_ZeroStruct(&testComment);
+   	gs_comment_setContent("Test Comment", &testComment);
+   	gs_comment_setScopeId(CAMPAIGN_ID, &testComment);
+	   
+   	db_insertComment(&testComment,conn);
+
 	gs_marker_ZeroStruct(&testMarker);
-	gs_marker_setCommentId(73, &testMarker);
+	gs_marker_setCommentId(testComment.id, &testMarker);
 	gs_marker_setScopeId(CAMPAIGN_ID, &testMarker);
 	gs_marker_setLongitude(longitude, &testMarker);
 	gs_marker_setLatitude(latitude, &testMarker);
