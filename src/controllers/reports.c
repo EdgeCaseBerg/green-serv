@@ -48,7 +48,7 @@ int report_controller(const struct http_request * request, char * stringToReturn
 	if(numParams > 0){
 		if(sm_exists(sm,"page") == 1){
 			sm_get(sm, "page", tempBuf, sizeof tempBuf);
-			if(strtod(tempBuf,convertSuccess) != 0 && convertSuccess == NULL)
+			if(strtod(tempBuf,convertSuccess) != 0 && convertSuccess == NULL && strncasecmp(tempBuf, "nan", 3) != 0)
 				page = atoi(tempBuf);
 			else{
 				status = 422;

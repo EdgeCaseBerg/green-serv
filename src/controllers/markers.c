@@ -77,7 +77,7 @@ int marker_controller(const struct http_request * request, char * stringToReturn
 		/* Collect any parameters and convert them to the proper types */
 		if (sm_exists(sm,"latdegrees")==1) {
 			sm_get(sm,"latdegrees",tempBuf,sizeof tempBuf);
-			if(strtod(tempBuf,convertSuccess) != 0 && convertSuccess == NULL)
+			if(strtod(tempBuf,convertSuccess) != 0 && convertSuccess == NULL && strncasecmp(tempBuf, "nan", 3) != 0)
 				(*latDegrees) = createDecimalFromString(tempBuf);
 			else{
 				sm_delete(sm);
@@ -96,7 +96,7 @@ int marker_controller(const struct http_request * request, char * stringToReturn
 		if (sm_exists(sm,"latoffset")==1) {
 			sm_get(sm,"latoffset", tempBuf, sizeof tempBuf);
 			/* Validate the numericness of the offset */
-			if(strtod(tempBuf,convertSuccess) != 0 && convertSuccess == NULL)
+			if(strtod(tempBuf,convertSuccess) != 0 && convertSuccess == NULL && strncasecmp(tempBuf, "nan", 3) != 0)
 				(*latOffset) = createDecimalFromString(tempBuf);
 			else{
 				status = 400;
@@ -109,7 +109,7 @@ int marker_controller(const struct http_request * request, char * stringToReturn
 		}
 		if (sm_exists(sm,"londegrees")==1) {
 			sm_get(sm,"londegrees",tempBuf,sizeof tempBuf);
-			if(strtod(tempBuf,convertSuccess) != 0 && convertSuccess == NULL)
+			if(strtod(tempBuf,convertSuccess) != 0 && convertSuccess == NULL && strncasecmp(tempBuf, "nan", 3) != 0)
 				(*lonDegrees) = createDecimalFromString(tempBuf);
 			else{
 				status = 400;
@@ -124,7 +124,7 @@ int marker_controller(const struct http_request * request, char * stringToReturn
 		if (sm_exists(sm,"lonoffset")==1) {
 			sm_get(sm,"lonoffset", tempBuf, sizeof tempBuf);
 			convertSuccess = NULL;	
-			if(strtod(tempBuf,convertSuccess) != 0 && convertSuccess == NULL)
+			if(strtod(tempBuf,convertSuccess) != 0 && convertSuccess == NULL && strncasecmp(tempBuf, "nan", 3) != 0)
 				(*lonOffset) = createDecimalFromString(tempBuf);
 			else{
 				status = 400;
@@ -138,7 +138,7 @@ int marker_controller(const struct http_request * request, char * stringToReturn
 
 		if(sm_exists(sm, "page") == 1)
 			if(sm_get(sm, "page", tempBuf, sizeof tempBuf) == 1){
-				if(strtod(tempBuf,convertSuccess) != 0 && convertSuccess == NULL)
+				if(strtod(tempBuf,convertSuccess) != 0 && convertSuccess == NULL && strncasecmp(tempBuf, "nan", 3) != 0)
 					page = atoi(tempBuf);
 				else
 					page = -1;
@@ -225,7 +225,7 @@ int marker_controller(const struct http_request * request, char * stringToReturn
 				goto mc_missing_key;
 			}
 			sm_get(sm, "id", tempBuf, sizeof tempBuf);
-			if(strtod(tempBuf,convertSuccess) != 0 && convertSuccess == NULL)
+			if(strtod(tempBuf,convertSuccess) != 0 && convertSuccess == NULL && strncasecmp(tempBuf, "nan", 3) != 0)
 				id = atol(tempBuf);
 			else{
 				status = 422;
@@ -245,7 +245,7 @@ int marker_controller(const struct http_request * request, char * stringToReturn
 				goto mc_missing_key;
 			}
 			sm_get(sm, "id", tempBuf, sizeof tempBuf);
-			if(strtod(tempBuf,convertSuccess) != 0 && convertSuccess == NULL)
+			if(strtod(tempBuf,convertSuccess) != 0 && convertSuccess == NULL && strncasecmp(tempBuf, "nan", 3) != 0)
 				id = atol(tempBuf);
 			else{
 				status = 422;
@@ -443,7 +443,7 @@ int marker_post(char * buffer, int buffSize, const struct http_request * request
 		gs_comment_setContent(valBuffer,&assocComment);
 
 		sm_get(sm,"londegrees",valBuffer,sizeof valBuffer);
-		if(! ( strtod(valBuffer,convertSuccess) != 0 && convertSuccess == NULL ) ){
+		if(! ( strtod(valBuffer,convertSuccess) != 0 && convertSuccess == NULL && strncasecmp(valBuffer, "nan", 3) != 0) ){
 			sm_delete(sm);
 			snprintf(buffer, buffSize, ERROR_STR_FORMAT, 400, NAN_LONGITUDE);
 			return 400;
@@ -458,7 +458,7 @@ int marker_post(char * buffer, int buffSize, const struct http_request * request
 		gs_marker_setLongitude(longitude, &marker);
 
 		sm_get(sm,"latdegrees",valBuffer,sizeof valBuffer);
-		if(! ( strtod(valBuffer,convertSuccess) != 0 && convertSuccess == NULL ) ){
+		if(! ( strtod(valBuffer,convertSuccess) != 0 && convertSuccess == NULL && strncasecmp(valBuffer, "nan", 3) != 0) ){
 			sm_delete(sm);
 			snprintf(buffer, buffSize, ERROR_STR_FORMAT, 400, NAN_LATITUDE);
 			return 400;

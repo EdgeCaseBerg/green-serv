@@ -119,7 +119,7 @@ int heatmap_controller(const struct http_request * request, char * stringToRetur
 		}
 		if( sm_exists(sm, "lonoffset") == 1){
 			sm_get(sm,"lonoffset",tempBuf,sizeof tempBuf);
-			if(strtod(tempBuf,convertSuccess) != 0 && convertSuccess == NULL)
+			if(strtod(tempBuf,convertSuccess) != 0 && convertSuccess == NULL && strncasecmp(tempBuf, "nan", 3) != 0)
 				(*lonOffset) = createDecimalFromString(tempBuf);
 			else{
 				sm_delete(sm);
@@ -132,7 +132,7 @@ int heatmap_controller(const struct http_request * request, char * stringToRetur
 		}
 		if( sm_exists(sm, "latoffset") == 1){
 			sm_get(sm,"latoffset",tempBuf,sizeof tempBuf);
-			if(strtod(tempBuf,convertSuccess) != 0 && convertSuccess == NULL)
+			if(strtod(tempBuf,convertSuccess) != 0 && convertSuccess == NULL && strncasecmp(tempBuf, "nan", 3) != 0)
 				(*latOffset) = createDecimalFromString(tempBuf);
 			else{
 				sm_delete(sm);
@@ -145,7 +145,7 @@ int heatmap_controller(const struct http_request * request, char * stringToRetur
 		}
 		if( sm_exists(sm, "precision") == 1){
 			sm_get(sm,"precision",tempBuf, sizeof tempBuf);
-			if(strtod(tempBuf,convertSuccess) != 0 && convertSuccess == NULL){
+			if(strtod(tempBuf,convertSuccess) != 0 && convertSuccess == NULL && strncasecmp(tempBuf, "nan", 3) != 0){
 				precision = strtod(tempBuf,convertSuccess);
 				if(precision < 0)
 					goto hop;
@@ -450,7 +450,7 @@ int heatmap_put(char * buffer, int buffSize, const struct http_request * request
 						snprintf(buffer, buffSize, ERROR_STR_FORMAT, 422, NULL_LONGITUDE);
 						return 422;
 					}
-					if(strtod(valBuffer,convertSuccess) != 0 && convertSuccess == NULL)
+					if(strtod(valBuffer,convertSuccess) != 0 && convertSuccess == NULL && strncasecmp(valBuffer, "nan", 3) != 0)
 						longitude = createDecimalFromString(valBuffer);
 					else{
 						sm_delete(sm);
@@ -469,7 +469,7 @@ int heatmap_put(char * buffer, int buffSize, const struct http_request * request
 						snprintf(buffer, buffSize, ERROR_STR_FORMAT, 422, NULL_LATITUDE);
 						return 422;
 					}
-					if(strtod(valBuffer,convertSuccess) != 0 && convertSuccess == NULL)
+					if(strtod(valBuffer,convertSuccess) != 0 && convertSuccess == NULL && strncasecmp(valBuffer, "nan", 3) != 0)
 						latitude = createDecimalFromString( valBuffer);
 					else{
 						sm_delete(sm);
@@ -505,7 +505,7 @@ int heatmap_put(char * buffer, int buffSize, const struct http_request * request
 						snprintf(buffer, buffSize, ERROR_STR_FORMAT, 422, NULL_SECONDS);
 						return 422;
 					}
-					if(strtod(valBuffer,convertSuccess) != 0 && convertSuccess == NULL)
+					if(strtod(valBuffer,convertSuccess) != 0 && convertSuccess == NULL && strncasecmp(valBuffer, "nan", 3) != 0 )
 						intensity = strtol(valBuffer,NULL,10);
 					else{
 						sm_delete(sm);

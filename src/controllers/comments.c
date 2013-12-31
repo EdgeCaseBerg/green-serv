@@ -279,7 +279,7 @@ int comment_post(char * buffer, int buffSize, const struct http_request * reques
 	gs_comment_setContent(keyBuffer, &insComment);
 	if(sm_exists(sm, "pin")){
 		sm_get(sm, "pin",keyBuffer,sizeof keyBuffer);
-		if(strtod(keyBuffer,convertSuccess) != 0 && convertSuccess == NULL){
+		if(strtod(keyBuffer,convertSuccess) != 0 && convertSuccess == NULL && strncasecmp(keyBuffer, "nan",3) != 0){
 			gs_comment_setPinId(atol(keyBuffer),&insComment);
 		}else{
 			/* NaN */
@@ -331,7 +331,7 @@ int comment_delete(char * buffer, int buffSize, const struct http_request * requ
 		return 422;
 	}
 	sm_get(sm, "id", buffer, sizeof buffer);
-	if(strtold(buffer,convertSuccess) != 0 && convertSuccess == NULL)
+	if(strtold(buffer,convertSuccess) != 0 && convertSuccess == NULL && strncasecmp(buffer, "nan",3) != 0)
 		id = atol(buffer);
 	else{
 		sm_delete(sm);
