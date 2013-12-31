@@ -1,3 +1,4 @@
+#define GREEN_SERV 1
 #include <unistd.h>
 #include "controllers/markers.h"
 #include "network/router.h"
@@ -8,7 +9,7 @@
 		fprintf(stdout, "." );\
 	else{\
 		fprintf(stdout, "F" );\
-		fprintf(stderr, "PUT PINS: Expected status of %d, recieved %d. %s (%s::%d)\n", expected,status, errmessage,__FILE__,__LINE__ );\
+		fprintf(stderr, "PUT PINS: Expected status of %d, recieved %d. %s (%s::%d)\n%s\n", expected,status, errmessage,__FILE__,__LINE__, stringToReturn );\
 	}
 
 
@@ -31,6 +32,7 @@ int main(){
 		close(STDERR_FILENO);
 	  	return 1;
    	}
+   	_shared_campaign_id =1 ;
 	
 
 	latitude = createDecimalFromString( "-44.050");
@@ -48,7 +50,7 @@ int main(){
    
 	gs_marker_ZeroStruct(&testMarker);
 
-	gs_marker_setCommentId(1, &testMarker);
+	gs_marker_setCommentId(testComment.id, &testMarker);
 	gs_marker_setScopeId(CAMPAIGN_ID, &testMarker);
 	gs_marker_setLongitude(longitude, &testMarker);
 	gs_marker_setLatitude(latitude, &testMarker);
@@ -77,7 +79,7 @@ int main(){
 
 	sprintf(request.url, "/api/pins?id=derp");
 	status = marker_controller(&request, stringToReturn, 1000);
-	EXPECTED(422,status, "Expected valid request")
+	EXPECTED(422,status, "Should fail due to id being non-numeric")
 
 	sprintf(request.url, "/api/pins?id=%ld", testMarker.id);
 	request.data = "";

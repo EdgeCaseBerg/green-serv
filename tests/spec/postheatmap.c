@@ -1,3 +1,4 @@
+#define GREEN_SERV 1
 #include <unistd.h>
 #include "controllers/heatmaps.h"
 
@@ -6,6 +7,7 @@ int main(){
 	char * stringToReturn;
 	struct http_request request;
 	int status;
+	_shared_campaign_id =1;
 
 	
 	sprintf(request.url, "/api/heatmap");

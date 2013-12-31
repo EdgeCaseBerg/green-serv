@@ -1,3 +1,4 @@
+#define GREEN_SERV 1
 #include "config.h"
 #include <unistd.h>
 #include "controllers/comments.h"
@@ -7,7 +8,7 @@
 		fprintf(stdout, "." );\
 	else{\
 		fprintf(stdout, "F" );\
-		fprintf(stderr, "POST COMMENT: Expected status of %d, recieved %d. %s (%s::%d)\n", expected,status, errmessage, __FILE__, __LINE__ );\
+		fprintf(stderr, "POST COMMENT: Expected status of %d, recieved %d. %s (%s::%d)\n%s\n", expected,status, errmessage, __FILE__, __LINE__, stringToReturn );\
 	}
 
 #define SETDATA(datum) \
@@ -20,8 +21,10 @@ int main(){
 	int status;
 	MYSQL * conn;
 	struct gs_marker testMarker; 
+	struct gs_comment testComment;
 	Decimal latitude;
    	Decimal longitude;
+   	_shared_campaign_id = 1;
 
 	char * valid1 = "{\"type\":\"COMMENT\", \"message\":\"test message from post comments\"}";
 	char * valid2 = "{\"type\":\"MARKER\", \"message\":\"test message from post comments\"}";
@@ -35,7 +38,7 @@ int main(){
 	char * invalidType = "{\"type\":\"Invalid\", \"message\":\"test message from post comments\"}";
 	char * invalidPin = "{\"type\":\"COMMENT\", \"message\":\"test message from post comments\", \"pin\" : abc}";
 	char * emptyMsg = "{\"type\":\"COMMENT\", \"message\":\"\"}";
-	char * msgTooLarge = "\"type\":\"COMMENT\", \"message\":\"abcdefghijklmnopqrstuvwxyz01234567890abcdefghijklmnopqrstuvwxyz01234567890abcdefghijklmnopqrstuvwxyz01234567890abcdefghijklmnopqrstuvwxyz01234567890\"}";
+	char * msgTooLarge = "{\"type\":\"COMMENT\", \"message\":\"abcdefghijklmnopqrstuvwxyz01234567890abcdefghijklmnopqrstuvwxyz01234567890abcdefghijklmnopqrstuvwxyz0123456stuvwxyz01234567890abcdefghijklmnopqrstuvwxyz01234567890abcdefghijklmnopqrstuvwxyz01234567890abcdefghijklmnopqrstuvwxyz01234567890\"}";
 
 
 	conn = _getMySQLConnection();
@@ -51,8 +54,15 @@ int main(){
    	latitude = createDecimalFromString( "-44.050");
 	longitude= createDecimalFromString( "-44.70");
    
+
+	gs_comment_ZeroStruct(&testComment);
+   	gs_comment_setContent("Test Comment", &testComment);
+   	gs_comment_setScopeId(CAMPAIGN_ID, &testComment);
+	   
+   	db_insertComment(&testComment,conn);
+
 	gs_marker_ZeroStruct(&testMarker);
-	gs_marker_setCommentId(1, &testMarker);
+	gs_marker_setCommentId(testComment.id, &testMarker);
 	gs_marker_setScopeId(CAMPAIGN_ID, &testMarker);
 	gs_marker_setLongitude(longitude, &testMarker);
 	gs_marker_setLatitude(latitude, &testMarker);

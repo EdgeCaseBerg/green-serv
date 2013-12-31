@@ -1,3 +1,4 @@
+#define GREEN_SERV 1
 #include <unistd.h>
 #include "controllers/heatmaps.h"
 #include "network/router.h"
@@ -7,7 +8,7 @@
 		fprintf(stdout, "." );\
 	else{\
 		fprintf(stdout, "F" );\
-		fprintf(stderr, "GET HEATMAP: Expected status of %d, recieved %d. %s (%s::%d)\n", expected,status, errmessage, __FILE__, __LINE__ );\
+		fprintf(stderr, "GET HEATMAP: Expected status of %d, recieved %d. %s (%s::%d)\n%s\n", expected,status, errmessage, __FILE__, __LINE__, stringToReturn );\
 	}
 
 int main(){
@@ -17,6 +18,7 @@ int main(){
 	int size = 1000;
 	stringToReturn = malloc(size);
 	request.method = GET;
+	_shared_campaign_id = 1;
 	
 	sprintf(request.url, "/api/heatmap");
 	status = heatmap_controller(&request, stringToReturn, size);
@@ -99,7 +101,7 @@ int main(){
 	EXPECTED(422, status, "lonDegrees out of bounds (positive)")
 	
 
-	sprintf(request.url, "/api/heatmap?latDegrees=nan");
+	sprintf(request.url, "/api/heatmap?latDegrees=nasn");
 	status = heatmap_controller(&request, stringToReturn, size);
 	EXPECTED(400, status, "non-numeric latDegrees")
 	

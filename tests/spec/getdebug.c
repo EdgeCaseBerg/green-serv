@@ -1,3 +1,4 @@
+#define GREEN_SERV 1
 #include <unistd.h>
 #include "controllers/reports.h"
 #include "models/report.h"
@@ -8,7 +9,7 @@
 		fprintf(stdout, "." );\
 	else{\
 		fprintf(stdout, "F" );\
-		fprintf(stderr, "GET DEBUG: Expected status of %d, recieved %d. %s (%s::%d)\n", expected,status, errmessage,__FILE__,__LINE__ );\
+		fprintf(stderr, "GET DEBUG: Expected status of %d, recieved %d. %s (%s::%d)\n%s\n", expected,status, errmessage,__FILE__,__LINE__,stringToReturn );\
 	}
 
 
@@ -35,7 +36,7 @@ int main(){
 		close(STDERR_FILENO);
 	  	return 1;
    	}
-   	db_start_transaction(conn);
+   	_shared_campaign_id = 1;
 
 	gs_report_ZeroStruct(&testReport);
 
@@ -67,7 +68,7 @@ int main(){
 	status = report_controller(&request, stringToReturn, size);
 	EXPECTED(200,status, "Should have succeeded with valid hash to retrieve")
 
-	sprintf(request.url, "/api/debug?since=2013-12-13-00:00?page=1");
+	sprintf(request.url, "/api/debug?since=2013-12-13-00:00&page=1");
 	status = report_controller(&request, stringToReturn, size);
 	EXPECTED(200,status, "Should have succeeded with page and since parameters")	
 
@@ -77,11 +78,11 @@ int main(){
 	status = report_controller(&request, stringToReturn, size);
 	EXPECTED(404,status, "Should not have found any report by this hash")
 
-	sprintf(request.url, "/api/debug?hash=3?page=1");
+	sprintf(request.url, "/api/debug?hash=3&page=1");
 	status = report_controller(&request, stringToReturn, size);
 	EXPECTED(422,status, "Hash and page parameters should be mutually exclusive")	
 
-	sprintf(request.url, "/api/debug?since=2013-12-13-00:00?page=failed");
+	sprintf(request.url, "/api/debug?since=2013-12-13-00:00&page=failed");
 	status = report_controller(&request, stringToReturn, size);
 	EXPECTED(422,status, "Should fail with invalid page parameter")	 /* 422? why not 400, spec you so crazy */
 
@@ -90,8 +91,6 @@ int main(){
 	EXPECTED(400,status, "Should not have parsed since time")	
 
 
-	db_abort_transaction(conn);
-   	db_end_transaction(conn);
 	mysql_close(conn);
 	mysql_library_end();
 

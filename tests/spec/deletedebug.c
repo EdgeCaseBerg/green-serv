@@ -1,3 +1,4 @@
+#define GREEN_SERV 1
 #include "config.h"
 #include <unistd.h>
 #include "controllers/reports.h"
@@ -7,7 +8,7 @@
 		fprintf(stdout, "." );\
 	else{\
 		fprintf(stdout, "F" );\
-		fprintf(stderr, "DELETE DEBUG: Expected status of %d, recieved %d. %s (%s::%d)\n", expected,status, errmessage, __FILE__, __LINE__ );\
+		fprintf(stderr, "DELETE DEBUG: Expected status of %d, recieved %d. %s (%s::%d)\n%s\n", expected,status, errmessage,__FILE__,__LINE__, stringToReturn );\
 	}
 
 int main(){
@@ -25,6 +26,7 @@ int main(){
 		close(STDERR_FILENO);
 	  	return 1;
    	}
+   	_shared_campaign_id =1 ;
    		
    	gs_report_ZeroStruct(&testReport); 	
 

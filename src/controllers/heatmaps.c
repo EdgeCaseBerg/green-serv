@@ -91,27 +91,55 @@ int heatmap_controller(const struct http_request * request, char * stringToRetur
 		}
 		if( sm_exists(sm,"latdegrees") == 1){
 			sm_get(sm,"latdegrees",tempBuf,sizeof tempBuf);
-			(*latDegrees) = createDecimalFromString(tempBuf);
+			if(strtod(tempBuf,convertSuccess) != 0 && convertSuccess == NULL && strncasecmp(tempBuf, "nan", 3) != 0)
+				(*latDegrees) = createDecimalFromString(tempBuf);
+			else{
+				sm_delete(sm);
+				status = 400;
+				free(buffer); free(latDegrees); free(lonDegrees); free(latOffset); free(lonOffset);	
+				goto mh_badlat;
+			}
 		}else{
 			free(latDegrees);
 			latDegrees = NULL;
 		}
 		if( sm_exists(sm, "londegrees") == 1){
 			sm_get(sm,"londegrees",tempBuf,sizeof tempBuf);
-			(*lonDegrees) = createDecimalFromString(tempBuf);
+			if(strtod(tempBuf,convertSuccess) != 0 && convertSuccess == NULL && strncasecmp(tempBuf, "nan", 3) != 0)
+				(*lonDegrees) = createDecimalFromString(tempBuf);
+			else{
+				sm_delete(sm);
+				status = 400;
+				free(buffer); free(latDegrees); free(lonDegrees); free(latOffset); free(lonOffset);	
+				goto mh_badlon;
+			}
 		}else{
 			free(lonDegrees);
 			lonDegrees = NULL;
 		}
 		if( sm_exists(sm, "lonoffset") == 1){
 			sm_get(sm,"lonoffset",tempBuf,sizeof tempBuf);
-			(*lonOffset) = createDecimalFromString(tempBuf);
+			if(strtod(tempBuf,convertSuccess) != 0 && convertSuccess == NULL)
+				(*lonOffset) = createDecimalFromString(tempBuf);
+			else{
+				sm_delete(sm);
+				status = 400;
+				free(buffer); free(latDegrees); free(lonDegrees); free(latOffset); free(lonOffset);	
+				goto mh_badlonoffset;	
+			}
 		} else {
 			(*lonOffset) = createDecimalFromString(DEFAULT_OFFSET);
 		}
 		if( sm_exists(sm, "latoffset") == 1){
 			sm_get(sm,"latoffset",tempBuf,sizeof tempBuf);
-			(*latOffset) = createDecimalFromString(tempBuf);
+			if(strtod(tempBuf,convertSuccess) != 0 && convertSuccess == NULL)
+				(*latOffset) = createDecimalFromString(tempBuf);
+			else{
+				sm_delete(sm);
+				status = 400;
+				free(buffer); free(latDegrees); free(lonDegrees); free(latOffset); free(lonOffset);	
+				goto mh_badlatoffset;	
+			}
 		} else {
 			(*latOffset) = createDecimalFromString(DEFAULT_OFFSET);
 		}
@@ -130,6 +158,7 @@ int heatmap_controller(const struct http_request * request, char * stringToRetur
 				if(lonDegrees != NULL)
 					free(lonDegrees); 
 				free(latOffset); free(lonOffset);	
+				status = 400; 	
 				goto bad_precision;
 			}
 		}
@@ -219,6 +248,8 @@ int heatmap_controller(const struct http_request * request, char * stringToRetur
 	ERR_LABEL_STRING_TO_RETURN(mh_badlon, LONGITUDE_OUT_OF_RANGE_ERR)
 	ERR_LABEL_STRING_TO_RETURN(mh_bothOffsets, BOTH_OFFSET_ERR)
 	ERR_LABEL_STRING_TO_RETURN(bad_precision, PRECISION_ERR)
+	ERR_LABEL_STRING_TO_RETURN(mh_badlatoffset, "bad lat offset")
+	ERR_LABEL_STRING_TO_RETURN(mh_badlonoffset, "bad lon offset")
 
 }
 
@@ -332,9 +363,11 @@ int heatmap_put(char * buffer, int buffSize, const struct http_request * request
 	Decimal latitude;
 	struct mNode * lhead;
 	struct mNode * ltail;
+	char **convertSuccess;
 
 	lhead = NULL;
 	ltail  =NULL;
+	convertSuccess = NULL;
 	bzero(keyBuffer,sizeof keyBuffer);
 	bzero(valBuffer,sizeof valBuffer);
 	
@@ -344,6 +377,12 @@ int heatmap_put(char * buffer, int buffSize, const struct http_request * request
 	if(sm == NULL){
 		fprintf(stderr, "sm err\n");
 		return -1;
+	}
+
+	if( validateJSON( request->data, request->contentLength ) == 0 ){
+		sm_delete(sm);
+		snprintf(buffer, buffSize, ERROR_STR_FORMAT, 400, MALFORMED_JSON);
+		return 400;
 	}
 
 	numberHeatmapsSent = 0;
@@ -388,36 +427,57 @@ int heatmap_put(char * buffer, int buffSize, const struct http_request * request
                 	numberHeatmapsSent++; /* Increase for each key val pair we find, then divide by 3 later */
             }
             /* Check if we have a full and valid point yet */
-            if(sm_exists(sm, "secondsworked") == 1 && sm_exists(sm,"latdegrees") == 1 && sm_exists(sm,"londegrees") ==1 ){
-            	heatmap = malloc(sizeof (struct gs_heatmap));
-            	if(heatmap == NULL){
-            		sm_delete(sm);
-            		if(lhead != NULL)
-            			destroy_list(lhead);
-            		return -1;
-            	}
-            	gs_heatmap_ZeroStruct(heatmap);
+        	if( numberHeatmapsSent % 3 == 0 ){
+            	if(sm_exists(sm, "secondsworked") == 1 && sm_exists(sm,"latdegrees") == 1 && sm_exists(sm,"londegrees") ==1 ){
+	            	heatmap = malloc(sizeof (struct gs_heatmap));
+	            	if(heatmap == NULL){
+	            		sm_delete(sm);
+	            		if(lhead != NULL)
+	            			destroy_list(lhead);
+	            		return -1;
+	            	}
+	            	gs_heatmap_ZeroStruct(heatmap);
 
-            	/* Verify that the data is valid */
-				if(	sm_exists(sm, "secondsworked") 	!=1 || 
-					sm_exists(sm, "latdegrees") 	!=1 ||
-					sm_exists(sm, "londegrees") 	!=1 ){
-					
-					sm_delete(sm);
-					if(lhead != NULL)
-            			destroy_list(lhead);
-					snprintf(buffer,buffSize,ERROR_STR_FORMAT,400,KEYS_MISSING);
-					return 400;		
-				}else{		
+	            							
 					/* _shared_campaign_id is a global inherited from green-serv.c */
 					gs_heatmap_setScopeId(_shared_campaign_id, heatmap);		
 
 					sm_get(sm,"londegrees",valBuffer,sizeof valBuffer);
-					longitude = createDecimalFromString(valBuffer);
+					if( strncasecmp(valBuffer,"null",4) == 0 ){
+						sm_delete(sm);
+						if(lhead != NULL)
+							destroy_list(lhead);
+						snprintf(buffer, buffSize, ERROR_STR_FORMAT, 422, NULL_LONGITUDE);
+						return 422;
+					}
+					if(strtod(valBuffer,convertSuccess) != 0 && convertSuccess == NULL)
+						longitude = createDecimalFromString(valBuffer);
+					else{
+						sm_delete(sm);
+						if(lhead != NULL)
+							destroy_list(lhead);
+						snprintf(buffer, buffSize, ERROR_STR_FORMAT, 400, NAN_LONGITUDE);
+						return 400;
+					}
 					gs_heatmap_setLongitude(longitude, heatmap);
 
 					sm_get(sm,"latdegrees",valBuffer,sizeof valBuffer);
-					latitude = createDecimalFromString( valBuffer);
+					if( strncasecmp(valBuffer,"null",4) == 0 ){
+						sm_delete(sm);
+						if(lhead != NULL)
+							destroy_list(lhead);
+						snprintf(buffer, buffSize, ERROR_STR_FORMAT, 422, NULL_LATITUDE);
+						return 422;
+					}
+					if(strtod(valBuffer,convertSuccess) != 0 && convertSuccess == NULL)
+						latitude = createDecimalFromString( valBuffer);
+					else{
+						sm_delete(sm);
+						if(lhead != NULL)
+							destroy_list(lhead);
+						snprintf(buffer, buffSize, ERROR_STR_FORMAT, 400, NAN_LATITUDE);
+						return 400;
+					}
 					gs_heatmap_setLatitude(latitude, heatmap);
 
 					/* Check latitude and longitude ranges */
@@ -425,37 +485,52 @@ int heatmap_put(char * buffer, int buffSize, const struct http_request * request
 						sm_delete(sm);
 						if(lhead != NULL)
             				destroy_list(lhead);
-						snprintf(buffer,buffSize,ERROR_STR_FORMAT,400,LATITUDE_OUT_OF_RANGE_ERR);
-						return 400;
+						snprintf(buffer,buffSize,ERROR_STR_FORMAT,422,LATITUDE_OUT_OF_RANGE_ERR);
+						return 422;
 					}
 
 					if(!(-180L <= longitude && longitude <= 180L)){
 						sm_delete(sm);
 						if(lhead != NULL)
             				destroy_list(lhead);
-						snprintf(buffer,buffSize,ERROR_STR_FORMAT,400,LONGITUDE_OUT_OF_RANGE_ERR);
+						snprintf(buffer,buffSize,ERROR_STR_FORMAT,422,LONGITUDE_OUT_OF_RANGE_ERR);
+						return 422;
+					}
+					
+					sm_get(sm,"secondsworked", valBuffer, sizeof valBuffer);
+					if( strncasecmp(valBuffer,"null",4) == 0 ){
+						sm_delete(sm);
+						if(lhead != NULL)
+							destroy_list(lhead);
+						snprintf(buffer, buffSize, ERROR_STR_FORMAT, 422, NULL_SECONDS);
+						return 422;
+					}
+					if(strtod(valBuffer,convertSuccess) != 0 && convertSuccess == NULL)
+						intensity = strtol(valBuffer,NULL,10);
+					else{
+						sm_delete(sm);
+						if(lhead != NULL)
+							destroy_list(lhead);
+						snprintf(buffer, buffSize, ERROR_STR_FORMAT, 400, BAD_INTENSITY_ERR);
 						return 400;
 					}
-
-					sm_get(sm,"secondsworked", valBuffer, sizeof valBuffer);
-					intensity = strtol(valBuffer,NULL,10);
 					if(intensity > 0L)
 						gs_heatmap_setIntensity(intensity, heatmap);
 					else{
 						if(intensity <= 0 ){
 							sm_delete(sm);
-							snprintf(buffer,buffSize,ERROR_STR_FORMAT,400,BAD_INTENSITY_ERR);
-							if(lhead != NULL)
-            					destroy_list(lhead);
-							return 400;		
-					}else{
-							sm_delete(sm);
 							snprintf(buffer,buffSize,ERROR_STR_FORMAT,422,BAD_INTENSITY_NEG_ERR);
 							if(lhead != NULL)
             					destroy_list(lhead);
-							return 422;	
-						}	
+							return 422;		
+						}
 					}
+				} else {
+					sm_delete(sm);
+					if(lhead != NULL)
+	            		destroy_list(lhead);
+					snprintf(buffer,buffSize,ERROR_STR_FORMAT,400,KEYS_MISSING);
+					return 400;		
 				}
 
 				if(lhead == NULL)

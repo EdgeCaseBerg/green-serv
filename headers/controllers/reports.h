@@ -48,6 +48,15 @@
 	#ifndef ORIGIN_NOT_ALLOWED
 		#define ORIGIN_NOT_ALLOWED "You do not have permission to delete this report"
 	#endif
+	#ifndef MALFORMED_JSON
+		#define MALFORMED_JSON "Could not parse JSON"
+	#endif
+	#ifndef ORIGIN_REQUIRED
+		#define ORIGIN_REQUIRED "Origin parameter must be present"
+	#endif
+	#ifndef HASH_REQUIRED
+		#define HASH_REQUIRED "Hash parameter must be present"
+	#endif
 
 	
 	int report_controller(const struct http_request * request, char * stringToReturn, int strLength);

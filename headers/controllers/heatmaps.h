@@ -42,14 +42,23 @@
 	#ifndef LATITUDE_OUT_OF_RANGE_ERR
 		#define LATITUDE_OUT_OF_RANGE_ERR "Latitude must be within -90 and 90 degrees"
 	#endif
+	#ifndef NAN_LATITUDE
+		#define NAN_LATITUDE "Latitude must be a numeric value"
+	#endif
 	#ifndef LONGITUDE_OUT_OF_RANGE_ERR
 		#define LONGITUDE_OUT_OF_RANGE_ERR "Longitude must be within -180 and 180 degrees"
+	#endif
+	#ifndef NAN_LONGITUDE
+		#define NAN_LONGITUDE "Longitude must be a numeric value"
 	#endif
 	#ifndef KEYS_MISSING
 		#define KEYS_MISSING "Could not process request due to required keys not being found in data."
 	#endif
 	#ifndef PRECISION_ERR
 		#define PRECISION_ERR "Precision must be an unsigned non-zero integral number"
+	#endif
+	#ifndef MALFORMED_JSON
+		#define MALFORMED_JSON "Bad Request, JSON data not valid"
 	#endif
 	#ifndef FALSE
 		#define FALSE 0
@@ -59,6 +68,15 @@
 	#endif
 	#ifndef DEFAULT_OFFSET
 		#define DEFAULT_OFFSET "0.5"
+	#endif
+	#ifndef NULL_LONGITUDE
+		#define NULL_LONGITUDE "Longitude may not be null"
+	#endif
+	#ifndef NULL_LATITUDE
+		#define NULL_LATITUDE "Latitude may not be null"
+	#endif
+	#ifndef NULL_SECONDS
+		#define NULL_SECONDS "Seconds Worked may not be null"
 	#endif
 
 	int heatmap_controller(const struct http_request * request, char * stringToReturn, int strLength);

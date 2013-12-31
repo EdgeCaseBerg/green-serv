@@ -203,7 +203,7 @@ int comment_post(char * buffer, int buffSize, const struct http_request * reques
 	int i;
 	int empty;
 	char keyBuffer[GS_COMMENT_MAX_LENGTH+5]; /* Add +5 so we can check if the length is beyond its limit */
-	char valBuffer[GS_COMMENT_MAX_LENGTH+1];
+	char valBuffer[GS_COMMENT_MAX_LENGTH+5];
 	char **convertSuccess;
 
 	bzero(keyBuffer,sizeof keyBuffer);
@@ -219,18 +219,23 @@ int comment_post(char * buffer, int buffSize, const struct http_request * reques
 	/*Parse the JSON for the information we desire */
 	parseJSON(request->data,request->contentLength, sm);
 
+	if( validateJSON(request->data, request->contentLength) == 0 ){
+		sm_delete(sm);
+		snprintf(buffer, buffSize, ERROR_STR_FORMAT, 400, MALFORMED_JSON);
+		return 400;		
+	}
+
 	/* Determine if the request is valid or not */
 	if(sm_exists(sm, "type") !=1 || sm_exists(sm, "message") !=1){
 		sm_delete(sm);
-		fprintf(stderr, "required keys not found\n"); /* TODO replace with network logging */
-		snprintf(buffer, buffSize, ERROR_STR_FORMAT, 400, MISSING_KEY_ERR);
-		return 400;		
+		snprintf(buffer, buffSize, ERROR_STR_FORMAT, 422, MISSING_KEY_ERR);
+		return 422;		
 	}else{
 		if(sm_exists(sm,"message") == 1){
 			if(sm_get(sm,"message",keyBuffer, sizeof keyBuffer) == 1){
 				if(strlen(keyBuffer) > GS_COMMENT_MAX_LENGTH){
 					sm_delete(sm);
-					snprintf(buffer, buffSize, ERROR_STR_FORMAT, 422, "Message may not be more than " STRINGIFY(GS_COMMENT_MAX_LENGTH)  " characters long." );
+					snprintf(buffer, buffSize, ERROR_STR_FORMAT, 422, MESSAGE_TOO_LARGE );
 					return 422;
 				}
 			}
@@ -263,6 +268,12 @@ int comment_post(char * buffer, int buffSize, const struct http_request * reques
 		sm_delete(sm);
 		snprintf(buffer, buffSize, ERROR_STR_FORMAT, 422, EMPTY_COMMENT_MESSAGE);
 		return 422;
+	} else {
+		if( strlen(keyBuffer) > GS_COMMENT_MAX_LENGTH ) {
+			sm_delete(sm);
+			snprintf(buffer, buffSize, ERROR_STR_FORMAT, 422,  MESSAGE_TOO_LARGE);
+			return 422;
+		}
 	}
 	
 	gs_comment_setContent(keyBuffer, &insComment);
@@ -305,20 +316,28 @@ int comment_delete(char * buffer, int buffSize, const struct http_request * requ
 	MYSQL *conn;
 	long affected; 
 	long id;
+	char **convertSuccess;
 
 	sm = sm_new(HASH_TABLE_CAPACITY);
 	if(sm == NULL){
 		fprintf(stderr, "sm err\n");
 		return 500;
 	}
+	convertSuccess = NULL;
 	parseURL(request->url, strlen(request->url), sm);
 	if(sm_exists(sm,"id")!=1){
 		sm_delete(sm);
-		snprintf(buffer, buffSize, ERROR_STR_FORMAT, 400, MISSING_ID_KEY);
-		return 400;
+		snprintf(buffer, buffSize, ERROR_STR_FORMAT, 422, MISSING_ID_KEY);
+		return 422;
 	}
 	sm_get(sm, "id", buffer, sizeof buffer);
-	id = atol(buffer);
+	if(strtold(buffer,convertSuccess) != 0 && convertSuccess == NULL)
+		id = atol(buffer);
+	else{
+		sm_delete(sm);
+		snprintf(buffer, buffSize, ERROR_STR_FORMAT, 422, NAN_ID_KEY);
+		return 422;
+	}
 	sm_delete(sm);
 
 	mysql_thread_init();

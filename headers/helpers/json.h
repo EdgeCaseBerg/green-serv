@@ -25,6 +25,7 @@
 
 	#include "helpers/strmap.h"
 	void parseJSON(const char * input, int input_length, StrMap * sm);
+	int validateJSON(const char * input, int input_length);
 
 
 #endif

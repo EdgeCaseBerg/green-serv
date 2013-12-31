@@ -27,7 +27,7 @@
 	#ifndef BAD_PAGE_ERR
 		#define BAD_PAGE_ERR "Page must be a non zero, positive integral value"
 	#endif
-	#ifndef BAD_TYPE_ERR
+	#ifndef BAD_TYPE_ERR 
 		#define BAD_TYPE_ERR "Type must be of " CTYPE_1 "," CTYPE_2 ", or " CTYPE_3
 	#endif
 	#ifndef BAD_METHOD_ERR
@@ -39,6 +39,15 @@
 	#endif
 	#define EMPTY_COMMENT_MESSAGE "Message may not be empty"
 	#define MISSING_PIN_ERR "If pin key present, pin ID must be an integral numeric identifier"
+	#ifndef MALFORMED_JSON
+		#define MALFORMED_JSON "JSON Message cannot be interpreted due to malformed JSON"
+	#endif
+	#ifndef MESSAGE_TOO_LARGE
+		#define MESSAGE_TOO_LARGE "Message may not be more than " STRINGIFY(GS_COMMENT_MAX_LENGTH)  " characters long."
+	#endif
+	#ifndef NAN_ID_KEY
+		#define NAN_ID_KEY "ID must be a numeric identifier"
+	#endif
 
 	int comment_controller(const struct http_request * request, char * stringToReturn, int strLength);
 

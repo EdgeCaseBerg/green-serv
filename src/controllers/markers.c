@@ -4,6 +4,11 @@ static inline int min(const int a, const int b){
 	return a < b ? a : b;
 }
 
+/* Not inclusive */
+static inline int between(const Decimal var, const Decimal low, const Decimal high){
+	return low < var && var < high;
+}
+
 int marker_controller(const struct http_request * request, char * stringToReturn, int strLength){
 	int status;
 	int buffSize;
@@ -72,21 +77,14 @@ int marker_controller(const struct http_request * request, char * stringToReturn
 		/* Collect any parameters and convert them to the proper types */
 		if (sm_exists(sm,"latdegrees")==1) {
 			sm_get(sm,"latdegrees",tempBuf,sizeof tempBuf);
-			(*latDegrees) = createDecimalFromString(tempBuf);
-			/* Offsets only make sense if their parent coordinate is existent */
-			if (sm_exists(sm,"latoffset")==1) {
-				sm_get(sm,"latoffset", tempBuf, sizeof tempBuf);
-				/* Validate the numericness of the offset */
-				if(strtod(tempBuf,convertSuccess) != 0 && convertSuccess == NULL)
-					(*latOffset) = createDecimalFromString(tempBuf);
-				else{
-					sm_delete(sm);
-					free(buffer); free(latDegrees); free(lonDegrees); free(latOffset); free(lonOffset);
-					goto mc_badLatOffset;
-				} 
-			} else {
-				(*latOffset) = createDecimalFromString(DEFAULT_OFFSET);
-			}
+			if(strtod(tempBuf,convertSuccess) != 0 && convertSuccess == NULL)
+				(*latDegrees) = createDecimalFromString(tempBuf);
+			else{
+				sm_delete(sm);
+				free(buffer); free(latDegrees); free(lonDegrees); free(latOffset); free(lonOffset);
+				status = 400;
+				goto mc_badLatitude;
+			}			
 		} else{
 			/* Sensible default for latdegrees is... to become NULL 
 			 * so that we can handle using a different query without 
@@ -95,29 +93,55 @@ int marker_controller(const struct http_request * request, char * stringToReturn
 			free(latDegrees);
 			latDegrees = NULL;
 		}
+		if (sm_exists(sm,"latoffset")==1) {
+			sm_get(sm,"latoffset", tempBuf, sizeof tempBuf);
+			/* Validate the numericness of the offset */
+			if(strtod(tempBuf,convertSuccess) != 0 && convertSuccess == NULL)
+				(*latOffset) = createDecimalFromString(tempBuf);
+			else{
+				status = 400;
+				sm_delete(sm);
+				free(buffer); free(latDegrees); free(lonDegrees); free(latOffset); free(lonOffset);
+				goto mc_badLatOffset;
+			} 
+		} else {
+			(*latOffset) = createDecimalFromString(DEFAULT_OFFSET);
+		}
 		if (sm_exists(sm,"londegrees")==1) {
 			sm_get(sm,"londegrees",tempBuf,sizeof tempBuf);
-			(*lonDegrees) = createDecimalFromString(tempBuf);
-			if (sm_exists(sm,"lonoffset")==1) {
-				sm_get(sm,"lonoffset", tempBuf, sizeof tempBuf);
-				if(strtod(tempBuf,convertSuccess) != 0 && convertSuccess == NULL)
-					(*lonOffset) = createDecimalFromString(tempBuf);
-				else{
-					sm_delete(sm);
-					free(buffer); free(latDegrees); free(lonDegrees); free(latOffset); free(lonOffset);
-					goto mc_badLonOffset;
-				} 
-			} else {
-				(*lonOffset) = createDecimalFromString(DEFAULT_OFFSET);
+			if(strtod(tempBuf,convertSuccess) != 0 && convertSuccess == NULL)
+				(*lonDegrees) = createDecimalFromString(tempBuf);
+			else{
+				status = 400;
+				sm_delete(sm);
+				free(buffer); free(latDegrees); free(lonDegrees); free(latOffset); free(lonOffset);
+				goto mc_badLongitude;
 			}
 		} else {
 			free(lonDegrees);
 			lonDegrees = NULL;
 		}
+		if (sm_exists(sm,"lonoffset")==1) {
+			sm_get(sm,"lonoffset", tempBuf, sizeof tempBuf);
+			convertSuccess = NULL;	
+			if(strtod(tempBuf,convertSuccess) != 0 && convertSuccess == NULL)
+				(*lonOffset) = createDecimalFromString(tempBuf);
+			else{
+				status = 400;
+				sm_delete(sm);
+				free(buffer); free(latDegrees); free(lonDegrees); free(latOffset); free(lonOffset);
+				goto mc_badLonOffset;
+			} 
+		} else {
+			(*lonOffset) = createDecimalFromString(DEFAULT_OFFSET);
+		}
 
 		if(sm_exists(sm, "page") == 1)
 			if(sm_get(sm, "page", tempBuf, sizeof tempBuf) == 1){
-				page = atoi(tempBuf);
+				if(strtod(tempBuf,convertSuccess) != 0 && convertSuccess == NULL)
+					page = atoi(tempBuf);
+				else
+					page = -1;
 				if(page <= 0){
 					status = 400;		
 					sm_delete(sm);
@@ -150,26 +174,25 @@ int marker_controller(const struct http_request * request, char * stringToReturn
 				sm_delete(sm);
 				free(buffer);
 				FREE_NON_NULL_DEGREES_AND_OFFSETS
-				status = 422;
+				status = 400;
 				goto mc_bothOffsets;
 			}
 			if(latDegrees != NULL)
-				/*Let the -90.1 slide by as ok...*/
-				if(*latDegrees < -90L || *latDegrees > 90L){
+				if( ! between(*latDegrees, -91.0, 91.0) ){
 					sm_delete(sm);
 					free(buffer);
 					FREE_NON_NULL_DEGREES_AND_OFFSETS
 					status = 422;
-					goto mc_bothOffsets;		
+					goto mc_oobLatitude;		
 				}
 
 			if(lonDegrees != NULL)
-				if(*lonDegrees < -180L || *lonDegrees > 180L){
+				if( ! between(*lonDegrees, -181L, 181L) ){
 					sm_delete(sm);
 					free(buffer); 
 					FREE_NON_NULL_DEGREES_AND_OFFSETS
 					status = 422;
-					goto mc_bothOffsets;			
+					goto mc_oobLongitude;			
 				}
 			if(sm_exists(sm,"id")!=1){
 				/* Retrieve multiple markers */
@@ -195,26 +218,42 @@ int marker_controller(const struct http_request * request, char * stringToReturn
 			break;
 		case PUT:
 			if(sm_exists(sm,"id")!=1){
-				status = 400;
+				status = 422;
 				sm_delete(sm);
 				free(buffer); 
 				FREE_NON_NULL_DEGREES_AND_OFFSETS
 				goto mc_missing_key;
 			}
 			sm_get(sm, "id", tempBuf, sizeof tempBuf);
-			id = atol(tempBuf);
+			if(strtod(tempBuf,convertSuccess) != 0 && convertSuccess == NULL)
+				id = atol(tempBuf);
+			else{
+				status = 422;
+				sm_delete(sm);
+				free(buffer);
+				FREE_NON_NULL_DEGREES_AND_OFFSETS
+				goto mc_nan_id;
+			}
 			status = marker_address(buffer,buffSize,id,request);
 			break;
 		case DELETE:
 			if(sm_exists(sm,"id")!=1){
-				status = 400;
+				status = 422;
 				sm_delete(sm);
 				free(buffer); 
 				FREE_NON_NULL_DEGREES_AND_OFFSETS
 				goto mc_missing_key;
 			}
 			sm_get(sm, "id", tempBuf, sizeof tempBuf);
-			id = atol(tempBuf);
+			if(strtod(tempBuf,convertSuccess) != 0 && convertSuccess == NULL)
+				id = atol(tempBuf);
+			else{
+				status = 422;
+				sm_delete(sm);
+				free(buffer);
+				FREE_NON_NULL_DEGREES_AND_OFFSETS
+				goto mc_nan_id;
+			}
 			status = marker_delete(buffer, buffSize, id);
 			if(status == -1){
 				sm_delete(sm);
@@ -244,6 +283,11 @@ int marker_controller(const struct http_request * request, char * stringToReturn
 	ERR_LABEL_STRING_TO_RETURN(mc_badLatOffset, BAD_LAT_OFFSET)
 	ERR_LABEL_STRING_TO_RETURN(mc_bothOffsets, BOTH_OFFSET_ERR)
 	ERR_LABEL_STRING_TO_RETURN(mc_badpage, BAD_PAGE_ERR)
+	ERR_LABEL_STRING_TO_RETURN(mc_nan_id, NAN_ID)
+	ERR_LABEL_STRING_TO_RETURN(mc_badLatitude, NAN_LATITUDE)
+	ERR_LABEL_STRING_TO_RETURN(mc_badLongitude, NAN_LONGITUDE)
+	ERR_LABEL_STRING_TO_RETURN(mc_oobLatitude, OOB_LATITUDE)
+	ERR_LABEL_STRING_TO_RETURN(mc_oobLongitude, OOB_LONGITUDE)
 
 }
 
@@ -286,13 +330,11 @@ int marker_address(char * buffer, int buffSize, long id, const struct http_reque
 	if(request->contentLength > 0){
 		charP = strstr(request->data, "addressed");
 		if(charP == NULL){
-			snprintf(buffer, buffSize,ERROR_STR_FORMAT,422,NO_ADDRESSED_KEY);
-			return 422;
+			snprintf(buffer, buffSize,ERROR_STR_FORMAT,400,NO_ADDRESSED_KEY);
+			return 400;
 		} else {
 			/* Key was found, skip the field name and find the value*/
-			fprintf(stderr, "%s\n", charP);
 			charP+=9;
-			fprintf(stderr, "%s\n", charP);
 			boolVal = strstr(charP, "true");
 			if(boolVal == NULL){
 				boolVal = strstr(charP, "false");
@@ -342,20 +384,19 @@ int marker_post(char * buffer, int buffSize, const struct http_request * request
 	struct gs_marker marker;
 	struct gs_comment assocComment;
 	StrMap * sm;
-	int i;
-	int j;
-	int strFlag;
 	char keyBuffer[GS_COMMENT_MAX_LENGTH+1];
 	char valBuffer[GS_COMMENT_MAX_LENGTH+1];
 	Decimal longitude;
 	Decimal latitude;
+	char **convertSuccess;
+
 
 
 	bzero(keyBuffer,sizeof keyBuffer);
 	bzero(valBuffer,sizeof valBuffer);
 	gs_marker_ZeroStruct(&marker);
 	gs_comment_ZeroStruct(&assocComment);
-	strFlag = 0;
+	convertSuccess = NULL;
 
 	sm = sm_new(HASH_TABLE_CAPACITY);
 	if(sm == NULL){
@@ -364,46 +405,8 @@ int marker_post(char * buffer, int buffSize, const struct http_request * request
 	}
 
 	/*Parse the JSON for the information we desire */
-	for(i=0; i < request->contentLength && request->data[i] != '\0'; ++i){
-		/*We're at the start of a string*/
-		if(request->data[i] == '"'){
-			/*Go until we hit the closing qoute*/
-			i++;
-			for(j=0; i < request->contentLength && request->data[i] != '\0' && request->data[i] != '"' && (unsigned int)j < sizeof keyBuffer; ++j,++i){
-				keyBuffer[j] = (int)request->data[i] > 64 && request->data[i] < 91 ? request->data[i] + 32 : request->data[i];
-			}
-			keyBuffer[j] = '\0';
-			/*find the beginning of the value
-			 *which is either a " or a number. So skip spaces and commas
-			*/
-			for(i++; i < request->contentLength && request->data[i] != '\0' && (request->data[i] == ',' || request->data[i] == ' ' || request->data[i] == ':' || request->data[i] == '\n'); ++i)
-				;
-			/*Skip any opening qoute */
-			if(request->data[i] != '\0' && request->data[i] == '"'){
-				i++;
-				strFlag = 1;
-			}
-			for(j=0; i < request->contentLength && request->data[i] != '\0'; ++j,++i){
-				if(strFlag == 0){
-					if(request->data[i] == ' ' || request->data[i] == '\n')
-						break; /*break out if num data*/
-				}else{
-					if(request->data[i] == '"' && request->data[i-1] != '\\')
-						break;
-				}
-				valBuffer[j] = request->data[i];
-			}
-			valBuffer[j] = '\0';
-			/* Skip any closing paren. */
-			if(request->data[i] == '"')
-				i++;
-			if(strlen(keyBuffer) > 0 && strlen(valBuffer) > 0)
-				if(sm_put(sm, keyBuffer, valBuffer) == 0)
-                	fprintf(stderr, "Failed to copy parameters into hash table while parsing url\n");
-		}
-		strFlag = 0;
-	}
-
+	parseJSON(request->data, request->contentLength, sm);
+	
 	/* Verify that the data is valid */
 	if(	sm_exists(sm, "type") 		!=1 || 
 		sm_exists(sm, "message") 	!=1 ||
@@ -422,8 +425,8 @@ int marker_post(char * buffer, int buffSize, const struct http_request * request
 				if(strncasecmp(valBuffer, CTYPE_2,COMMENTS_CTYPE_SIZE) != 0)
 					if(strncasecmp(valBuffer, CTYPE_3,COMMENTS_CTYPE_SIZE) != 0){				
 						sm_delete(sm);
-						snprintf(buffer,buffSize,ERROR_STR_FORMAT,400,BAD_TYPE_ERR);
-						return 400;
+						snprintf(buffer,buffSize,ERROR_STR_FORMAT,422,BAD_TYPE_ERR);
+						return 422;
 					}
 		}
 		/* _shared_campaign_id is a global inherited from green-serv.c */
@@ -432,18 +435,43 @@ int marker_post(char * buffer, int buffSize, const struct http_request * request
 		gs_comment_setCommentType(valBuffer,&assocComment);
 
 		sm_get(sm,"message",valBuffer, sizeof valBuffer);
+		if( strlen( valBuffer ) == 0 ){
+			sm_delete(sm);
+			snprintf(buffer,buffSize,ERROR_STR_FORMAT,422,EMPTY_COMMENT_MESSAGE);
+			return 422;
+		}
 		gs_comment_setContent(valBuffer,&assocComment);
 
 		sm_get(sm,"londegrees",valBuffer,sizeof valBuffer);
+		if(! ( strtod(valBuffer,convertSuccess) != 0 && convertSuccess == NULL ) ){
+			sm_delete(sm);
+			snprintf(buffer, buffSize, ERROR_STR_FORMAT, 400, NAN_LONGITUDE);
+			return 400;
+		}
+
 		longitude = createDecimalFromString(valBuffer);
+		if( ! between(longitude, -181L, 181L) ){
+			sm_delete(sm);
+			snprintf(buffer, buffSize, ERROR_STR_FORMAT, 422, OOB_LONGITUDE);
+			return 422;
+		}
 		gs_marker_setLongitude(longitude, &marker);
 
 		sm_get(sm,"latdegrees",valBuffer,sizeof valBuffer);
+		if(! ( strtod(valBuffer,convertSuccess) != 0 && convertSuccess == NULL ) ){
+			sm_delete(sm);
+			snprintf(buffer, buffSize, ERROR_STR_FORMAT, 400, NAN_LATITUDE);
+			return 400;
+		}
 		latitude = createDecimalFromString( valBuffer);
+		if( ! between(latitude, -91L, 91L) ){
+			sm_delete(sm);
+			snprintf(buffer, buffSize, ERROR_STR_FORMAT, 422, OOB_LATITUDE);
+			return 422;
+		}
 		gs_marker_setLatitude(latitude, &marker);
 
 		sm_get(sm,"addressed", valBuffer, sizeof valBuffer);
-		fprintf(stderr, "valbuff:%s\n", valBuffer);
 		if(strncasecmp(valBuffer,"true", sizeof valBuffer) == 0)
 			gs_marker_setAddressed(ADDRESSED_TRUE,&marker);
 		else if(strncasecmp(valBuffer,"false",sizeof valBuffer) == 0)

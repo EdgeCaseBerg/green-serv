@@ -1,3 +1,4 @@
+#define GREENSERV 1
 #include "config.h"
 #include <unistd.h>
 #include "controllers/reports.h"
@@ -14,10 +15,14 @@
 	request.data = datum;\
 	request.contentLength = strlen(datum);
 
+
+
 int main(){
 	char * stringToReturn;
 	struct http_request request;
 	int status;
+	/* Set Shared Campaign_id */
+	_shared_campaign_id =1 ;
 	
    	stringToReturn = malloc(1000);
 	request.method = POST;

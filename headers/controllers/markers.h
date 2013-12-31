@@ -10,6 +10,7 @@
 	#include "db.h"
 	#include "models/marker.h"
 	#include "models/comment.h"
+	#include "controllers/comments.h" /* For comment error messages */
 	#include "controllers/macros.h"
 	
 	#ifndef COMMENTS_CTYPE_SIZE
@@ -50,6 +51,11 @@
 		#define KEYS_MISSING "Could not process request due to required keys not being found in data."
 	#endif
 	#define BOTH_OFFSET_ERR "Both lonOffset and latOffset must be present if either is used"
+	#define OOB_LATITUDE "Latitude must be between -91 and 91 (non-inclusive)"
+	#define OOB_LONGITUDE "Longitude must be between -181 and 181 (non-inclusive)"
+	#define NAN_LATITUDE "Latitude must be a number"
+	#define NAN_LONGITUDE "Longitude must be a number"
+	#define NAN_ID "id must be a numeric value"
 
 	int marker_controller(const struct http_request * request, char * stringToReturn, int strLength);
 

@@ -1,3 +1,4 @@
+#define GREEN_SERV 1
 #include "config.h"
 #include <unistd.h>
 #include "controllers/markers.h"
@@ -7,7 +8,7 @@
 		fprintf(stdout, "." );\
 	else{\
 		fprintf(stdout, "F" );\
-		fprintf(stderr, "DELETE PINS: Expected status of %d, recieved %d. %s (%s::%d)\n", expected,status, errmessage, __FILE__, __LINE__ );\
+		fprintf(stderr, "DELETE PINS: Expected status of %d, recieved %d. %s (%s::%d)\n%s\n", expected,status, errmessage,__FILE__,__LINE__, stringToReturn );\
 	}
 
 int main(){
@@ -30,6 +31,8 @@ int main(){
 	  	return 1;
    	}
 
+   	_shared_campaign_id =1 ;
+
    	latitude = createDecimalFromString( "-44.050");
 	longitude= createDecimalFromString( "-44.70");
 
@@ -45,7 +48,7 @@ int main(){
    
 	gs_marker_ZeroStruct(&testMarker);
 
-	gs_marker_setCommentId(1, &testMarker);
+	gs_marker_setCommentId(testComment.id, &testMarker);
 	gs_marker_setScopeId(CAMPAIGN_ID, &testMarker);
 	gs_marker_setLongitude(longitude, &testMarker);
 	gs_marker_setLatitude(latitude, &testMarker);
@@ -73,7 +76,7 @@ int main(){
 
 	sprintf(request.url, "/api/pins?id=derp");
 	status = marker_controller(&request, stringToReturn, 1000);
-	EXPECTED(204, status, "Request failed to err correctly when given non-numeric id")
+	EXPECTED(422, status, "Request failed to err correctly when given non-numeric id")
 
 
 	mysql_close(conn);
