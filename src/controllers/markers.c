@@ -5,7 +5,7 @@ static inline int min(const int a, const int b){
 }
 
 /* Not inclusive */
-static inline int between(const int var, const int low, const int high){
+static inline int between(const Decimal var, const Decimal low, const Decimal high){
 	return low < var && var < high;
 }
 
@@ -77,21 +77,14 @@ int marker_controller(const struct http_request * request, char * stringToReturn
 		/* Collect any parameters and convert them to the proper types */
 		if (sm_exists(sm,"latdegrees")==1) {
 			sm_get(sm,"latdegrees",tempBuf,sizeof tempBuf);
-			(*latDegrees) = createDecimalFromString(tempBuf);
-			/* Offsets only make sense if their parent coordinate is existent */
-			if (sm_exists(sm,"latoffset")==1) {
-				sm_get(sm,"latoffset", tempBuf, sizeof tempBuf);
-				/* Validate the numericness of the offset */
-				if(strtod(tempBuf,convertSuccess) != 0 && convertSuccess == NULL)
-					(*latOffset) = createDecimalFromString(tempBuf);
-				else{
-					sm_delete(sm);
-					free(buffer); free(latDegrees); free(lonDegrees); free(latOffset); free(lonOffset);
-					goto mc_badLatOffset;
-				} 
-			} else {
-				(*latOffset) = createDecimalFromString(DEFAULT_OFFSET);
-			}
+			if(strtod(tempBuf,convertSuccess) != 0 && convertSuccess == NULL)
+				(*latDegrees) = createDecimalFromString(tempBuf);
+			else{
+				sm_delete(sm);
+				free(buffer); free(latDegrees); free(lonDegrees); free(latOffset); free(lonOffset);
+				status = 400;
+				goto mc_badLatitude;
+			}			
 		} else{
 			/* Sensible default for latdegrees is... to become NULL 
 			 * so that we can handle using a different query without 
@@ -100,29 +93,55 @@ int marker_controller(const struct http_request * request, char * stringToReturn
 			free(latDegrees);
 			latDegrees = NULL;
 		}
+		if (sm_exists(sm,"latoffset")==1) {
+			sm_get(sm,"latoffset", tempBuf, sizeof tempBuf);
+			/* Validate the numericness of the offset */
+			if(strtod(tempBuf,convertSuccess) != 0 && convertSuccess == NULL)
+				(*latOffset) = createDecimalFromString(tempBuf);
+			else{
+				status = 400;
+				sm_delete(sm);
+				free(buffer); free(latDegrees); free(lonDegrees); free(latOffset); free(lonOffset);
+				goto mc_badLatOffset;
+			} 
+		} else {
+			(*latOffset) = createDecimalFromString(DEFAULT_OFFSET);
+		}
 		if (sm_exists(sm,"londegrees")==1) {
 			sm_get(sm,"londegrees",tempBuf,sizeof tempBuf);
-			(*lonDegrees) = createDecimalFromString(tempBuf);
-			if (sm_exists(sm,"lonoffset")==1) {
-				sm_get(sm,"lonoffset", tempBuf, sizeof tempBuf);
-				if(strtod(tempBuf,convertSuccess) != 0 && convertSuccess == NULL)
-					(*lonOffset) = createDecimalFromString(tempBuf);
-				else{
-					sm_delete(sm);
-					free(buffer); free(latDegrees); free(lonDegrees); free(latOffset); free(lonOffset);
-					goto mc_badLonOffset;
-				} 
-			} else {
-				(*lonOffset) = createDecimalFromString(DEFAULT_OFFSET);
+			if(strtod(tempBuf,convertSuccess) != 0 && convertSuccess == NULL)
+				(*lonDegrees) = createDecimalFromString(tempBuf);
+			else{
+				status = 400;
+				sm_delete(sm);
+				free(buffer); free(latDegrees); free(lonDegrees); free(latOffset); free(lonOffset);
+				goto mc_badLongitude;
 			}
 		} else {
 			free(lonDegrees);
 			lonDegrees = NULL;
 		}
+		if (sm_exists(sm,"lonoffset")==1) {
+			sm_get(sm,"lonoffset", tempBuf, sizeof tempBuf);
+			convertSuccess = NULL;	
+			if(strtod(tempBuf,convertSuccess) != 0 && convertSuccess == NULL)
+				(*lonOffset) = createDecimalFromString(tempBuf);
+			else{
+				status = 400;
+				sm_delete(sm);
+				free(buffer); free(latDegrees); free(lonDegrees); free(latOffset); free(lonOffset);
+				goto mc_badLonOffset;
+			} 
+		} else {
+			(*lonOffset) = createDecimalFromString(DEFAULT_OFFSET);
+		}
 
 		if(sm_exists(sm, "page") == 1)
 			if(sm_get(sm, "page", tempBuf, sizeof tempBuf) == 1){
-				page = atoi(tempBuf);
+				if(strtod(tempBuf,convertSuccess) != 0 && convertSuccess == NULL)
+					page = atoi(tempBuf);
+				else
+					page = -1;
 				if(page <= 0){
 					status = 400;		
 					sm_delete(sm);
@@ -155,18 +174,16 @@ int marker_controller(const struct http_request * request, char * stringToReturn
 				sm_delete(sm);
 				free(buffer);
 				FREE_NON_NULL_DEGREES_AND_OFFSETS
-				status = 422;
+				status = 400;
 				goto mc_bothOffsets;
 			}
 			if(latDegrees != NULL)
-				/*Let the -90.1 slide by as ok...*/
-
-				if( ! between(*latDegrees, -91L, 91L) ){
+				if( ! between(*latDegrees, -91.0, 91.0) ){
 					sm_delete(sm);
 					free(buffer);
 					FREE_NON_NULL_DEGREES_AND_OFFSETS
 					status = 422;
-					goto mc_bothOffsets;		
+					goto mc_oobLatitude;		
 				}
 
 			if(lonDegrees != NULL)
@@ -175,7 +192,7 @@ int marker_controller(const struct http_request * request, char * stringToReturn
 					free(buffer); 
 					FREE_NON_NULL_DEGREES_AND_OFFSETS
 					status = 422;
-					goto mc_bothOffsets;			
+					goto mc_oobLongitude;			
 				}
 			if(sm_exists(sm,"id")!=1){
 				/* Retrieve multiple markers */
@@ -267,6 +284,10 @@ int marker_controller(const struct http_request * request, char * stringToReturn
 	ERR_LABEL_STRING_TO_RETURN(mc_bothOffsets, BOTH_OFFSET_ERR)
 	ERR_LABEL_STRING_TO_RETURN(mc_badpage, BAD_PAGE_ERR)
 	ERR_LABEL_STRING_TO_RETURN(mc_nan_id, NAN_ID)
+	ERR_LABEL_STRING_TO_RETURN(mc_badLatitude, NAN_LATITUDE)
+	ERR_LABEL_STRING_TO_RETURN(mc_badLongitude, NAN_LONGITUDE)
+	ERR_LABEL_STRING_TO_RETURN(mc_oobLatitude, OOB_LATITUDE)
+	ERR_LABEL_STRING_TO_RETURN(mc_oobLongitude, OOB_LONGITUDE)
 
 }
 
