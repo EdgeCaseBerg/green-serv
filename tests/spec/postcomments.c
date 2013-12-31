@@ -1,3 +1,4 @@
+#define GREEN_SERV 1
 #include "config.h"
 #include <unistd.h>
 #include "controllers/comments.h"
@@ -7,7 +8,7 @@
 		fprintf(stdout, "." );\
 	else{\
 		fprintf(stdout, "F" );\
-		fprintf(stderr, "POST COMMENT: Expected status of %d, recieved %d. %s (%s::%d)\n", expected,status, errmessage, __FILE__, __LINE__ );\
+		fprintf(stderr, "POST COMMENT: Expected status of %d, recieved %d. %s (%s::%d)\n%s\n", expected,status, errmessage, __FILE__, __LINE__, stringToReturn );\
 	}
 
 #define SETDATA(datum) \
@@ -22,6 +23,7 @@ int main(){
 	struct gs_marker testMarker; 
 	Decimal latitude;
    	Decimal longitude;
+   	_shared_campaign_id = 1;
 
 	char * valid1 = "{\"type\":\"COMMENT\", \"message\":\"test message from post comments\"}";
 	char * valid2 = "{\"type\":\"MARKER\", \"message\":\"test message from post comments\"}";
@@ -52,7 +54,7 @@ int main(){
 	longitude= createDecimalFromString( "-44.70");
    
 	gs_marker_ZeroStruct(&testMarker);
-	gs_marker_setCommentId(1, &testMarker);
+	gs_marker_setCommentId(73, &testMarker);
 	gs_marker_setScopeId(CAMPAIGN_ID, &testMarker);
 	gs_marker_setLongitude(longitude, &testMarker);
 	gs_marker_setLatitude(latitude, &testMarker);

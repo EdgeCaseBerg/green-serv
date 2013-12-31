@@ -8,7 +8,7 @@
 		fprintf(stdout, "." );\
 	else{\
 		fprintf(stdout, "F" );\
-		fprintf(stderr, "POST PINS: Expected status of %d, recieved %d. %s (%s::%d)\n", expected,status, errmessage, __FILE__, __LINE__ );\
+		fprintf(stderr, "POST PINS: Expected status of %d, recieved %d. %s (%s::%d)\n%s\n", expected,status, errmessage, __FILE__, __LINE__, stringToReturn );\
 	}
 
 #define SETDATA(datum) \

@@ -228,7 +228,6 @@ int comment_post(char * buffer, int buffSize, const struct http_request * reques
 	/* Determine if the request is valid or not */
 	if(sm_exists(sm, "type") !=1 || sm_exists(sm, "message") !=1){
 		sm_delete(sm);
-		fprintf(stderr, "required keys not found\n"); /* TODO replace with network logging */
 		snprintf(buffer, buffSize, ERROR_STR_FORMAT, 422, MISSING_KEY_ERR);
 		return 422;		
 	}else{
