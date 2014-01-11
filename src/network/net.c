@@ -306,12 +306,18 @@ int run_network(char * buffer, int bufferLength, void*(*func)(void*)){
     int retval;
     int sec;
     int usec;
+    int readAmount;
+    int totalRead;
+    int flags; 
     
-    clientfd = socketfd = 0; 
+
+
+    clientfd = socketfd =  readAmount = totalRead = 0; 
     bzero(buff,BUFSIZ);
     bzero(&sockserv,sizeof(sockserv));
     sec = 0;
     usec = 10;
+
 
 
     socketfd = createSocket();
@@ -365,9 +371,25 @@ int run_network(char * buffer, int bufferLength, void*(*func)(void*)){
 
                 clientfd = accept(socketfd,(struct sockaddr*)&sockclient,&clientsocklen);
                 if(clientfd != -1){
+                    readAmount=totalRead=0;
                     NETWORK_LOG_LEVEL_2_NUM("Accepted Client Request on File Descriptor ", clientfd);
-                    buff[read(clientfd,buff,BUFSIZ)] = '\0';
-                    strncpy(buffer, buff ,bufferLength);
+                    readAmount = 1; /* Sentinal */
+                    flags = fcntl(clientfd, F_GETFL, 0);
+                    fcntl(clientfd, F_SETFL, flags | O_NONBLOCK);
+                    while(readAmount != 0){
+                        readAmount = read(clientfd,buff,BUFSIZ);
+                        if(readAmount == -1){
+                            if(errno == EAGAIN)
+                                readAmount = 0;
+                        }else{
+                            strncpy(buffer, buff ,bufferLength);    
+                            totalRead += readAmount;    
+                        }
+                    }
+                    if(totalRead > bufferLength)
+                        NETWORK_LOG_LEVEL_1("Warning: Total Read Greater than Buffer Length");
+                    buffer[totalRead] = '\0';
+                    
 
                     /* A thread pool would be intelligent here */
                     sprintf(data[i].msg, "%s", buffer);
