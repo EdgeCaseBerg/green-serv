@@ -363,8 +363,6 @@ int run_network(char * buffer, int bufferLength, void*(*func)(void*)){
                 }
                 FD_SET(socketfd, &rfds);
 
-                fprintf(stderr, "%s\n", "data");
-
                 clientfd = accept(socketfd,(struct sockaddr*)&sockclient,&clientsocklen);
                 if(clientfd != -1){
                     NETWORK_LOG_LEVEL_2_NUM("Accepted Client Request on File Descriptor ", clientfd);
