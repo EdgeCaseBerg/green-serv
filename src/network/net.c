@@ -382,7 +382,7 @@ int run_network(char * buffer, int bufferLength, void*(*func)(void*)){
                             if(errno == EAGAIN)
                                 readAmount = 0;
                         }else{
-			    if(totalRead + readAmount > bufferLength){
+                            if(totalRead + readAmount > bufferLength){
                                 NETWORK_LOG_LEVEL_1("Warning Too much content in request. Possible Truncation");
                                 readAmount = 0;
                             }else
