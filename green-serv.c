@@ -67,11 +67,9 @@ int green_serv(int argc, const char* argv[]) {
 	_shared_campaign_id = campaign.id;
 	(void)_shared_campaign_id; /*http://stackoverflow.com/a/394568/1808164*/
 
-	char buff[8000];
-	bzero(buff,8000);
 	/*What a silly cast we have to make...*/
 	BOOT_LOG_STR("Running Network Interface:", "");
-	run_network(buff,8000,(void*(*)(void*))&doNetWork);
+	run_network((void*(*)(void*))&doNetWork);
 	BOOT_LOG_STR("Finished Network Interface.","");
 	/*Clean Up database connection*/
 	mysql_library_end();

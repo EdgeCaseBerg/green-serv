@@ -4,12 +4,13 @@
 	#define METHOD_LENGTH 7
 	
 	#define FIRSTLINEBUFFSIZE 512
+	#define THREAD_DATA_MAX_SIZE 16384
 	#define NUMTHREADS 100
 	#define DETACHED_THREADS
 	#undef DETACHED_THREADS /* Using detacthed threads runs the risk of leaving fd's open */
 	/* Simple struct to contain data to be sent to worker threads */
 	struct threadData{
-	    char msg[16384];
+	    char msg[THREAD_DATA_MAX_SIZE];
 	    int clientfd;
 	};
 
@@ -64,7 +65,7 @@
 	*/
 	void* doNetWork(struct threadData* td);
 
-	int run_network(char * buffer, int bufferLength, void*( *func )(void*) );
+	int run_network(void*( *func )(void*) );
 
 
 

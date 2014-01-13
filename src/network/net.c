@@ -289,7 +289,7 @@ void stop_server(int signum){
 }
 
 
-int run_network(char * buffer, int bufferLength, void*(*func)(void*)){
+int run_network(void*(*func)(void*)){
     struct sockaddr_in sockserv,sockclient;
     int clientfd;
     int socketfd;
@@ -387,21 +387,20 @@ int run_network(char * buffer, int bufferLength, void*(*func)(void*)){
                             else
                                 readAmount = 0;
                         }else{
-                            if(totalRead + readAmount > bufferLength){
+                            if(totalRead + readAmount > THREAD_DATA_MAX_SIZE){
                                 NETWORK_LOG_LEVEL_1("Warning Too much content in request. Possible Truncation");
                                 readAmount = 0;
                             }else
-                                strncat(buffer, buff ,bufferLength);    
+                                strncat(data[i].msg, buff ,THREAD_DATA_MAX_SIZE);    
                             totalRead += readAmount;    
                         }
                     }
-                    if(totalRead > bufferLength)
+                    if(totalRead > THREAD_DATA_MAX_SIZE)
                         NETWORK_LOG_LEVEL_1("Warning: Total Read Greater than Buffer Length");
-                    buffer[totalRead] = '\0';
+                    data[i].msg[totalRead] = '\0';
                     
 
                     /* A thread pool would be intelligent here */
-                    sprintf(data[i].msg, "%s", buffer);
                     data[i].clientfd = clientfd;
                     #ifndef DETACHED_THREADS
                         pthread_create(&children[i],NULL,func,&data[i]);
@@ -410,7 +409,6 @@ int run_network(char * buffer, int bufferLength, void*(*func)(void*)){
                         pthread_create(&children[i],&attr,func,&data[i]);
                     #endif
                     bzero(buff,BUFSIZ);
-                    bzero(buffer,bufferLength);
                 }else{
                     NETWORK_LOG_LEVEL_1("Connection shutdown.");
                     NETWORK_LOG_LEVEL_2("Invalid file descriptor from client connection.");
