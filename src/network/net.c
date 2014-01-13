@@ -78,6 +78,7 @@ void* doNetWork(struct threadData* td) {
     NETWORK_LOG_LEVEL_1(request.url);
     if(request.contentLength > 0){
         NETWORK_LOG_LEVEL_2("Incoming Data:");
+        NETWORK_LOG_LEVEL_2_NUM("Content length of Data: ", request.contentLength);
         NETWORK_LOG_LEVEL_2(request.data);
     }
     if(request.contentLength > 0)
