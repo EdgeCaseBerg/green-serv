@@ -294,7 +294,7 @@ int run_network(void*(*func)(void*)){
     int clientfd;
     int socketfd;
     socklen_t clientsocklen;
-    char buff[BUFSIZ];
+    char * buff; 
     pthread_t children[NUMTHREADS];
     struct threadData data[NUMTHREADS];
     int i,j;
@@ -311,10 +311,14 @@ int run_network(void*(*func)(void*)){
     int totalRead;
     int flags; 
     
-
+    buff = malloc(NUMTHREADS*BUFSIZ);
+    if(buff == NULL){
+        BOOT_LOG_STR("Could not allocated memory for buffers, exiting","");
+        return 0;
+    }
+    memset(buff, 0, NUMTHREADS*BUFSIZ);
 
     clientfd = socketfd =  readAmount = totalRead = 0; 
-    bzero(buff,BUFSIZ);
     bzero(&sockserv,sizeof(sockserv));
     sec = 0;
     usec = 10;
@@ -351,6 +355,7 @@ int run_network(void*(*func)(void*)){
     if(errno != 13){
         while(stop == 0){
             for(i=0; i < NUMTHREADS && stop == 0; i++){
+                bzero(data[i].msg, THREAD_DATA_MAX_SIZE);
                 retval = select((socketfd+1)/*see "man select_tut"*/, &rfds, NULL, NULL, &tv);
                 /* Reset select */
                 tv.tv_sec = sec;
@@ -379,8 +384,8 @@ int run_network(void*(*func)(void*)){
                     flags = fcntl(clientfd, F_GETFL, 0);
                     fcntl(clientfd, F_SETFL, flags | O_NONBLOCK);
                     while(readAmount != 0){
-                        bzero(buff, BUFSIZ);
-                        readAmount = read(clientfd,buff,BUFSIZ);
+                        memset(buff+(i*BUFSIZ), 0, BUFSIZ);
+                        readAmount = read(clientfd,buff+(i*BUFSIZ),BUFSIZ);
                         if(readAmount == -1){
                             if(errno == EAGAIN && totalRead == 0)
                                 continue;
@@ -391,7 +396,7 @@ int run_network(void*(*func)(void*)){
                                 NETWORK_LOG_LEVEL_1("Warning Too much content in request. Possible Truncation");
                                 readAmount = 0;
                             }else
-                                strncat(data[i].msg, buff ,THREAD_DATA_MAX_SIZE);    
+                                strncat(data[i].msg, buff+(i*BUFSIZ) ,BUFSIZ);    
                             totalRead += readAmount;    
                         }
                     }
@@ -408,7 +413,7 @@ int run_network(void*(*func)(void*)){
                         NETWORK_LOG_LEVEL_2("Spawning detached thread");
                         pthread_create(&children[i],&attr,func,&data[i]);
                     #endif
-                    bzero(buff,BUFSIZ);
+                    bzero(buff+(i*BUFSIZ),BUFSIZ);
                 }else{
                     NETWORK_LOG_LEVEL_1("Connection shutdown.");
                     NETWORK_LOG_LEVEL_2("Invalid file descriptor from client connection.");
@@ -434,7 +439,7 @@ int run_network(void*(*func)(void*)){
     close(socketfd);
     BOOT_LOG_STR("Exiting Server...", "");
     wait(NULL);
-    
+    free(buff);
 
     return 0;
 }
