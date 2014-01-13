@@ -239,7 +239,7 @@ int parseRequest(struct http_request * requestToFill, char * requestStr){
         /*Determine actual content length */
         contentLength+=strlen("Content-Length: "); /* Skip the text */
         methodLoc=0; /* ReUsing again */
-        for(i=contentLength; i < FIRSTLINEBUFFSIZE && requestStr[i] != '\0' && requestStr[i] != '\r'; ++i)
+        for(i=contentLength; methodLoc < FIRSTLINEBUFFSIZE && requestStr[i] != '\0' && requestStr[i] != '\r'; ++i)
             buff[methodLoc++] = requestStr[i];
         buff[i] = '\0';
         /* Attempt to parse: */
