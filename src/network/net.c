@@ -378,6 +378,7 @@ int run_network(char * buffer, int bufferLength, void*(*func)(void*)){
                     flags = fcntl(clientfd, F_GETFL, 0);
                     fcntl(clientfd, F_SETFL, flags | O_NONBLOCK);
                     while(readAmount != 0){
+                        bzero(buff, BUFSIZ);
                         readAmount = read(clientfd,buff,BUFSIZ);
                         if(readAmount == -1){
                             if(errno == EAGAIN && totalRead == 0)
