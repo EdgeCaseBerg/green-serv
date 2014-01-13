@@ -396,7 +396,8 @@ int run_network(void*(*func)(void*)){
                                 NETWORK_LOG_LEVEL_1("Warning Too much content in request. Possible Truncation");
                                 readAmount = 0;
                             }else
-                                strncat(data[i].msg, buff+(i*BUFSIZ) ,BUFSIZ);    
+                                if( strncat(data[i].msg, buff+(i*BUFSIZ) ,BUFSIZ) == NULL )
+                                    NETWORK_LOG_LEVEL_1("Warning: Too much content concatenated, possible truncation");
                             totalRead += readAmount;    
                         }
                     }
