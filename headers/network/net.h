@@ -3,7 +3,7 @@
 
 	#define METHOD_LENGTH 7
 	
-	#define FIRSTLINEBUFFSIZE 256
+	#define FIRSTLINEBUFFSIZE 512
 	#define NUMTHREADS 100
 	#define DETACHED_THREADS
 	#undef DETACHED_THREADS /* Using detacthed threads runs the risk of leaving fd's open */

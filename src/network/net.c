@@ -372,6 +372,7 @@ int run_network(char * buffer, int bufferLength, void*(*func)(void*)){
                 clientfd = accept(socketfd,(struct sockaddr*)&sockclient,&clientsocklen);
                 if(clientfd != -1){
                     readAmount=totalRead=0;
+
                     NETWORK_LOG_LEVEL_2_NUM("Accepted Client Request on File Descriptor ", clientfd);
                     readAmount = 1; /* Sentinal */
                     flags = fcntl(clientfd, F_GETFL, 0);
@@ -379,7 +380,9 @@ int run_network(char * buffer, int bufferLength, void*(*func)(void*)){
                     while(readAmount != 0){
                         readAmount = read(clientfd,buff,BUFSIZ);
                         if(readAmount == -1){
-                            if(errno == EAGAIN)
+                            if(errno == EAGAIN && totalRead == 0)
+                                continue;
+                            else
                                 readAmount = 0;
                         }else{
                             if(totalRead + readAmount > bufferLength){
