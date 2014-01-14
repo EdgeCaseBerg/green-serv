@@ -272,7 +272,7 @@ int parseRequest(struct http_request * requestToFill, char * requestStr){
             }
         }
     }
-    /* Calling parties must use contentLenght to tell if they will need to free the memory */
+    /* Calling parties must use contentLength to tell if they will need to free the memory */
     requestToFill->contentLength = contentLength;
     return contentLength;
 
@@ -297,7 +297,7 @@ int run_network(void*(*func)(void*)){
     char * buff; 
     pthread_t children[NUMTHREADS];
     struct threadData data[NUMTHREADS];
-    int i,j;
+    int i,j,k;
     stop = 0;
     #ifdef DETACHED_THREADS
     pthread_attr_t attr;
@@ -310,6 +310,8 @@ int run_network(void*(*func)(void*)){
     int readAmount;
     int totalRead;
     int flags; 
+    int contentLength;
+    int contentLengthRecieved;
     
     buff = malloc(NUMTHREADS*BUFSIZ);
     if(buff == NULL){
@@ -318,7 +320,8 @@ int run_network(void*(*func)(void*)){
     }
     memset(buff, 0, NUMTHREADS*BUFSIZ);
 
-    clientfd = socketfd =  readAmount = totalRead = 0; 
+    clientfd = socketfd =  readAmount = totalRead = contentLengthRecieved = 0; 
+    contentLength = -1; /* Sentinal */
     bzero(&sockserv,sizeof(sockserv));
     sec = 0;
     usec = 10;
@@ -355,7 +358,6 @@ int run_network(void*(*func)(void*)){
     if(errno != 13){
         while(stop == 0){
             for(i=0; i < NUMTHREADS && stop == 0; i++){
-                bzero(data[i].msg, THREAD_DATA_MAX_SIZE);
                 retval = select((socketfd+1)/*see "man select_tut"*/, &rfds, NULL, NULL, &tv);
                 /* Reset select */
                 tv.tv_sec = sec;
@@ -374,7 +376,10 @@ int run_network(void*(*func)(void*)){
                     continue;
                 }
                 FD_SET(socketfd, &rfds);
+                bzero(data[i].msg, THREAD_DATA_MAX_SIZE);
 
+                /* We have yet to recieve anything or check for the header */
+                contentLengthRecieved = contentLength = 0;
                 clientfd = accept(socketfd,(struct sockaddr*)&sockclient,&clientsocklen);
                 if(clientfd != -1){
                     readAmount=totalRead=0;
@@ -389,16 +394,60 @@ int run_network(void*(*func)(void*)){
                         if(readAmount == -1){
                             if(errno == EAGAIN && totalRead == 0)
                                 continue;
+                            else if(contentLengthRecieved != contentLength)
+                                continue;
                             else
                                 readAmount = 0;
                         }else{
                             if(totalRead + readAmount > THREAD_DATA_MAX_SIZE){
                                 NETWORK_LOG_LEVEL_1("Warning Too much content in request. Possible Truncation");
                                 readAmount = 0;
-                            }else
-                                if( strncat(data[i].msg, buff+(i*BUFSIZ) ,BUFSIZ) == NULL )
+                            }else{
+                                if( strncat(data[i].msg, buff+(i*BUFSIZ) ,BUFSIZ) == NULL ){
                                     NETWORK_LOG_LEVEL_1("Warning: Too much content concatenated, possible truncation");
-                            totalRead += readAmount;    
+                                }else{
+                                    /* Since we're here that means we have at least 
+                                     * the beginning of the request itself but we're
+                                     * waiting for more. So determine the content-length
+                                     * and then figure out if we have all of it or not
+                                    */
+                                    totalRead += readAmount;    
+                                    contentLength = strnstr("Content-Length", data[i].msg,strlen(data[i].msg));
+                                    if(contentLength == -1){
+                                        /* You didn't send us a content length, carry on! 
+                                         * so no data, so just url, so good bye.
+                                        */
+                                        contentLengthRecieved = contentLength = readAmount = 0;
+                                    }else{
+                                        /* Convert the content length 
+                                         * reuse this connections buffer.
+                                        */
+                                        memset(buff+(i*BUFSIZ), 0, 100); /* Only what we need */
+                                        contentLength+=strlen("Content-Length: "); /* Skip the text */
+                                         
+                                        for(k=0; k < 100 && data[i].msg[contentLength] != '\0' && data[i].msg[contentLength] != '\r'; ++k, contentLength++)
+                                            *(buff+(i*BUFSIZ)+k) = data[i].msg[contentLength];
+                                        *(buff+(i*BUFSIZ)+k) = '\0';
+                                        contentLength = atoi((buff+(i*BUFSIZ)));
+                                        /* We've said a content length now, and we need 
+                                         * determine how much we've actually recieved
+                                         * no need to store it, just count it with k. 
+                                        */
+                                        j = strnstr("\r\n\r\n", data[i].msg, strlen(data[i].msg));
+                                        if(j != -1){
+                                            j+=4; /* skip newlines */
+                                            for(contentLengthRecieved = 0; j < (int)strlen(data[i].msg) && data[i].msg[j] != '\0'; ++j, ++contentLengthRecieved)
+                                                ;
+                                        }else{
+                                            /* Could not find content...*/
+                                            if(contentLength == 0)
+                                                readAmount = 0; /* Get out */
+                                            else
+                                                contentLengthRecieved = 0; /* Haven't received it yet */
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                     if(totalRead > THREAD_DATA_MAX_SIZE)
