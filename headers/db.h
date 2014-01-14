@@ -24,7 +24,7 @@
 	/* Gets it's own results because it's more likely we'll want more
 	 * heatmap data than something like comments
 	*/
-	#define HEATMAP_RESULTS_PER_PAGE 51
+	#define HEATMAP_RESULTS_PER_PAGE 150
 	#define HEATMAP_RESULTS_RETURNED (HEATMAP_RESULTS_PER_PAGE-1)
 	#define TOSTR(x) #x
 	#define STRINGIFY(x) TOSTR(x)
@@ -60,7 +60,7 @@
 	#define GS_MARKER_COMMENT_GET_BY_LONGITUDE "SELECT pin_id, comment_id, content, comment_type, latitude, longitude, addressed FROM comments INNER JOIN markers ON comment_id = comments.id WHERE markers.scope_id=%ld AND longitude BETWEEN %s AND %s ORDER BY markers.created_time DESC LIMIT %d, " STRINGIFY(MARKER_LIMIT)
 	#define GS_MARKER_COMMENT_GET_BY_BOTH "SELECT pin_id, comment_id, content, comment_type, latitude, longitude, addressed FROM comments INNER JOIN markers ON comment_id = comments.id WHERE markers.scope_id=%ld AND latitude BETWEEN %s AND %s AND longitude BETWEEN %s AND %s ORDER BY markers.created_time DESC LIMIT %d, " STRINGIFY(MARKER_LIMIT)
 
-	#define GS_HEATMAP_GET_ALL "SELECT SUM(intensity), TIMESTAMP(AVG(created_time)) ,TRUNCATE(latitude,%ld), TRUNCATE(longitude,%ld) FROM heatmap WHERE scope_id = %ld AND latitude BETWEEN " DecimalFormat " AND " DecimalFormat " AND longitude BETWEEN " DecimalFormat " AND " DecimalFormat " GROUP BY latitude ORDER BY created_time DESC LIMIT %d, " STRINGIFY(HEATMAP_RESULTS_PER_PAGE)
+	#define GS_HEATMAP_GET_ALL "SELECT SUM(intensity), TIMESTAMP(AVG(created_time)) ,TRUNCATE(latitude,%ld), TRUNCATE(longitude,%ld) FROM heatmap WHERE scope_id = %ld AND latitude BETWEEN " DecimalFormat " AND " DecimalFormat " AND longitude BETWEEN " DecimalFormat " AND " DecimalFormat " GROUP BY latitude,longitude ORDER BY created_time DESC LIMIT %d, " STRINGIFY(HEATMAP_RESULTS_PER_PAGE)
 	#define GS_HEATMAP_GET_BY_ID "SELECT id, intensity, scope_id, created_time, latitude, longitude FROM heatmap WHERE id = %ld;"
 	#define GS_HEATMAP_INSERT "INSERT INTO heatmap (scope_id, intensity, latitude, longitude) VALUES (%ld, %ld, " DecimalFormat ", " DecimalFormat ");"
 	#define GS_HEATMAP_FIND_MATCH "SELECT id, intensity FROM heatmap WHERE scope_id = %ld AND latitude = " DecimalFormat " AND longitude = " DecimalFormat ";"
