@@ -602,7 +602,7 @@ int db_getHeatmap(int page, long scopeId, long precision, long * max, Decimal lo
 		if(gsh[i].intensity > (*max))
 			(*max) = gsh[i].intensity;
 		gs_heatmap_setScopeId( scopeId, &gsh[i]);
-		gs_heatmap_setCreatedTime( row[1], &gsh[i]);
+		gs_heatmap_setCreatedTime( row[1] == NULL ? "" : row[1], &gsh[i]);
 		latitude = createDecimalFromString(row[2]);
 		gs_heatmap_setLatitude(latitude,&gsh[i]);
 		longitude = createDecimalFromString(row[3]);
