@@ -558,7 +558,7 @@ void db_insertHeatmap(struct gs_heatmap * gsh, MYSQL * conn){
 }
 
 #ifndef HEATMAP_PAGE_QUERY_SIZE
-	#define HEATMAP_PAGE_QUERY_SIZE 512 /* Super safe estimate (could probably just be 300 or so)*/
+	#define HEATMAP_PAGE_QUERY_SIZE 600 /* Super safe estimate (could probably just be 388 or so)*/
 #endif
 int db_getHeatmap(int page, long scopeId, long precision, long * max, Decimal lowerLatBound, Decimal upperLatBound, Decimal lowerLonBound, Decimal upperLonBound, struct gs_heatmap * gsh, MYSQL * conn){
 	MYSQL_RES * result;
