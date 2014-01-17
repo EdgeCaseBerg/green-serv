@@ -580,6 +580,8 @@ int db_getHeatmap(int page, long scopeId, long precision, long * max, Decimal lo
 					upperLatBound, /* Latitude upper bound  */
 					lowerLonBound, /* Longitude lower bound */
 					upperLonBound, /* Longitude upper bound */
+					precision, /* Truncation of Grouping criteria */
+					precision, /* Truncation of Grouping criteria */
 				   	limit);
 
 	LOGDB
