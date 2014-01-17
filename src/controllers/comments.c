@@ -146,7 +146,8 @@ int comments_get(char * buffer, int buffSize ,const struct http_request * reques
 		numComments = db_getComments(page, _shared_campaign_id ,commentPage, conn);
 	else
 		numComments = db_getCommentsByType(page, _shared_campaign_id, commentPage, cType, conn);
-
+	/* Because We Subtracted one before we need to add it back in */
+	page+=1;
 	mysql_close(conn);
 	mysql_thread_end();
 
