@@ -520,7 +520,7 @@ int marker_post(char * buffer, int buffSize, const struct http_request * request
 	mysql_thread_end();
 	sm_delete(sm);
 
-	snprintf(buffer,buffSize,"{ \"status_code\" : 200, \"message\" : \"Successful submit\" }");
+	snprintf(buffer,buffSize,"{\"pin_id\":%ld, \"status_code\" : 200, \"message\" : \"Successful submit\" }", marker.id);
 
 	return 200;
 
