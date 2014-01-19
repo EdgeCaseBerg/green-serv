@@ -93,7 +93,7 @@ void* doNetWork(struct threadData* td) {
     fcntl(td->clientfd, F_SETFL, flags | O_NONBLOCK);
     contentLength = -1; /* Sentinal */
     while(readAmount != 0){
-        readAmount = read(td->clientfd,raw_message+totalRead,BUFSIZ);
+        readAmount = read(td->clientfd,raw_message+totalRead,BUFSIZ);        
         if(readAmount == -1){
             if(errno == EAGAIN && totalRead == 0)
                 continue;
@@ -107,35 +107,36 @@ void* doNetWork(struct threadData* td) {
                 NETWORK_LOG_LEVEL_1("Warning Too much content in request. Possible Truncation");
                 readAmount = 0;
             }else{
-                    /* Since we're here that means we have at least 
-                     * the beginning of the request itself but we're
-                     * waiting for more. So determine the content-length
-                     * and then figure out if we have all of it or not
+                /* Since we're here that means we have at least 
+                 * the beginning of the request itself but we're
+                 * waiting for more. So determine the content-length
+                 * and then figure out if we have all of it or not
+                */
+                contentLengthPosition = strnstr("Content-Length", raw_message, BUFSIZ);                    
+                if(contentLengthPosition == -1){
+                    /* You didn't send us a content length, carry on! 
+                     * so no data, so just url, so good bye.
                     */
-                    contentLengthPosition = strnstr("Content-Length", raw_message, BUFSIZ);                    
-                    if(contentLengthPosition == -1){
-                        /* You didn't send us a content length, carry on! 
-                         * so no data, so just url, so good bye.
+                    contentLengthRecieved = contentLength = readAmount = 0;
+                }else{
+                    if(totalRead == 0){                            
+                        /* Convert the content length 
+                        * reuse this connections buffer.
                         */
-                        contentLengthRecieved = contentLength = readAmount = 0;
-                    }else{
-                        if(totalRead == 0){                            
-                            /* Convert the content length 
-                            * reuse this connections buffer.
-                            */
-                            bzero(contentLengthBuff, sizeof contentLengthBuff); /* Only what we need */
-                            contentLength = contentLengthPosition;
-                            contentLength+=strlen("Content-Length: "); /* Skip the text */
-                             
-                            for(k=0; k < (int)sizeof(contentLengthBuff) && *(raw_message + contentLength) != '\0' && *(raw_message + contentLength) != '\r'; ++k, contentLength++)
-                                contentLengthBuff[k] = *(raw_message + contentLength);
-                            contentLengthBuff[k] = '\0';
-                            contentLength = atoi(contentLengthBuff);                            
-                            
-                            /* Malloc for the content Length 
-                             * j is the position of the data, all things prior 
-                             * need to be conserved as well
-                            */
+                        bzero(contentLengthBuff, sizeof contentLengthBuff); /* Only what we need */
+                        contentLength = contentLengthPosition;
+                        contentLength+=strlen("Content-Length: "); /* Skip the text */
+                         
+                        for(k=0; k < (int)sizeof(contentLengthBuff) && *(raw_message + contentLength) != '\0' && *(raw_message + contentLength) != '\r'; ++k, contentLength++)
+                            contentLengthBuff[k] = *(raw_message + contentLength);
+                        contentLengthBuff[k] = '\0';
+                        contentLength = atoi(contentLengthBuff);                            
+                        
+                        /* Malloc for the content Length 
+                         * j is the position of the data, all things prior 
+                         * need to be conserved as well
+                        */
+                        if( contentLength > 0 ){
                             j = strnstr("\r\n\r\n", raw_message, BUFSIZ);
                             tempBuff = realloc(raw_message, BUFSIZ + 1+ j + 4 + (contentLength < 0 ? 0 : contentLength) );
                             if(!tempBuff){
@@ -147,43 +148,41 @@ void* doNetWork(struct threadData* td) {
                                 /* set the memory realloced to 0 */
                                 memset(raw_message+BUFSIZ, 0, 1+ j + 4 + (contentLength < 0 ? 0 : contentLength));
                             }
-
-                        }
-
-                        /* We've said a content length now, and we need 
-                        * determine how much we've actually recieved
-                        * no need to store it, just count it with j. 
-                        */
-                        j = strnstr("\r\n\r\n", raw_message, BUFSIZ);
-                        if(j != -1){
-                            j+=4; /* skip newlines */
-                            j+= contentLengthRecieved;
-                            for(contentLengthRecieved = contentLengthRecieved == (0 ? 0 : contentLengthRecieved); j < 5+contentLengthPosition+contentLength && raw_message+j != '\0'; ++j, ++contentLengthRecieved)
-                                ;                            
-                            
-                        }else{
-                            /* Could not find content...*/
-                            if(contentLength == 0)
-                                readAmount = 0; /* Get out */
-                            else
-                                contentLengthRecieved = 0; /* Haven't received it yet */
                         }
                     }
-                    /* Important to do this last as the totalRead is what
-                     * determines if we malloc for content or not
+
+                    /* We've said a content length now, and we need 
+                    * determine how much we've actually recieved
+                    * no need to store it, just count it with j. 
                     */
-                    totalRead += readAmount;                           
-                    if(totalRead > contentLength){
-                        contentLengthRecieved = contentLength;
-                        readAmount = 0;
+                    j = strnstr("\r\n\r\n", raw_message, BUFSIZ);
+                    if(j != -1){
+                        j+=4; /* skip newlines */
+                        j+= contentLengthRecieved;
+                        for(contentLengthRecieved = contentLengthRecieved == (0 ? 0 : contentLengthRecieved); j < 5+contentLengthPosition+contentLength && raw_message+j != '\0'; ++j, ++contentLengthRecieved)
+                            ;                            
+                        
+                    }else{
+                        /* Could not find content...*/
+                        if(contentLength == 0)
+                            readAmount = 0; /* Get out */
+                        else
+                            contentLengthRecieved = 0; /* Haven't received it yet */
                     }
-                
+                }
+                /* Important to do this last as the totalRead is what
+                 * determines if we malloc for content or not
+                */
+                totalRead += readAmount;                   
+                if(totalRead > contentLength){
+                    contentLengthRecieved = contentLength;
+                    readAmount = 0;
+                }                
             }
         }
     }
     if(totalRead > THREAD_DATA_MAX_SIZE)
         NETWORK_LOG_LEVEL_1("Warning: Total Read Greater than Buffer Length");
-    raw_message[totalRead] = '\0';
 
     /*Blank JSON response for no control*/
     response[0]='{'; response[1]='}'; response[2]='\0';
