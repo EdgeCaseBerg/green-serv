@@ -23,23 +23,172 @@
 #define NETWORK_LOG_LEVEL_2(s) if(NETWORK_LOGGING == 2) fprintf(stderr, "%s\n", (s) );
 #define NETWORK_LOG_LEVEL_1(s) if(NETWORK_LOGGING >= 1) fprintf(stderr, "%s\n", (s) );
 
+
+static int strnstr(char * needle, char * haystack, int haystackLen){
+    int i;
+    int j;
+    
+    int needleLen = strlen(needle);
+    for(i=0; i < haystackLen && haystack[i] != '\0'; ++i){
+        if( needle[0] == haystack[i] ){
+            j=i;
+            while(needle[j-i] == haystack[j] && j-i < needleLen)
+                j++;
+            if(j-i == needleLen){
+                /* We made it through the haystack and
+                 * and looked at all the characters without
+                 * terminating early. 
+                */
+                 return i;
+            }
+        }
+    }
+    return -1;
+}
+
 /* Ha, this function name is great. DO NETWORK WORK -- doNetWork! 
- * Is funny because network is what we talk over see?
+ * Is funny because network iis what we talk over see?
 */
 void* doNetWork(struct threadData* td) {
-    /* Copy local data 
-    struct ThreadData* data=(struct ThreadData*) td;*/
+    /*Response Variables*/
     struct http_request request;
     int bytesSent;
     int controller;
     int status;
     char response[10000];
     bzero(response, sizeof response);
+    /* Request variables */
+    int readAmount;
+    int totalRead;
+    int flags; 
+    int j,k;
+    int contentLength;
+    int contentLengthRecieved;
+    int contentLengthPosition;
+    char * tempBuff;
+    char * raw_message;
+    char contentLengthBuff[100];
+
+    raw_message = malloc(sizeof(char)*BUFSIZ); /* Just enough space for the first read, to determine content length */
+    if(raw_message == NULL){
+        /* Internal Problem! */
+        NETWORK_LOG_LEVEL_1("Fatal: Failed to allocate memory for first-read temporary buffer");
+        response[0]='{'; response[1]='}'; response[2]='\0';
+        status = 500;
+        goto internal_err;
+    }
+    memset(raw_message, 0,sizeof(char)*BUFSIZ);
+    tempBuff = NULL; /* temp buff will be used as an indirection pointer during realloc */
+        
+
+    /* Accept and read incoming request  */
+    if(td->clientfd == -1)
+        goto bad_client_id;
+
+    readAmount=totalRead=contentLengthRecieved =contentLengthPosition= contentLength = 0;
+
+    NETWORK_LOG_LEVEL_2_NUM("Accepted Client Request on File Descriptor ", td->clientfd);
+    readAmount = 1; /* Sentinal */
+    flags = fcntl(td->clientfd, F_GETFL, 0);
+    fcntl(td->clientfd, F_SETFL, flags | O_NONBLOCK);
+    contentLength = -1; /* Sentinal */
+    while(readAmount != 0){
+        readAmount = read(td->clientfd,raw_message+totalRead,BUFSIZ);
+        if(readAmount == -1){
+            if(errno == EAGAIN && totalRead == 0)
+                continue;
+            else if(contentLengthRecieved != contentLength)
+                continue;
+            else
+                readAmount = 0;
+        }else{
+            NETWORK_LOG_LEVEL_2_NUM("Reading Data From Socket", td->clientfd);
+            if(totalRead + readAmount > THREAD_DATA_MAX_SIZE){
+                NETWORK_LOG_LEVEL_1("Warning Too much content in request. Possible Truncation");
+                readAmount = 0;
+            }else{
+                    /* Since we're here that means we have at least 
+                     * the beginning of the request itself but we're
+                     * waiting for more. So determine the content-length
+                     * and then figure out if we have all of it or not
+                    */
+                    contentLengthPosition = strnstr("Content-Length", raw_message, BUFSIZ);                    
+                    if(contentLengthPosition == -1){
+                        /* You didn't send us a content length, carry on! 
+                         * so no data, so just url, so good bye.
+                        */
+                        contentLengthRecieved = contentLength = readAmount = 0;
+                    }else{
+                        if(totalRead == 0){                            
+                            /* Convert the content length 
+                            * reuse this connections buffer.
+                            */
+                            bzero(contentLengthBuff, sizeof contentLengthBuff); /* Only what we need */
+                            contentLength = contentLengthPosition;
+                            contentLength+=strlen("Content-Length: "); /* Skip the text */
+                             
+                            for(k=0; k < (int)sizeof(contentLengthBuff) && *(raw_message + contentLength) != '\0' && *(raw_message + contentLength) != '\r'; ++k, contentLength++)
+                                contentLengthBuff[k] = *(raw_message + contentLength);
+                            contentLengthBuff[k] = '\0';
+                            contentLength = atoi(contentLengthBuff);                            
+                            
+                            /* Malloc for the content Length 
+                             * j is the position of the data, all things prior 
+                             * need to be conserved as well
+                            */
+                            j = strnstr("\r\n\r\n", raw_message, BUFSIZ);
+                            tempBuff = realloc(raw_message, BUFSIZ + 1+ j + 4 + (contentLength < 0 ? 0 : contentLength) );
+                            if(!tempBuff){
+                                free(raw_message);
+                                NETWORK_LOG_LEVEL_1("Could not reallocate memory during request data acquisition");
+                                goto internal_err;
+                            }else{
+                                raw_message = tempBuff;
+                                /* set the memory realloced to 0 */
+                                memset(raw_message+BUFSIZ, 0, 1+ j + 4 + (contentLength < 0 ? 0 : contentLength));
+                            }
+
+                        }
+
+                        /* We've said a content length now, and we need 
+                        * determine how much we've actually recieved
+                        * no need to store it, just count it with j. 
+                        */
+                        j = strnstr("\r\n\r\n", raw_message, BUFSIZ);
+                        if(j != -1){
+                            j+=4; /* skip newlines */
+                            j+= contentLengthRecieved;
+                            for(contentLengthRecieved = contentLengthRecieved == (0 ? 0 : contentLengthRecieved); j < 5+contentLengthPosition+contentLength && raw_message+j != '\0'; ++j, ++contentLengthRecieved)
+                                ;                            
+                            
+                        }else{
+                            /* Could not find content...*/
+                            if(contentLength == 0)
+                                readAmount = 0; /* Get out */
+                            else
+                                contentLengthRecieved = 0; /* Haven't received it yet */
+                        }
+                    }
+                    /* Important to do this last as the totalRead is what
+                     * determines if we malloc for content or not
+                    */
+                    totalRead += readAmount;                           
+                    if(totalRead > contentLength){
+                        contentLengthRecieved = contentLength;
+                        readAmount = 0;
+                    }
+                
+            }
+        }
+    }
+    if(totalRead > THREAD_DATA_MAX_SIZE)
+        NETWORK_LOG_LEVEL_1("Warning: Total Read Greater than Buffer Length");
+    raw_message[totalRead] = '\0';
 
     /*Blank JSON response for no control*/
     response[0]='{'; response[1]='}'; response[2]='\0';
     status = 200;
-    parseRequest(&request, td->msg);
+    parseRequest(&request, raw_message);
 
     /* Pass the request off to a handler */
     controller = determineController(request.url);
@@ -84,23 +233,23 @@ void* doNetWork(struct threadData* td) {
     if(request.contentLength > 0)
         free(request.data);
 
-
+    internal_err:
     createResponse(response,td->msg,status);
     td->msg[strlen(td->msg)] = '\0';
 
+    bad_client_id: 
     if(td->clientfd != -1){
         bytesSent = send(td->clientfd,td->msg,strlen(td->msg),0);  
         NETWORK_LOG_LEVEL_1("Sending Response:");
         NETWORK_LOG_LEVEL_1(td->msg);
         NETWORK_LOG_LEVEL_2_NUM("Bytes sent to client: ", bytesSent);
         NETWORK_LOG_LEVEL_2(strerror(errno));
-
         close(td->clientfd);
     }else{
         NETWORK_LOG_LEVEL_2("File Descriptor invalid. If shutting down there is no problem.");
         NETWORK_LOG_LEVEL_2("If not shutting down, there was an issue sending data to the client.");
     }
-
+    free(raw_message);
     return NULL;
 }
 
@@ -109,10 +258,10 @@ void* doNetWork(struct threadData* td) {
  *response code of status. This function call is not safe.
 */
 int createResponse(char * content, char * buff, int status){
-    char timeBuffer[1000];
+    char timeBuffer[40];
     time_t now;
     struct tm tm;
-    bzero(timeBuffer,1000);
+    bzero(timeBuffer,40);
     now = time(NULL);
 
     tm  = *gmtime(&now);
@@ -156,27 +305,7 @@ int setupSockAndBind(int fd, struct sockaddr_in * sockserv, int port ){
     return bind(fd,(struct sockaddr *)sockserv,sizeof(*sockserv));
 }
 
-static int strnstr(char * needle, char * haystack, int haystackLen){
-    int i;
-    int j;
-    
-    int needleLen = strlen(needle);
-    for(i=0; i < haystackLen && haystack[i] != '\0'; ++i){
-        if( needle[0] == haystack[i] ){
-            j=i;
-            while(needle[j-i] == haystack[j] && j-i < needleLen)
-                j++;
-            if(j-i == needleLen){
-                /* We made it through the haystack and
-                 * and looked at all the characters without
-                 * terminating early. 
-                */
-                 return i;
-            }
-        }
-    }
-    return -1;
-}
+
 
 int parseRequest(struct http_request * requestToFill, char * requestStr){
     char buff[FIRSTLINEBUFFSIZE]; /* This is the most we'll read */
@@ -294,10 +423,9 @@ int run_network(void*(*func)(void*)){
     int clientfd;
     int socketfd;
     socklen_t clientsocklen;
-    char * buff; 
     pthread_t children[NUMTHREADS];
     struct threadData data[NUMTHREADS];
-    int i,j,k;
+    int i,j;
     stop = 0;
     #ifdef DETACHED_THREADS
     pthread_attr_t attr;
@@ -307,21 +435,9 @@ int run_network(void*(*func)(void*)){
     int retval;
     int sec;
     int usec;
-    int readAmount;
-    int totalRead;
-    int flags; 
-    int contentLength;
-    int contentLengthRecieved;
-    
-    buff = malloc(NUMTHREADS*BUFSIZ);
-    if(buff == NULL){
-        BOOT_LOG_STR("Could not allocated memory for buffers, exiting","");
-        return 0;
-    }
-    memset(buff, 0, NUMTHREADS*BUFSIZ);
 
-    clientfd = socketfd =  readAmount = totalRead = contentLengthRecieved = 0; 
-    contentLength = -1; /* Sentinal */
+    clientfd = socketfd  = 0; 
+    
     bzero(&sockserv,sizeof(sockserv));
     sec = 0;
     usec = 10;
@@ -376,86 +492,10 @@ int run_network(void*(*func)(void*)){
                     continue;
                 }
                 FD_SET(socketfd, &rfds);
-                bzero(data[i].msg, THREAD_DATA_MAX_SIZE);
 
                 /* We have yet to recieve anything or check for the header */
-                contentLengthRecieved = contentLength = 0;
                 clientfd = accept(socketfd,(struct sockaddr*)&sockclient,&clientsocklen);
                 if(clientfd != -1){
-                    readAmount=totalRead=0;
-
-                    NETWORK_LOG_LEVEL_2_NUM("Accepted Client Request on File Descriptor ", clientfd);
-                    readAmount = 1; /* Sentinal */
-                    flags = fcntl(clientfd, F_GETFL, 0);
-                    fcntl(clientfd, F_SETFL, flags | O_NONBLOCK);
-                    while(readAmount != 0){
-                        memset(buff+(i*BUFSIZ), 0, BUFSIZ);
-                        readAmount = read(clientfd,buff+(i*BUFSIZ),BUFSIZ);
-                        if(readAmount == -1){
-                            if(errno == EAGAIN && totalRead == 0)
-                                continue;
-                            else if(contentLengthRecieved != contentLength)
-                                continue;
-                            else
-                                readAmount = 0;
-                        }else{
-                            if(totalRead + readAmount > THREAD_DATA_MAX_SIZE){
-                                NETWORK_LOG_LEVEL_1("Warning Too much content in request. Possible Truncation");
-                                readAmount = 0;
-                            }else{
-                                if( strncat(data[i].msg, buff+(i*BUFSIZ) ,BUFSIZ) == NULL ){
-                                    NETWORK_LOG_LEVEL_1("Warning: Too much content concatenated, possible truncation");
-                                }else{
-                                    /* Since we're here that means we have at least 
-                                     * the beginning of the request itself but we're
-                                     * waiting for more. So determine the content-length
-                                     * and then figure out if we have all of it or not
-                                    */
-                                    totalRead += readAmount;    
-                                    contentLength = strnstr("Content-Length", data[i].msg,strlen(data[i].msg));
-                                    if(contentLength == -1){
-                                        /* You didn't send us a content length, carry on! 
-                                         * so no data, so just url, so good bye.
-                                        */
-                                        contentLengthRecieved = contentLength = readAmount = 0;
-                                    }else{
-                                        /* Convert the content length 
-                                         * reuse this connections buffer.
-                                        */
-                                        memset(buff+(i*BUFSIZ), 0, 100); /* Only what we need */
-                                        contentLength+=strlen("Content-Length: "); /* Skip the text */
-                                         
-                                        for(k=0; k < 100 && data[i].msg[contentLength] != '\0' && data[i].msg[contentLength] != '\r'; ++k, contentLength++)
-                                            *(buff+(i*BUFSIZ)+k) = data[i].msg[contentLength];
-                                        *(buff+(i*BUFSIZ)+k) = '\0';
-                                        contentLength = atoi((buff+(i*BUFSIZ)));
-                                        /* We've said a content length now, and we need 
-                                         * determine how much we've actually recieved
-                                         * no need to store it, just count it with k. 
-                                        */
-                                        j = strnstr("\r\n\r\n", data[i].msg, strlen(data[i].msg));
-                                        if(j != -1){
-                                            j+=4; /* skip newlines */
-                                            for(contentLengthRecieved = 0; j < (int)strlen(data[i].msg) && data[i].msg[j] != '\0'; ++j, ++contentLengthRecieved)
-                                                ;
-                                        }else{
-                                            /* Could not find content...*/
-                                            if(contentLength == 0)
-                                                readAmount = 0; /* Get out */
-                                            else
-                                                contentLengthRecieved = 0; /* Haven't received it yet */
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    if(totalRead > THREAD_DATA_MAX_SIZE)
-                        NETWORK_LOG_LEVEL_1("Warning: Total Read Greater than Buffer Length");
-                    data[i].msg[totalRead] = '\0';
-                    
-
-                    /* A thread pool would be intelligent here */
                     data[i].clientfd = clientfd;
                     #ifndef DETACHED_THREADS
                         pthread_create(&children[i],NULL,func,&data[i]);
@@ -463,7 +503,6 @@ int run_network(void*(*func)(void*)){
                         NETWORK_LOG_LEVEL_2("Spawning detached thread");
                         pthread_create(&children[i],&attr,func,&data[i]);
                     #endif
-                    bzero(buff+(i*BUFSIZ),BUFSIZ);
                 }else{
                     NETWORK_LOG_LEVEL_1("Connection shutdown.");
                     NETWORK_LOG_LEVEL_2("Invalid file descriptor from client connection.");
@@ -489,8 +528,6 @@ int run_network(void*(*func)(void*)){
     close(socketfd);
     BOOT_LOG_STR("Exiting Server...", "");
     wait(NULL);
-    free(buff);
-
     return 0;
 }
 
