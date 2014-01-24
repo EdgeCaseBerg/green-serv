@@ -104,6 +104,7 @@ units: $(unittests)
 	$(valgrind) tests/bin/router.out
 	$(valgrind) tests/bin/network.out
 	$(valgrind) tests/bin/mlist.out
+	$(valgrind) tests/bin/json-test.out
 
 test-decimal: tests/unit/decimal-test.c decimal.o
 	$(CC) $(gflags) tests/unit/decimal-test.c obj/decimal.o -o tests/bin/decimal.out -lm -rdynamic
@@ -134,6 +135,9 @@ test-network: tests/unit/network-test.c router.o  strmap.o network.o commentC.o 
 
 test-mlist: tests/unit/mlist-test.c comment.o marker.o heatmap.o mlist.o
 	$(CC) $(gflags) tests/unit/mlist-test.c obj/mlist.o obj/comment.o obj/marker.o obj/heatmap.o -o tests/bin/mlist.out
+
+test-json: tests/unit/json-test.c strmap.o json.o decimal.o 
+	$(CC) $(gflags) tests/unit/json-test.c obj/json.o obj/strmap.o obj/decimal.o -o tests/bin/json-test.out
 
 #Controller Tests
 
