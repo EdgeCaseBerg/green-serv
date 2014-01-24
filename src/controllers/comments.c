@@ -246,12 +246,12 @@ int comment_post(char * buffer, int buffSize, const struct http_request * reques
 				/* Verify that it is a correct type */
 				if(strncasecmp(valBuffer, CTYPE_1,COMMENTS_CTYPE_SIZE) != 0)
 					if(strncasecmp(valBuffer, CTYPE_2,COMMENTS_CTYPE_SIZE) != 0)
-						if(strncasecmp(valBuffer, CTYPE_3,COMMENTS_CTYPE_SIZE) != 0){				
+						if(strncasecmp(valBuffer, CTYPE_3,COMMENTS_CTYPE_SIZE) != 0)
+							if(strncasecmp(valBuffer, CTYPE_4, COMMENTS_CTYPE_SIZE) !=0){
 							sm_delete(sm);
 							snprintf(buffer, buffSize, ERROR_STR_FORMAT, 422, BAD_TYPE_ERR);
 							return 422;
 						}
-
 			}
 		}
 	}
