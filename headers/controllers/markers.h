@@ -21,6 +21,7 @@
 		#define CTYPE_1 "COMMENT"
 		#define CTYPE_2 "ADMIN"
 		#define CTYPE_3 "MARKER"
+		#define CTYPE_4 "HAZARD"
 	#endif
 	
 	/* The default offset for lat and lon */
@@ -33,7 +34,7 @@
 		#define BAD_PAGE_ERR "Page must be a non zero, positive integral value"
 	#endif
 	#ifndef BAD_TYPE_ERR
-		#define BAD_TYPE_ERR "Type must be of " CTYPE_1 "," CTYPE_2 ", or " CTYPE_3
+		#define BAD_TYPE_ERR "Type must be of " CTYPE_1 "," CTYPE_2 "," CTYPE_4 ", or " CTYPE_3
 	#endif
 	#ifndef BAD_METHOD_ERR
 		#define BAD_METHOD_ERR "Request method not supported"
