@@ -15,6 +15,11 @@ void gs_report_setStackTrace(char * trace, struct gs_report * gsr){
 	strncpy(gsr->trace,trace,GS_REPORT_MAX_LENGTH);	
 }
 
+void gs_report_setType(char * rType, struct gs_report * gsr){
+	bzero(gsr->rType, GS_REPORT_TYPE_MAX_LENGTH+1);
+	strncpy(gsr->rType,rType, GS_REPORT_TYPE_MAX_LENGTH);
+}
+
 void gs_report_setOrigin(char * origin, struct gs_report * gsr){
 	bzero(gsr->origin,SHA_LENGTH+1);
 	sha256(origin,gsr->origin);

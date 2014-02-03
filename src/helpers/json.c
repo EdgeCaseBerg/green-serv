@@ -364,7 +364,7 @@ int gs_heatmapNToJSON(const struct gs_heatmap gsh, char * jsonOutput, int jsonOu
 }
 
 
-/* Recommed at least 67 + GS_REPORT_MAX_LENGTH*3 for safety for jsonOutput size*/
+/* Recommed at least 67 + GS_REPORT_MAX_LENGTH*3 + GS_REPORT_TYPE_MAX_LENGTH for safety for jsonOutput size*/
 int gs_reportToJSON(const struct gs_report gsr, char * jsonOutput){
     char * jsonMsg;
     char * jsonPartial;
@@ -376,11 +376,11 @@ int gs_reportToJSON(const struct gs_report gsr, char * jsonOutput){
 
     /* The hash is the auth hash not the origin hash*/
     jsonMsg = "{\"message\" : \"%s\", ";
-    jsonPartial = "\"timestamp\" : \"%s\", \"hash\" : \"%s\" }";
+    jsonPartial = "\"timestamp\" : \"%s\", \"hash\" : \"%s\",\"type\":\"%s\" }";
     _escapeJSON(gsr.content, GS_REPORT_MAX_LENGTH*3, escaped);
 
     /* the message content can easily overrun the stack so try to be extra careful */
-    snprintf(jsonPartialString,43+65+20,jsonPartial,gsr.createdTime, gsr.authorize);
+    snprintf(jsonPartialString,43+65+20+GS_REPORT_TYPE_MAX_LENGTH,jsonPartial,gsr.createdTime, gsr.authorize,gsr.rType);
     snprintf(jsonPartialMsg,strlen(gsr.content)*3+20,jsonMsg, escaped);
     
 
@@ -391,10 +391,10 @@ int gs_reportToJSON(const struct gs_report gsr, char * jsonOutput){
 */
 int gs_reportNToJSON(const struct gs_report gsr, char * jsonOutput, int jsonOutputAllocatedSize){
     #ifndef JSON_CONTENT_LENGTH
-        #define JSON_CONTENT_LENGTH (20+(GS_REPORT_MAX_LENGTH)*4+1)
+        #define JSON_CONTENT_LENGTH (20+(GS_REPORT_MAX_LENGTH)*4+1+GS_REPORT_TYPE_MAX_LENGTH)
     #else
         #undef JSON_CONTENT_LENGTH
-        #define JSON_CONTENT_LENGTH (20+(GS_REPORT_MAX_LENGTH)*4+1)
+        #define JSON_CONTENT_LENGTH (20+(GS_REPORT_MAX_LENGTH)*4+1+GS_REPORT_TYPE_MAX_LENGTH)
     #endif
     char jsonMessage[JSON_CONTENT_LENGTH];
     #ifndef JSON_TIMESTAMP_LENGTH
@@ -421,19 +421,20 @@ int gs_reportNToJSON(const struct gs_report gsr, char * jsonOutput, int jsonOutp
     bzero(escaped,JSON_CONTENT_LENGTH);
 
     jsonTimestampWritten = snprintf(jsonTimestamp,JSON_TIMESTAMP_LENGTH,"\"timestamp\" : \"%s\",",gsr.createdTime);
-    jsonHashWritten = snprintf(jsonHash, JSON_HASH_LENGTH," \"hash\" : \"%s\" }",gsr.authorize );
+    jsonHashWritten = snprintf(jsonHash, JSON_HASH_LENGTH," \"hash\" : \"%s\" ",gsr.authorize );
+
 
     _escapeJSON(gsr.content, strlen(gsr.content), escaped);
 
     jsonMessageWritten = snprintf(jsonMessage, JSON_CONTENT_LENGTH, "{\"message\" : \"%s\", ",escaped );
     
-    if(jsonMessageWritten + jsonHashWritten + jsonTimestampWritten > jsonOutputAllocatedSize){
+    if(jsonMessageWritten + jsonHashWritten + jsonTimestampWritten > jsonOutputAllocatedSize + GS_REPORT_TYPE_MAX_LENGTH){
         fprintf(stderr, "%s\n", "gs_reportNToJSON may have returned partial JSON output due to not allocating enough memory");
         #ifdef RETURN_ON_JSON_RISK
             RETURN_ON_JSON_RISK;
         #endif
     }
-    return snprintf(jsonOutput,jsonOutputAllocatedSize-1, "%s%s%s", jsonMessage,jsonTimestamp,jsonHash);
+    return snprintf(jsonOutput,jsonOutputAllocatedSize-1, "%s%s%s,\"type\":\"%s\"}", jsonMessage,jsonTimestamp,jsonHash,gsr.rType);
 
 }
 

@@ -614,7 +614,7 @@ int db_getHeatmap(int page, long scopeId, long precision, long * max, Decimal lo
 }
 
 #ifndef DB_INSERT_REPORT_QUERY_SIZE
-	#define DB_INSERT_REPORT_QUERY_SIZE 96 + GS_REPORT_MAX_LENGTH + (SHA_LENGTH+1)*2 +4/* 96 for Query, 65*2 for hashes, +4 for safety */
+	#define DB_INSERT_REPORT_QUERY_SIZE 96 + GS_REPORT_TYPE_MAX_LENGTH + GS_REPORT_MAX_LENGTH + (SHA_LENGTH+1)*2 +4/* 96 for Query, 65*2 for hashes, +4 for safety */
 #endif
 void db_insertReport(struct gs_report * gsr, MYSQL * conn){
 	MYSQL_RES * result;
@@ -626,7 +626,7 @@ void db_insertReport(struct gs_report * gsr, MYSQL * conn){
 		return; /* Return if scope is invalid that we can tell*/
 
 	bzero(query,sizeof query);
-	sprintf(query, GS_REPORT_INSERT, gsr->content, gsr->scopeId, gsr->origin, gsr->authorize, gsr->trace);
+	sprintf(query, GS_REPORT_INSERT, gsr->content, gsr->scopeId, gsr->origin, gsr->authorize, gsr->trace, gsr->rType);
 	LOGDB
 	if(0 != mysql_query(conn, query) ){
 		fprintf(stderr, "%s\n", mysql_error(conn));
@@ -670,6 +670,7 @@ void db_insertReport(struct gs_report * gsr, MYSQL * conn){
 	strncpy(gsr->authorize, row[4], SHA_LENGTH);
 	gs_report_setCreatedTime( row[5], gsr);
 	gs_report_setStackTrace( row[6], gsr);
+	gs_report_setType(row[7], gsr);
 	
 
 	mysql_free_result(result);
@@ -679,7 +680,7 @@ void db_insertReport(struct gs_report * gsr, MYSQL * conn){
 void db_getReportByAuth(char * auth, struct gs_report * gsr, MYSQL * conn){
 	MYSQL_RES * result;
 	MYSQL_ROW row; 
-	char query[99+65+40]; /* 99 for query, 65 for auth hash, 4 for safety*/
+	char query[99+65+40+GS_REPORT_TYPE_MAX_LENGTH]; /* 99 for query, 65 for auth hash, 4 for safety*/
 
 	gs_report_ZeroStruct(gsr);
 	bzero(query,sizeof query);
@@ -705,6 +706,7 @@ void db_getReportByAuth(char * auth, struct gs_report * gsr, MYSQL * conn){
 	strncpy(gsr->authorize, row[4], SHA_LENGTH);
 	gs_report_setCreatedTime( row[5], gsr);
 	gs_report_setStackTrace( row[6], gsr);
+	gs_report_setType(row[7], gsr);
 
 	mysql_free_result(result);  
 }
@@ -800,6 +802,7 @@ int db_getReports(int page,char * since, long scopeId,  struct gs_report * gsr, 
 		strncpy(gsr[i].authorize, row[4], SHA_LENGTH);
 		gs_report_setCreatedTime( row[5], &gsr[i]);
 		gs_report_setStackTrace( row[6], &gsr[i]);
+		gs_report_setType(row[7], &gsr[i]);
 		i++;
 	}
 	mysql_free_result(result);  

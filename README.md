@@ -158,6 +158,7 @@ SQL to create database structure:
         origin CHAR(64) NOT NULL, -- sha256 hash
         authorize CHAR(64) NOT NULL, -- sha256 hash
         created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        r_type CHAR(20) NOT NULL DEFAULT "INFO",
         INDEX(`scope_id`),
         CONSTRAINT FOREIGN KEY (`scope_id`) REFERENCES `scope` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
     ) ENGINE InnoDB;
