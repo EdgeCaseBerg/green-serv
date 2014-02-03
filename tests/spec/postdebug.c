@@ -28,16 +28,22 @@ int main(){
 	request.method = POST;
 
 	char * valid = "{ \"message\" : \"Test Debug\",\"stackTrace\" : \"stack trace\",\"origin\" : \"6f3d78c8ca1cca4f362c697d9\"}";
+	char * withType = "{ \"message\" : \"Test Debug\",\"stackTrace\" : \"stack trace\",\"origin\" : \"6f3d78c8ca1cca4f362c697d9\",\"type\":\"WARN\"}";
 
 	char * malformed = "{ { {{} }aaa}";
 	char * missingKeys = "{\"message\" : \"ms\"}";
 	char * emptyMsg = "{ \"message\" : \"\",\"stackTrace\" : \"stack trace\",\"origin\" : \"6f3d78c8ca1cca4f362c697d9\"}";
 	char * emptyTrace = "{ \"message\" : \"Test Debug\",\"stackTrace\" : \"\",\"origin\" : \"6f3d78c8ca1cca4f362c697d9\"}";
-	char * emptyOrigin = "{ \"message\" : \"Test Debug\",\"stackTrace\" : \"stack trace\",\"origin\" : \"\"}";
+	char * emptyOrigin = "{ \"message\" : \"Test Debug\",\"stackTrace\" : \"stack trace\",\"origin\" : \"\"}";	
+	char * invalidType = "{ \"message\" : \"Test Debug\",\"stackTrace\" : \"stack trace\",\"origin\" : \"6f3d78c8ca1cca4f362c697d9\",\"type\":\"WAsRN\"}";
 	
 	/* Valids */
 	sprintf(request.url, "/api/debug");
 	SETDATA(valid)
+	status = report_controller(&request, stringToReturn, 1000);
+	EXPECTED(200, status, "Expected successful request")
+
+	SETDATA(withType)
 	status = report_controller(&request, stringToReturn, 1000);
 	EXPECTED(200, status, "Expected successful request")
 
@@ -66,6 +72,10 @@ int main(){
 	SETDATA(emptyOrigin)
 	status = report_controller(&request, stringToReturn, 1000);
 	EXPECTED(422, status, "Should have failed when origin empty")
+
+	SETDATA(invalidType)
+	status = report_controller(&request, stringToReturn, 1000);
+	EXPECTED(400, status, "Expected failed request")	
 		
 	free(stringToReturn);
 	fflush(stdout);
