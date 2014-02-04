@@ -32,7 +32,7 @@
 	 * the number of points but this define is the hard limit to how 
 	 * many we're willing to return. 
 	*/
-	 #define MARKER_LIMIT 121
+	 #define MARKER_LIMIT 45
 	 #define MARKER_RETURNED (MARKER_LIMIT-1)
 
 	/* SQL Queries for entities */	

@@ -55,7 +55,7 @@ void* doNetWork(struct threadData* td) {
     int bytesSent;
     int controller;
     int status;
-    char response[10000];
+    char response[15000];
     bzero(response, sizeof response);
     /* Request variables */
     int readAmount;

@@ -39,9 +39,7 @@ void parseArgs(int argc, const char * argv[], struct gs_scope * campaign, MYSQL 
 int green_serv(int argc, const char* argv[]) {
 	MYSQL * conn;
 	struct gs_scope campaign;
-	
-	char json[512];
-	bzero(json,512);
+
 	/*You must initialize the library on the main thread. 
 	 *the only time threaded_db should be undef-ed is if you're
 	 *unit testing and don't want a threaded environment for some
