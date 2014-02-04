@@ -57,8 +57,10 @@
 	#ifndef HASH_REQUIRED
 		#define HASH_REQUIRED "Hash parameter must be present"
 	#endif
+	#ifndef BAD_REPORT_TYPE_ERR
+		#define BAD_REPORT_TYPE_ERR "Report types must be one of the following: " REPORT_TYPES
+	#endif
 
-	
 	int report_controller(const struct http_request * request, char * stringToReturn, int strLength);
 
 	int report_delete(char * buffer, int buffSize, char * origin, char * hash);

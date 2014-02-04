@@ -4,6 +4,26 @@ static inline int min(const int a, const int b){
 	return a < b ? a : b;
 }
 
+/* Very small limited substring match against an uppercased constant
+*/
+static inline int strcasestr(char * needle, char * haystack){
+	int i,j,length,hlength;
+	if(needle == NULL || haystack == NULL)
+		return 0;
+
+	length = strlen(needle);
+	hlength = strlen(haystack);
+	
+	for (i=j=0; i < hlength; ++i){
+		while(j < length && toupper((int)*(needle+j)) == (int)*(haystack+i+j))
+			j++;
+		if(j == length)
+			return 1; //matched
+		j=0;
+	}
+	return 0;
+}
+
 
 int report_controller(const struct http_request * request, char * stringToReturn, int strLength){
 	int status;
@@ -209,6 +229,7 @@ int report_post(char * buffer, int buffSize, const struct http_request * request
 	char message[GS_REPORT_MAX_LENGTH+1];
 	char stackTrace[GS_REPORT_MAX_LENGTH+1];
 	char origin[SHA_LENGTH+1];
+	char type[GS_REPORT_TYPE_MAX_LENGTH];
 	char *auth;
 
 
@@ -217,6 +238,7 @@ int report_post(char * buffer, int buffSize, const struct http_request * request
 	bzero(message, sizeof message);
 	bzero(stackTrace, sizeof stackTrace);
 	bzero(origin, sizeof origin);
+	bzero(type,sizeof type);
 	gs_report_ZeroStruct(&report);
 	
 
@@ -272,6 +294,20 @@ int report_post(char * buffer, int buffSize, const struct http_request * request
 		}
 		snprintf(origin, sizeof origin, "%s", valBuffer);
 		gs_report_setOrigin(origin, &report);
+
+		if( sm_exists(sm,"type") == 1 ){
+			sm_get(sm,"type",valBuffer,sizeof valBuffer);
+			if(strcasestr(valBuffer,REPORT_TYPES) == 0){
+				sm_delete(sm);
+				snprintf(buffer, buffSize, ERROR_STR_FORMAT, 400, BAD_REPORT_TYPE_ERR);
+				return 400;
+			}
+			snprintf(type, sizeof type, "%s", valBuffer);
+			gs_report_setType(type,&report);
+		}else{
+			gs_report_setType(DEFAULT_REPORT_TYPE,&report);	
+		}
+		
 	}
 
 	gs_report_setScopeId(_shared_campaign_id, &report);

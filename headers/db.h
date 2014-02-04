@@ -68,7 +68,7 @@
 
 	#define GS_REPORT_GET_ALL "SELECT id, content, scope_id, origin, authorize, created_time, trace, r_type FROM report WHERE scope_id = %ld AND created_time > '%s' ORDER BY created_time DESC LIMIT %d, " STRINGIFY(RESULTS_PER_PAGE)  
 	#define GS_REPORT_GET_BY_AUTH "SELECT id, content, scope_id, origin, authorize, created_time,trace,r_type  FROM report WHERE authorize = \"%s\""
-	#define GS_REPORT_INSERT "INSERT INTO report (content, scope_id, origin, authorize, trace,r_type) VALUES (\"%s\", %ld, \"%s\", \"%s\", \"%s\",\"%s\")"
+	#define GS_REPORT_INSERT "INSERT INTO report (content, scope_id, origin, authorize, trace,r_type) VALUES (\"%s\", %ld, \"%s\", \"%s\", \"%s\",UPPER(\"%s\"))"
 	#define GS_REPORT_DELETE "DELETE FROM report WHERE origin =\"%s\" AND authorize=\"%s\""
 
 

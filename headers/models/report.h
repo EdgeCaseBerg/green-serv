@@ -8,6 +8,7 @@
 	#define GS_REPORT_TYPE_MAX_LENGTH GS_REPORT_CREATED_TIME_LENGTH
 	#define SHA_LENGTH 64 /* 64 * 4 = 256*/
 	#define REPORT_TYPES "AUTH,INFO,DEBUG,WARN,ERROR"
+	#define DEFAULT_REPORT_TYPE "INFO"
 	
 	struct gs_report {
 		long id;

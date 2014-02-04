@@ -421,7 +421,7 @@ int gs_reportNToJSON(const struct gs_report gsr, char * jsonOutput, int jsonOutp
     bzero(escaped,JSON_CONTENT_LENGTH);
 
     jsonTimestampWritten = snprintf(jsonTimestamp,JSON_TIMESTAMP_LENGTH,"\"timestamp\" : \"%s\",",gsr.createdTime);
-    jsonHashWritten = snprintf(jsonHash, JSON_HASH_LENGTH," \"hash\" : \"%s\" ",gsr.authorize );
+    jsonHashWritten = snprintf(jsonHash, JSON_HASH_LENGTH," \"hash\" : \"%s\"",gsr.authorize );
 
 
     _escapeJSON(gsr.content, strlen(gsr.content), escaped);

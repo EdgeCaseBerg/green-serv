@@ -45,6 +45,8 @@ void gs_report_ZeroStruct(struct gs_report * gsr){
 	bzero(gsr->origin,SHA_LENGTH+1);
 	bzero(gsr->authorize,SHA_LENGTH+1);
 	bzero(gsr->trace, GS_REPORT_MAX_LENGTH +1);
+	bzero(gsr->rType, GS_REPORT_TYPE_MAX_LENGTH+1);
+	gs_report_setType(DEFAULT_REPORT_TYPE, gsr);
 	gsr->id = GS_REPORT_INVALID_ID; 
 	gsr->scopeId = GS_SCOPE_INVALID_ID;
 	bzero(gsr->createdTime, GS_REPORT_CREATED_TIME_LENGTH+1);

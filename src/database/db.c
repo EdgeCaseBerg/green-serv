@@ -769,7 +769,7 @@ int db_deleteMarker(long id, MYSQL * conn){
 }
 
 #ifndef REPORT_PAGE_QUERY_SIZE
-	#define REPORT_PAGE_QUERY_SIZE 256 
+	#define REPORT_PAGE_QUERY_SIZE 300 
 #endif
 int db_getReports(int page,char * since, long scopeId,  struct gs_report * gsr, MYSQL * conn){
 	MYSQL_RES * result;
