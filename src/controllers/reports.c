@@ -25,7 +25,7 @@ static inline int strcasestr(char * needle, char * haystack){
 }
 
 
-int report_controller(const struct http_request * request, char * stringToReturn, int strLength){
+int report_controller(const struct http_request * request, char ** stringToReturn, int strLength){
 	int status;
 	int buffSize;
 	int numParams;
@@ -151,7 +151,7 @@ int report_controller(const struct http_request * request, char * stringToReturn
 	}
 
 	
-	snprintf(stringToReturn, strLength, "%s", buffer);
+	snprintf(*stringToReturn, strLength, "%s", buffer);
 	free(buffer); 
 	return status;
 

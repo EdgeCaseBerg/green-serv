@@ -317,13 +317,6 @@ int marker_controller(const struct http_request * request, char ** stringToRetur
 	sm_delete(sm);	
 	return status;
 
-	#undef ERR_LABEL_STRING_TO_RETURN
-	#define ERR_LABEL_STRING_TO_RETURN(label, errorStr) \
-	label: \
-		snprintf(*stringToReturn, strLength, ERROR_STR_FORMAT, status, errorStr);\
-		return status;
-
-
 	ERR_LABEL_STRING_TO_RETURN(mc_nomem, NOMEM_ERROR)
 	ERR_LABEL_STRING_TO_RETURN(mc_unsupportedMethod, BAD_METHOD_ERR)
 	ERR_LABEL_STRING_TO_RETURN(mc_missing_key, MISSING_ID_KEY)
@@ -336,12 +329,6 @@ int marker_controller(const struct http_request * request, char ** stringToRetur
 	ERR_LABEL_STRING_TO_RETURN(mc_badLongitude, NAN_LONGITUDE)
 	ERR_LABEL_STRING_TO_RETURN(mc_oobLatitude, OOB_LATITUDE)
 	ERR_LABEL_STRING_TO_RETURN(mc_oobLongitude, OOB_LONGITUDE)
-
-	#undef ERR_LABEL_STRING_TO_RETURN
-	#define ERR_LABEL_STRING_TO_RETURN(label, errorStr) \
-	label: \
-		snprintf(stringToReturn, strLength, ERROR_STR_FORMAT, status, errorStr);\
-		return status;
 
 }
 

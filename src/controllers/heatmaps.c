@@ -5,7 +5,7 @@ static inline int min(const int a, const int b){
 }
 
 
-int heatmap_controller(const struct http_request * request, char * stringToReturn, int strLength){
+int heatmap_controller(const struct http_request * request, char ** stringToReturn, int strLength){
 	int status;
 	char * buffer; 
 	int buffSize;
@@ -235,7 +235,7 @@ int heatmap_controller(const struct http_request * request, char * stringToRetur
 	}
 
 	
-	snprintf(stringToReturn, strLength, "%s", buffer);
+	snprintf(*stringToReturn, strLength, "%s", buffer);
 	free(buffer); 
 	FREE_NON_NULL_DEGREES_AND_OFFSETS
 	sm_delete(sm);

@@ -208,11 +208,11 @@ void* doNetWork(struct threadData* td) {
             break;
         case COMMENTS_CONTROLLER :
             NETWORK_LOG_LEVEL_2("Comments Controller Processing Request.");
-            status = comment_controller(&request, response,  STARTING_RESPONSE_SIZE);
+            status = comment_controller(&request, &response,  STARTING_RESPONSE_SIZE);
             break;
         case HEATMAP_CONTROLLER :
             NETWORK_LOG_LEVEL_2("Heatmap Controller Processing Request.");
-            status = heatmap_controller(&request, response,  STARTING_RESPONSE_SIZE);
+            status = heatmap_controller(&request, &response,  STARTING_RESPONSE_SIZE);
             break;
         case MARKER_CONTROLLER :
             NETWORK_LOG_LEVEL_2("Marker Controller Processing Request.");
@@ -220,7 +220,7 @@ void* doNetWork(struct threadData* td) {
             break;
         case REPORT_CONTROLLER :
             NETWORK_LOG_LEVEL_2("Report Controller Processing Request.");
-            status = report_controller(&request, response,  STARTING_RESPONSE_SIZE);
+            status = report_controller(&request, &response,  STARTING_RESPONSE_SIZE);
             break;
         default:
             NETWORK_LOG_LEVEL_2("Unknown URL. Refusing to process request.");

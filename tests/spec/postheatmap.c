@@ -14,7 +14,7 @@ int main(){
 	stringToReturn = malloc(1000);
 	request.method = POST;
 	/* Expect invalid method */
-	status = heatmap_controller(&request, stringToReturn, 1000);
+	status = heatmap_controller(&request, &stringToReturn, 1000);
 	if( status == 501 )
 		fprintf(stdout, "." );
 	else{

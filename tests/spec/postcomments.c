@@ -79,58 +79,58 @@ int main(){
 	/* Valids */
 	sprintf(request.url, "/api/comments");
 	SETDATA(valid1)
-	status = comment_controller(&request, stringToReturn, 1000);
+	status = comment_controller(&request, &stringToReturn, 1000);
 	EXPECTED(200, status, "Request failed to succeed")
 
 	sprintf(request.url, "/api/comments");
 	SETDATA(valid2)
-	status = comment_controller(&request, stringToReturn, 1000);
+	status = comment_controller(&request, &stringToReturn, 1000);
 	EXPECTED(200, status, "Request failed to succeed")
 
 	sprintf(request.url, "/api/comments");
 	SETDATA(valid3)
-	status = comment_controller(&request, stringToReturn, 1000);
+	status = comment_controller(&request, &stringToReturn, 1000);
 	EXPECTED(200, status, "Request failed to succeed")
 
 	sprintf(request.url, "/api/comments");
 	SETDATA(validWithPin)
-	status = comment_controller(&request, stringToReturn, 1000);
+	status = comment_controller(&request, &stringToReturn, 1000);
 	EXPECTED(200, status, "Request failed to succeed")
 
 	/* Invalids */
 	sprintf(request.url, "/api/comments");
 	SETDATA(invalid)
-	status = comment_controller(&request, stringToReturn, 1000);
+	status = comment_controller(&request, &stringToReturn, 1000);
 	EXPECTED(400, status, "Expected malformed request")
 
 	sprintf(request.url, "/api/comments");
 	SETDATA(invalidKey)
-	status = comment_controller(&request, stringToReturn, 1000);
+	status = comment_controller(&request, &stringToReturn, 1000);
 	EXPECTED(422, status, "Expected key error")
 
 	sprintf(request.url, "/api/comments");
 	SETDATA(invalidNull)
-	status = comment_controller(&request, stringToReturn, 1000);
+	status = comment_controller(&request, &stringToReturn, 1000);
 	EXPECTED(422, status, "Expected Err for empty message or non-null message")
 
 	sprintf(request.url, "/api/comments");
 	SETDATA(invalidType)
-	status = comment_controller(&request, stringToReturn, 1000);
+	status = comment_controller(&request, &stringToReturn, 1000);
 	EXPECTED(422, status, "Expected rejection on invalid type")
 
 	sprintf(request.url, "/api/comments");
 	SETDATA(invalidPin)
-	status = comment_controller(&request, stringToReturn, 1000);
+	status = comment_controller(&request, &stringToReturn, 1000);
 	EXPECTED(422, status, "Expected failure for non-numeric pin id")
 
 	sprintf(request.url, "/api/comments");
 	SETDATA(emptyMsg)
-	status = comment_controller(&request, stringToReturn, 1000);
+	status = comment_controller(&request, &stringToReturn, 1000);
 	EXPECTED(422, status, "Expected failure for having an empty message")
 
 	sprintf(request.url, "/api/comments");
 	SETDATA(msgTooLarge)
-	status = comment_controller(&request, stringToReturn, 1000);
+	status = comment_controller(&request, &stringToReturn, 1000);
 	EXPECTED(422, status, "Expected failure for message being too large")
 
 	

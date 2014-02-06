@@ -50,45 +50,45 @@ int main(){
 
 
 	sprintf(request.url, "/api/debug");
-	status = report_controller(&request, stringToReturn, size);
+	status = report_controller(&request, &stringToReturn, size);
 	EXPECTED(200,status, "Failed on non-parameterized pins get.")
 
 	sprintf(request.url, "/api/debug?since=2013-12-13-00:00");
-	status = report_controller(&request, stringToReturn, size);
+	status = report_controller(&request, &stringToReturn, size);
 	EXPECTED(200,status, "Failed on ?since= get.")
 
 	sprintf(request.url, "/api/debug?page=1");
-	status = report_controller(&request, stringToReturn, size);
+	status = report_controller(&request, &stringToReturn, size);
 	EXPECTED(200,status, "Failed on ?page= get.")
 
 	sprintf(request.url, "/api/debug?since=2013-12-13-00:00");
-	status = report_controller(&request, stringToReturn, size);
+	status = report_controller(&request, &stringToReturn, size);
 	EXPECTED(200,status, "Should have succeeded with valid since parameter")
 
 	sprintf(request.url, "/api/debug?hash=%s", testReport.authorize);
-	status = report_controller(&request, stringToReturn, size);
+	status = report_controller(&request, &stringToReturn, size);
 	EXPECTED(200,status, "Should have succeeded with valid hash to retrieve")
 
 	sprintf(request.url, "/api/debug?since=2013-12-13-00:00&page=1");
-	status = report_controller(&request, stringToReturn, size);
+	status = report_controller(&request, &stringToReturn, size);
 	EXPECTED(200,status, "Should have succeeded with page and since parameters")	
 
 	/* 4xx */
 
 	sprintf(request.url, "/api/debug?hash=404value");
-	status = report_controller(&request, stringToReturn, size);
+	status = report_controller(&request, &stringToReturn, size);
 	EXPECTED(404,status, "Should not have found any report by this hash")
 
 	sprintf(request.url, "/api/debug?hash=3&page=1");
-	status = report_controller(&request, stringToReturn, size);
+	status = report_controller(&request, &stringToReturn, size);
 	EXPECTED(422,status, "Hash and page parameters should be mutually exclusive")	
 
 	sprintf(request.url, "/api/debug?since=2013-12-13-00:00&page=failed");
-	status = report_controller(&request, stringToReturn, size);
+	status = report_controller(&request, &stringToReturn, size);
 	EXPECTED(422,status, "Should fail with invalid page parameter")	 /* 422? why not 400, spec you so crazy */
 
 	sprintf(request.url, "/api/debug?since=2013-1e-13a00:00");
-	status = report_controller(&request, stringToReturn, size);
+	status = report_controller(&request, &stringToReturn, size);
 	EXPECTED(400,status, "Should not have parsed since time")	
 
 

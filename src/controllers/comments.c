@@ -11,7 +11,7 @@ static inline int min(const int a, const int b){
  *is given controller may return an invalid response.
  *Returns the status code of the response.
 */
-int comment_controller(const struct http_request * request, char * stringToReturn, int strLength){
+int comment_controller(const struct http_request * request, char ** stringToReturn, int strLength){
 	char buffer[(RESULTS_PER_PAGE * sizeof(struct gs_comment))*4+1+(2*MAX_URL_LENGTH)];
 	int status;
 	
@@ -23,17 +23,17 @@ int comment_controller(const struct http_request * request, char * stringToRetur
 			if( (status = comments_get(buffer, sizeof buffer, request )) == -1 )
 				goto cc_nomem;
 			/* Process results of comments_get */
-			snprintf(stringToReturn,strLength,"%s",buffer);
+			snprintf(*stringToReturn,strLength,"%s",buffer);
 			break;
 		case POST:
 			status = comment_post(buffer,sizeof buffer,request);
 			if( status == -1 )
 				goto cc_nomem;
-			snprintf(stringToReturn,strLength,"%s",buffer);
+			snprintf(*stringToReturn,strLength,"%s",buffer);
 			break;
 		case DELETE:
 			status = comment_delete(buffer, sizeof buffer, request);
-			snprintf(stringToReturn,strLength,"%s",buffer);
+			snprintf(*stringToReturn,strLength,"%s",buffer);
 			break;
 		default:
 			/*Invalid Method Err*/
@@ -46,11 +46,11 @@ int comment_controller(const struct http_request * request, char * stringToRetur
 	return status;
 
 	cc_nomem: /*Comment Controller Memory Allocation fail */
-		snprintf(stringToReturn, strLength, ERROR_STR_FORMAT, 500, NOMEM_ERROR);
+		snprintf(*stringToReturn, strLength, ERROR_STR_FORMAT, 500, NOMEM_ERROR);
 		return status;
 
 	cc_unsupportedMethod:/*Comment Controller Bad method*/			
-		snprintf(stringToReturn, strLength, ERROR_STR_FORMAT, status, BAD_METHOD_ERR);
+		snprintf(*stringToReturn, strLength, ERROR_STR_FORMAT, status, BAD_METHOD_ERR);
 		return status;															
 
 }

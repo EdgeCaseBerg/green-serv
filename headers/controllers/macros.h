@@ -20,6 +20,6 @@
 #ifndef ERR_LABEL_STRING_TO_RETURN
 	#define ERR_LABEL_STRING_TO_RETURN(label, errorStr) \
 	label: \
-		snprintf(stringToReturn, strLength, ERROR_STR_FORMAT, status, errorStr);\
+		snprintf(*stringToReturn, strLength, ERROR_STR_FORMAT, status, errorStr);\
 		return status;
 #endif
