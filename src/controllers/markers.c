@@ -695,13 +695,13 @@ int marker_get(char ** buffer,int buffSize,Decimal * latDegrees, Decimal * lonDe
 
 	/* If we've resized in the loop we need to resize the buffer */
 	if(resize != 1){
-		tmpBuff = malloc(sizeof(char)*buffSize*resize);
+		tmpBuff = malloc(sizeof(char)*buffSize*resize+256); /* 256 for the marker page str */
 		if(tmpBuff == NULL){
 			NETWORK_LOG_LEVEL_1("WARN: Possible invalid JSON being sent to due re-allocation err");
 		}else{
 			swapCharPtr(&tmpBuff,buffer);
 			free(tmpBuff);
-			buffSize = resize*buffSize;
+			buffSize = resize*buffSize+256;
 		}
 	}
 	snprintf(*buffer,buffSize, MARKER_PAGE_STR, 200, hybridBuffer, min(numMarkers,MARKER_RETURNED), page-1, nextStr,prevStr);

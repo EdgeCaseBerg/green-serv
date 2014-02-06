@@ -81,7 +81,7 @@
 
 	int heatmap_controller(const struct http_request * request, char ** stringToReturn, int strLength);
 
-	int heatmap_get(char * buffer, int buffSize,int page, Decimal * latDegrees, Decimal * latOffset, Decimal * lonDegrees, Decimal * lonOffset, int precision, int raw);
+	int heatmap_get(char ** buffer, int buffSize,int page, Decimal * latDegrees, Decimal * latOffset, Decimal * lonDegrees, Decimal * lonOffset, int precision, int raw);
 
 	int heatmap_put(char * buffer, int buffSize, const struct http_request * request);
 
