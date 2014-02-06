@@ -49,7 +49,7 @@ static int strnstr(char * needle, char * haystack, int haystackLen){
 /* Ha, this function name is great. DO NETWORK WORK -- doNetWork! 
  * Is funny because network iis what we talk over see?
 */
- #define STARTING_RESPONSE_SIZE 15000
+ #define STARTING_RESPONSE_SIZE 2000
 void* doNetWork(struct threadData* td) {
     /*Response Variables*/
     struct http_request request;

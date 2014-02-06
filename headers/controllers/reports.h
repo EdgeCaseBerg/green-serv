@@ -67,7 +67,7 @@
 
 	int report_post(char * buffer, int buffSize, const struct http_request * request);
 
-	int report_get(char * buffer,int buffSize, char * hash, char * since, int page);
+	int report_get(char ** buffer,int buffSize, char * hash, char * since, int page);
 
 	#define REPORT_PAGE_STR	"{" \
 								"\"status_code\" : %d ,"\
