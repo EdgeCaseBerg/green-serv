@@ -9,7 +9,24 @@ static inline int between(const Decimal var, const Decimal low, const Decimal hi
 	return low < var && var < high;
 }
 
-int marker_controller(const struct http_request * request, char * stringToReturn, int strLength){
+static inline void  swapCharPtr( char ** ptr1, char ** ptr2){
+	char *temp = *ptr1;
+    *ptr1 = *ptr2;
+    *ptr2 = temp;
+}
+
+#ifndef NETWORK_LOGGING
+   #define NETWORK_LOGGING 0
+#endif
+#if(NETWORK_LOGGING != 2 && NETWORK_LOGGING != 1) 
+    #undef NETWORK_LOGGING
+    #define NETWORK_LOGGING 0
+#endif
+#define NETWORK_LOG_LEVEL_2_NUM(s,d) if(NETWORK_LOGGING == 2) fprintf(stderr, "%s %d\n",(s), (d) );
+#define NETWORK_LOG_LEVEL_2(s) if(NETWORK_LOGGING == 2) fprintf(stderr, "%s\n", (s) );
+#define NETWORK_LOG_LEVEL_1(s) if(NETWORK_LOGGING >= 1) fprintf(stderr, "%s\n", (s) );
+
+int marker_controller(const struct http_request * request, char ** stringToReturn, int strLength){
 	int status;
 	int buffSize;
 	int numParams;
@@ -18,6 +35,7 @@ int marker_controller(const struct http_request * request, char * stringToReturn
 	char * buffer; 
 	char tempBuf[40];
 	char **convertSuccess;
+	char * bufferRealloc;
 	Decimal * latDegrees;
 	Decimal * lonDegrees;
 	Decimal * latOffset;
@@ -26,7 +44,8 @@ int marker_controller(const struct http_request * request, char * stringToReturn
 	
 	status = 500;
 	convertSuccess = NULL;
-	buffSize = (MARKER_LIMIT * sizeof(struct gs_marker))*4+1+(2*MAX_URL_LENGTH);
+	bufferRealloc = NULL;
+	buffSize = 256;
 	bzero(tempBuf, sizeof tempBuf);
 	page = 1;
 
@@ -196,7 +215,7 @@ int marker_controller(const struct http_request * request, char * stringToReturn
 				}
 			if(sm_exists(sm,"id")!=1){
 				/* Retrieve multiple markers */
-				status = marker_get(buffer,buffSize,latDegrees,lonDegrees,latOffset,lonOffset,page);
+				status = marker_get(&buffer,buffSize,latDegrees,lonDegrees,latOffset,lonOffset,page);
 			}else{
 				sm_get(sm, "id", tempBuf, sizeof tempBuf);
 				id = atol(tempBuf);	
@@ -270,11 +289,40 @@ int marker_controller(const struct http_request * request, char * stringToReturn
 			goto mc_unsupportedMethod;
 	}
 
-	snprintf(stringToReturn, strLength, "%s", buffer);
+	if(strlen(buffer) > (unsigned)strLength){
+		/* Can we get something bigger? 
+		 * reuse some old variables for storing
+		*/
+		numParams = strlen(buffer);
+		bufferRealloc = malloc(numParams*2);
+		if(bufferRealloc == NULL){
+			/* Out of memory... warn the server it's going to get
+			 * a truncated response to the client in the logs. Not much
+			 * we can do though.
+			 */
+			NETWORK_LOG_LEVEL_1("Not Enough memory to send valid response");
+			NETWORK_LOG_LEVEL_2_NUM("Failed to allocate reallocation buffer for size",(int)numParams*2);
+		}else{
+			/* Swap the stringToReturn buffer and the realloced buffer */
+			memset(bufferRealloc,0,numParams*2);
+
+			swapCharPtr(stringToReturn,&bufferRealloc);
+			free(bufferRealloc);
+			strLength = numParams*2;
+		}
+	}
+	snprintf((*stringToReturn), strLength-1, "%s", buffer);
 	free(buffer); 
 	FREE_NON_NULL_DEGREES_AND_OFFSETS
 	sm_delete(sm);	
 	return status;
+
+	#undef ERR_LABEL_STRING_TO_RETURN
+	#define ERR_LABEL_STRING_TO_RETURN(label, errorStr) \
+	label: \
+		snprintf(*stringToReturn, strLength, ERROR_STR_FORMAT, status, errorStr);\
+		return status;
+
 
 	ERR_LABEL_STRING_TO_RETURN(mc_nomem, NOMEM_ERROR)
 	ERR_LABEL_STRING_TO_RETURN(mc_unsupportedMethod, BAD_METHOD_ERR)
@@ -288,6 +336,12 @@ int marker_controller(const struct http_request * request, char * stringToReturn
 	ERR_LABEL_STRING_TO_RETURN(mc_badLongitude, NAN_LONGITUDE)
 	ERR_LABEL_STRING_TO_RETURN(mc_oobLatitude, OOB_LATITUDE)
 	ERR_LABEL_STRING_TO_RETURN(mc_oobLongitude, OOB_LONGITUDE)
+
+	#undef ERR_LABEL_STRING_TO_RETURN
+	#define ERR_LABEL_STRING_TO_RETURN(label, errorStr) \
+	label: \
+		snprintf(stringToReturn, strLength, ERROR_STR_FORMAT, status, errorStr);\
+		return status;
 
 }
 
@@ -535,7 +589,7 @@ int marker_post(char * buffer, int buffSize, const struct http_request * request
 }
 
 
-int marker_get(char * buffer,int buffSize,Decimal * latDegrees, Decimal * lonDegrees, Decimal * latOffset,Decimal * lonOffset,int page){
+int marker_get(char ** buffer,int buffSize,Decimal * latDegrees, Decimal * lonDegrees, Decimal * latOffset,Decimal * lonOffset,int page){
 	MYSQL * conn;
 	struct gs_comment * comments;
 	struct gs_marker * markers; 
@@ -543,13 +597,23 @@ int marker_get(char * buffer,int buffSize,Decimal * latDegrees, Decimal * lonDeg
 	int nextPage;
 	char nextStr[MAX_URL_LENGTH];
 	char prevStr[MAX_URL_LENGTH];
-	char hybridBuffer[buffSize];
+	char * hybridBuffer;
 	char json[512]; /*Some large enough number to hold all the info*/
 	int i;
+	
+	char * tmpBuff;
+	int resize;
 
+
+	hybridBuffer = malloc(buffSize);
+	if(hybridBuffer == NULL){
+		return -1;
+	}
+	memset(hybridBuffer,0,buffSize);
 
 	comments = malloc(MARKER_LIMIT * sizeof(struct gs_comment));
 	if(comments == NULL){
+		free(hybridBuffer);
 		return -1; /* Return flag to send self to cc_nomem */
 	}
 	memset(comments,0,MARKER_LIMIT * sizeof(struct gs_comment));
@@ -557,6 +621,7 @@ int marker_get(char * buffer,int buffSize,Decimal * latDegrees, Decimal * lonDeg
 	markers = malloc(MARKER_LIMIT * sizeof(struct gs_marker));
 	if(markers == NULL){
 		free(comments);
+		free(hybridBuffer);
 		return -1;
 	}
 	memset(markers,0,MARKER_LIMIT * sizeof(struct gs_marker));
@@ -564,6 +629,7 @@ int marker_get(char * buffer,int buffSize,Decimal * latDegrees, Decimal * lonDeg
 	mysql_thread_init();
 	conn = _getMySQLConnection();
 	if(!conn){
+		free(hybridBuffer);
 		free(comments);
 		free(markers);
 		mysql_thread_end();
@@ -612,6 +678,7 @@ int marker_get(char * buffer,int buffSize,Decimal * latDegrees, Decimal * lonDeg
 	/* Finally, create a hybrid json object and store it into the correct
 	 * format and return the buffer to the calling function.
 	*/
+	resize = 1;
 	for(i=0; i < min(numMarkers,MARKER_RETURNED); ++i){
 		bzero(json,sizeof json);
 		/* Custom hyrbid json call
@@ -620,14 +687,38 @@ int marker_get(char * buffer,int buffSize,Decimal * latDegrees, Decimal * lonDeg
 		if(i==0)
 			snprintf(hybridBuffer,buffSize,"%s",json);
 		else{
-			strncat(hybridBuffer,",",buffSize);
-			strncat(hybridBuffer,json,buffSize);
+			if((int)(strlen(hybridBuffer) + strlen(json)) > buffSize*resize){
+				/* Resize both the hybrid buffer and the actual buffer. */
+				resize = resize*2;
+				tmpBuff = malloc(sizeof(char)*buffSize*resize);
+				if(tmpBuff == NULL){
+					NETWORK_LOG_LEVEL_1("WARN: Possible invalid JSON being sent to due re-allocation err");
+					resize = resize/2; 
+				}else{
+					/* Successful sizing, so move the memory */
+					strcpy(tmpBuff, hybridBuffer);
+					swapCharPtr(&tmpBuff,&hybridBuffer);
+					free(tmpBuff); /* free up the old memory */
+				}
+			}
+			strncat(hybridBuffer,",",buffSize*resize);
+			strncat(hybridBuffer,json,buffSize*resize);
 		}			
 	}
 
-	snprintf(buffer,buffSize, MARKER_PAGE_STR, 200, hybridBuffer, min(numMarkers,MARKER_RETURNED), page-1, nextStr,prevStr);
-	
-
+	/* If we've resized in the loop we need to resize the buffer */
+	if(resize != 1){
+		tmpBuff = malloc(sizeof(char)*buffSize*resize);
+		if(tmpBuff == NULL){
+			NETWORK_LOG_LEVEL_1("WARN: Possible invalid JSON being sent to due re-allocation err");
+		}else{
+			swapCharPtr(&tmpBuff,buffer);
+			free(tmpBuff);
+			buffSize = resize*buffSize;
+		}
+	}
+	snprintf(*buffer,buffSize, MARKER_PAGE_STR, 200, hybridBuffer, min(numMarkers,MARKER_RETURNED), page-1, nextStr,prevStr);
+	free(hybridBuffer);
 	free(comments);
 	free(markers);
 	return 200;

@@ -65,32 +65,32 @@ int main(){
 	request.contentLength = strlen(data);
 	
 	sprintf(request.url, "/api/pins?id=%ld", testMarker.id);
-	status = marker_controller(&request, stringToReturn, 1000);
+	status = marker_controller(&request, &stringToReturn, 1000);
 	EXPECTED(200,status, "Expected valid request")
 	
 	/* Invalids */	
 	sprintf(request.url, "/api/pins?id=%ld", testMarker.id);
-	status = marker_controller(&request, stringToReturn, 1000);
+	status = marker_controller(&request, &stringToReturn, 1000);
 	EXPECTED(404,status, "Expected marker to not be found")
 
 	sprintf(request.url, "/api/pins");
-	status = marker_controller(&request, stringToReturn, 1000);
+	status = marker_controller(&request, &stringToReturn, 1000);
 	EXPECTED(422,status, "Expected invalid when not submitting an id parameter")
 
 	sprintf(request.url, "/api/pins?id=derp");
-	status = marker_controller(&request, stringToReturn, 1000);
+	status = marker_controller(&request, &stringToReturn, 1000);
 	EXPECTED(422,status, "Should fail due to id being non-numeric")
 
 	sprintf(request.url, "/api/pins?id=%ld", testMarker.id);
 	request.data = "";
 	request.contentLength = 0;
-	status = marker_controller(&request, stringToReturn, 1000);
+	status = marker_controller(&request, &stringToReturn, 1000);
 	EXPECTED(400,status, "Expected invalid response because of malformed JSON")
 
 	sprintf(request.url, "/api/pins?id=%ld", testMarker.id);
 	request.data = "{}";
 	request.contentLength = 3;
-	status = marker_controller(&request, stringToReturn, 1000);
+	status = marker_controller(&request, &stringToReturn, 1000);
 	EXPECTED(400,status, "Expected invalid response because of lack of addressed key")
 
 	free(stringToReturn);
