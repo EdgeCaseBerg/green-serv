@@ -50,53 +50,53 @@ int main(){
 
 	sprintf(request.url, "/api/heatmap");
 	SETDATA(valid)
-	status = heatmap_controller(&request, stringToReturn, 1000);
+	status = heatmap_controller(&request, &stringToReturn, 1000);
 	EXPECTED(200,status, "Expected valid request")
 	
 	/* Invalids */	
 	sprintf(request.url, "/api/heatmap");
 	SETDATA(invalid)
-	status = heatmap_controller(&request, stringToReturn, 1000);
+	status = heatmap_controller(&request, &stringToReturn, 1000);
 	EXPECTED(400,status, "Expected malformed request")
 
 	sprintf(request.url, "/api/heatmap");
 	SETDATA(invalidKeys)
-	status = heatmap_controller(&request, stringToReturn, 1000);
+	status = heatmap_controller(&request, &stringToReturn, 1000);
 	EXPECTED(400,status, "Expected invalid keys response")
 
 	sprintf(request.url, "/api/heatmap");
 	SETDATA(nullData)
-	status = heatmap_controller(&request, stringToReturn, 1000);
+	status = heatmap_controller(&request, &stringToReturn, 1000);
 	EXPECTED(422,status, "Cannot accept null data for required parameters")
 
 	sprintf(request.url, "/api/heatmap");
 	SETDATA(latDegreesOOB)
-	status = heatmap_controller(&request, stringToReturn, 1000);
+	status = heatmap_controller(&request, &stringToReturn, 1000);
 	EXPECTED(422,status, "latDegrees must be within the range of -90.0 and 90.")
 
 	sprintf(request.url, "/api/heatmap");
 	SETDATA(latDegreesNAN)
-	status = heatmap_controller(&request, stringToReturn, 1000);
+	status = heatmap_controller(&request, &stringToReturn, 1000);
 	EXPECTED(400,status, "latDegrees parameter must be numeric	")
 
 	sprintf(request.url, "/api/heatmap");
 	SETDATA(lonDegreesOOB)
-	status = heatmap_controller(&request, stringToReturn, 1000);
+	status = heatmap_controller(&request, &stringToReturn, 1000);
 	EXPECTED(422,status, "lonDegrees must be within the range of -180.0 and 180.")
 
 	sprintf(request.url, "/api/heatmap");
 	SETDATA(lonDegreesNAN)
-	status = heatmap_controller(&request, stringToReturn, 1000);
+	status = heatmap_controller(&request, &stringToReturn, 1000);
 	EXPECTED(400,status, "lonDegrees parameter must be numeric	")
 
 	sprintf(request.url, "/api/heatmap");
 	SETDATA(negativeSeconds)
-	status = heatmap_controller(&request, stringToReturn, 1000);
+	status = heatmap_controller(&request, &stringToReturn, 1000);
 	EXPECTED(422,status, "secondsWorked should fail if given negative value")
 
 	sprintf(request.url, "/api/heatmap");
 	SETDATA(invalidSeconds)
-	status = heatmap_controller(&request, stringToReturn, 1000);
+	status = heatmap_controller(&request, &stringToReturn, 1000);
 	EXPECTED(400,status, "Seconds worked should fail if given non-numeric value")
 
 

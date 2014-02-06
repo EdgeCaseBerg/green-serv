@@ -10,7 +10,7 @@
 	#undef DETACHED_THREADS /* Using detacthed threads runs the risk of leaving fd's open */
 	/* Simple struct to contain data to be sent to worker threads */
 	struct threadData{
-	    char msg[THREAD_DATA_MAX_SIZE];
+	    char * msg;
 	    int clientfd;
 	};
 

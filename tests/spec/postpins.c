@@ -52,59 +52,59 @@ int main(){
 	/* Valids */
 	sprintf(request.url, "/api/pins");
 	SETDATA(valid1)
-	status = marker_controller(&request, stringToReturn, 1000);
+	status = marker_controller(&request, &stringToReturn, 1000);
 	EXPECTED(200, status, "Request should have succeeded with a positive response")
 
 	sprintf(request.url, "/api/pins");
 	SETDATA(valid2)
-	status = marker_controller(&request, stringToReturn, 1000);
+	status = marker_controller(&request, &stringToReturn, 1000);
 	EXPECTED(200, status, "Request should have succeeded with a positive response")
 
 	sprintf(request.url, "/api/pins");
 	SETDATA(valid3)
-	status = marker_controller(&request, stringToReturn, 1000);
+	status = marker_controller(&request, &stringToReturn, 1000);
 	EXPECTED(200, status, "Request should have succeeded with a positive response")
 
 	
 	/* Invalids */
 	sprintf(request.url, "/api/pins");
 	SETDATA(malformed)
-	status = marker_controller(&request, stringToReturn, 1000);
+	status = marker_controller(&request, &stringToReturn, 1000);
 	EXPECTED(400, status, "Should have failed with malformed error")
 
 	sprintf(request.url, "/api/pins");
 	SETDATA(keysMissing)
-	status = marker_controller(&request, stringToReturn, 1000);
+	status = marker_controller(&request, &stringToReturn, 1000);
 	EXPECTED(400, status, "Should have failed when sent request with missing keys")
 
 	sprintf(request.url, "/api/pins");
 	SETDATA(invalidType)
-	status = marker_controller(&request, stringToReturn, 1000);
+	status = marker_controller(&request, &stringToReturn, 1000);
 	EXPECTED(422, status, "Request should have failed when invalid type was given")
 
 	sprintf(request.url, "/api/pins");
 	SETDATA(oobLat)
-	status = marker_controller(&request, stringToReturn, 1000);
+	status = marker_controller(&request, &stringToReturn, 1000);
 	EXPECTED(422, status, "Should have failed when latitude was out of bounds")
 
 	sprintf(request.url, "/api/pins");
 	SETDATA(nanLat)
-	status = marker_controller(&request, stringToReturn, 1000);
+	status = marker_controller(&request, &stringToReturn, 1000);
 	EXPECTED(400, status, "Should have failed when latitude was not a number")
 
 	sprintf(request.url, "/api/pins");
 	SETDATA(oobLon)
-	status = marker_controller(&request, stringToReturn, 1000);
+	status = marker_controller(&request, &stringToReturn, 1000);
 	EXPECTED(422, status, "Should have failed when longitude was out of bounds")
 
 	sprintf(request.url, "/api/pins");
 	SETDATA(nanLon)
-	status = marker_controller(&request, stringToReturn, 1000);
+	status = marker_controller(&request, &stringToReturn, 1000);
 	EXPECTED(400, status, "Should have failed when longitude was not a number")
 
 	sprintf(request.url, "/api/pins");
 	SETDATA(pinMsg)
-	status = marker_controller(&request, stringToReturn, 1000);
+	status = marker_controller(&request, &stringToReturn, 1000);
 	EXPECTED(422, status, "Should have failed when pin message was empty")
 
 	

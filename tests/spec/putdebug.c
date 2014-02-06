@@ -12,7 +12,7 @@ int main(){
 	stringToReturn = malloc(1000);
 	request.method = PUT;
 	/* Expect invalid method */
-	status = report_controller(&request, stringToReturn, 1000);
+	status = report_controller(&request, &stringToReturn, 1000);
 	if( status == 501 )
 		fprintf(stdout, "." );
 	else{

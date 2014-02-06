@@ -40,41 +40,41 @@ int main(){
 	/* Valids */
 	sprintf(request.url, "/api/debug");
 	SETDATA(valid)
-	status = report_controller(&request, stringToReturn, 1000);
+	status = report_controller(&request, &stringToReturn, 1000);
 	EXPECTED(200, status, "Expected successful request")
 
 	SETDATA(withType)
-	status = report_controller(&request, stringToReturn, 1000);
+	status = report_controller(&request, &stringToReturn, 1000);
 	EXPECTED(200, status, "Expected successful request")
 
 	/* Invalids */
 	sprintf(request.url, "/api/debug");
 	SETDATA(malformed)
-	status = report_controller(&request, stringToReturn, 1000);
+	status = report_controller(&request, &stringToReturn, 1000);
 	EXPECTED(400, status, "Expected failed request")
 
 	sprintf(request.url, "/api/debug");
 	SETDATA(missingKeys)
-	status = report_controller(&request, stringToReturn, 1000);
+	status = report_controller(&request, &stringToReturn, 1000);
 	EXPECTED(422, status, "Should have failed when missing keys from JSON")
 
 	sprintf(request.url, "/api/debug");
 	SETDATA(emptyMsg)
-	status = report_controller(&request, stringToReturn, 1000);
+	status = report_controller(&request, &stringToReturn, 1000);
 	EXPECTED(422, status, "Should have failed with empty message")	
 
 	sprintf(request.url, "/api/debug");
 	SETDATA(emptyTrace)
-	status = report_controller(&request, stringToReturn, 1000);
+	status = report_controller(&request, &stringToReturn, 1000);
 	EXPECTED(422, status, "Should have failed with empty trace")
 
 	sprintf(request.url, "/api/debug");
 	SETDATA(emptyOrigin)
-	status = report_controller(&request, stringToReturn, 1000);
+	status = report_controller(&request, &stringToReturn, 1000);
 	EXPECTED(422, status, "Should have failed when origin empty")
 
 	SETDATA(invalidType)
-	status = report_controller(&request, stringToReturn, 1000);
+	status = report_controller(&request, &stringToReturn, 1000);
 	EXPECTED(400, status, "Expected failed request")	
 		
 	free(stringToReturn);

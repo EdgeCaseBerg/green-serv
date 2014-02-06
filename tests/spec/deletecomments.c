@@ -41,21 +41,21 @@ int main(){
 	
 	/* Valids */
 	sprintf(request.url, "/api/comments?id=%ld", testComment.id);
-	status = comment_controller(&request, stringToReturn, 1000);
+	status = comment_controller(&request, &stringToReturn, 1000);
 	EXPECTED(204, status, "Request failed to return no content")
 
 	/* Invalids */
 
 	sprintf(request.url, "/api/comments?id=1232343");
-	status = comment_controller(&request, stringToReturn, 1000);
+	status = comment_controller(&request, &stringToReturn, 1000);
 	EXPECTED(404, status, "Request failed to return not found status")
 
 	sprintf(request.url, "/api/comments");
-	status = comment_controller(&request, stringToReturn, 1000);
+	status = comment_controller(&request, &stringToReturn, 1000);
 	EXPECTED(422, status, "Request failed to err when no id present")	
 
 	sprintf(request.url, "/api/comments?id=baulderdash");
-	status = comment_controller(&request, stringToReturn, 1000);
+	status = comment_controller(&request, &stringToReturn, 1000);
 	EXPECTED(422, status, "Request failed to err when given non-numeric id")
 
 

@@ -49,14 +49,14 @@ static int strnstr(char * needle, char * haystack, int haystackLen){
 /* Ha, this function name is great. DO NETWORK WORK -- doNetWork! 
  * Is funny because network iis what we talk over see?
 */
+ #define STARTING_RESPONSE_SIZE 2000
 void* doNetWork(struct threadData* td) {
     /*Response Variables*/
     struct http_request request;
     int bytesSent;
     int controller;
     int status;
-    char response[15000];
-    bzero(response, sizeof response);
+    char * response;
     /* Request variables */
     int readAmount;
     int totalRead;
@@ -68,6 +68,15 @@ void* doNetWork(struct threadData* td) {
     char * tempBuff;
     char * raw_message;
     char contentLengthBuff[100];
+
+    response = malloc(sizeof(char)*STARTING_RESPONSE_SIZE);
+    if(response == NULL){
+        NETWORK_LOG_LEVEL_1("Fatal: Failed to allocate memory for response");
+        response = "{}";
+        status = 500;
+        goto internal_err;
+    }
+    memset(response,0,sizeof(char)*STARTING_RESPONSE_SIZE);
 
     raw_message = malloc(sizeof(char)*BUFSIZ); /* Just enough space for the first read, to determine content length */
     if(raw_message == NULL){
@@ -185,7 +194,7 @@ void* doNetWork(struct threadData* td) {
         NETWORK_LOG_LEVEL_1("Warning: Total Read Greater than Buffer Length");
 
     /*Blank JSON response for no control*/
-    response[0]='{'; response[1]='}'; response[2]='\0';
+    *(response+1)='{'; *(response+1)='}'; *(response+2)='\0';
     status = 200;
     parseRequest(&request, raw_message);
 
@@ -195,23 +204,23 @@ void* doNetWork(struct threadData* td) {
     switch(controller){
         case HEARTBEAT_CONTROLLER :
             NETWORK_LOG_LEVEL_2("Heartbeat Controller Processing Request.");
-            status = heartbeat_controller(response,sizeof response);
+            status = heartbeat_controller(response, STARTING_RESPONSE_SIZE);
             break;
         case COMMENTS_CONTROLLER :
             NETWORK_LOG_LEVEL_2("Comments Controller Processing Request.");
-            status = comment_controller(&request, response, sizeof response);
+            status = comment_controller(&request, &response,  STARTING_RESPONSE_SIZE);
             break;
         case HEATMAP_CONTROLLER :
             NETWORK_LOG_LEVEL_2("Heatmap Controller Processing Request.");
-            status = heatmap_controller(&request, response, sizeof response);
+            status = heatmap_controller(&request, &response,  STARTING_RESPONSE_SIZE);
             break;
         case MARKER_CONTROLLER :
             NETWORK_LOG_LEVEL_2("Marker Controller Processing Request.");
-            status = marker_controller(&request, response, sizeof response);
+            status = marker_controller(&request, &response,  STARTING_RESPONSE_SIZE);
             break;
         case REPORT_CONTROLLER :
             NETWORK_LOG_LEVEL_2("Report Controller Processing Request.");
-            status = report_controller(&request, response, sizeof response);
+            status = report_controller(&request, &response,  STARTING_RESPONSE_SIZE);
             break;
         default:
             NETWORK_LOG_LEVEL_2("Unknown URL. Refusing to process request.");
@@ -233,6 +242,15 @@ void* doNetWork(struct threadData* td) {
         free(request.data);
 
     internal_err:
+    td->msg = malloc(strlen(response) + 256);
+    if(td->msg == NULL){
+        NETWORK_LOG_LEVEL_2_NUM("Fatal: Not enough memory for HTTP response", (int)strlen(response)+256);
+        free(raw_message);
+        free(response);
+        close(td->clientfd);
+        return NULL;
+    }
+    memset(td->msg,0,strlen(response)+256);
     createResponse(response,td->msg,status);
     td->msg[strlen(td->msg)] = '\0';
 
@@ -248,7 +266,9 @@ void* doNetWork(struct threadData* td) {
         NETWORK_LOG_LEVEL_2("File Descriptor invalid. If shutting down there is no problem.");
         NETWORK_LOG_LEVEL_2("If not shutting down, there was an issue sending data to the client.");
     }
+    free(td->msg);
     free(raw_message);
+    free(response);
     return NULL;
 }
 

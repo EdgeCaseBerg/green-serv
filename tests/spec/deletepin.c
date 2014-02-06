@@ -62,20 +62,20 @@ int main(){
 	
 	/* Valids */
 	sprintf(request.url, "/api/pins?id=%ld", testMarker.id);
-	status = marker_controller(&request, stringToReturn, 1000);
+	status = marker_controller(&request, &stringToReturn, 1000);
 	EXPECTED(204, status, "Request failed to return no content")
 
 	/* Invalids */
 	sprintf(request.url, "/api/pins?id=%ld", testMarker.id);
-	status = marker_controller(&request, stringToReturn, 1000);
+	status = marker_controller(&request, &stringToReturn, 1000);
 	EXPECTED(404, status, "Expected not to find marker by id once its been deleted")
 
 	sprintf(request.url, "/api/pins");
-	status = marker_controller(&request, stringToReturn, 1000);
+	status = marker_controller(&request, &stringToReturn, 1000);
 	EXPECTED(422, status, "Expected an err about id being a required field")
 
 	sprintf(request.url, "/api/pins?id=derp");
-	status = marker_controller(&request, stringToReturn, 1000);
+	status = marker_controller(&request, &stringToReturn, 1000);
 	EXPECTED(422, status, "Request failed to err correctly when given non-numeric id")
 
 

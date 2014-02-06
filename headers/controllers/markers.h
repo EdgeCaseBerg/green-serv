@@ -58,7 +58,7 @@
 	#define NAN_LONGITUDE "Longitude must be a number"
 	#define NAN_ID "id must be a numeric value"
 
-	int marker_controller(const struct http_request * request, char * stringToReturn, int strLength);
+	int marker_controller(const struct http_request * request, char ** stringToReturn, int strLength);
 
 	int marker_delete(char * buffer, int buffSize, long id);
 
@@ -66,7 +66,7 @@
 
 	int marker_post(char * buffer, int buffSize, const struct http_request * request);
 
-	int marker_get(char * buffer,int buffSize,Decimal * latDegrees, Decimal * lonDegrees, Decimal * latOffset,Decimal * lonOffset,int page);
+	int marker_get(char ** buffer,int buffSize,Decimal * latDegrees, Decimal * lonDegrees, Decimal * latOffset,Decimal * lonOffset,int page);
 
 	int marker_get_single(char * buffer,  int buffsize, long id);
 

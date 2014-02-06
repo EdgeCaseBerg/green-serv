@@ -22,7 +22,7 @@ int main(){
 	
 	stringToReturn = malloc(size);
 
-	status = comment_controller(&request, stringToReturn, size);
+	status = comment_controller(&request, &stringToReturn, size);
 	EXPECTED(200, status, "Default GET failed")
 	
 	/* We could automate the requests below by putting the types into a loop 
@@ -30,53 +30,53 @@ int main(){
 	 * as possible.
 	*/
 	sprintf(request.url, "/api/comments?type=COMMENT");
-	status = comment_controller(&request, stringToReturn, size);
+	status = comment_controller(&request, &stringToReturn, size);
 	EXPECTED(200, status, "Queried for type=comment")
 	
 
 	sprintf(request.url, "/api/comments?type=ADMIN");
-	status = comment_controller(&request, stringToReturn, size);
+	status = comment_controller(&request, &stringToReturn, size);
 	EXPECTED(200, status, "Queried for type=admin")
 	
 
 	sprintf(request.url, "/api/comments?type=MARKER");
-	status = comment_controller(&request, stringToReturn, size);
+	status = comment_controller(&request, &stringToReturn, size);
 	EXPECTED(200, status, "Queried for type=marker")
 	
 
 	sprintf(request.url, "/api/comments?page=1");
-	status = comment_controller(&request, stringToReturn, size);
+	status = comment_controller(&request, &stringToReturn, size);
 	EXPECTED(200,status, "Queried for page=1")
 
 
 	sprintf(request.url, "/api/comments?type=COMMENT&page=1");
-	status = comment_controller(&request, stringToReturn, size);
+	status = comment_controller(&request, &stringToReturn, size);
 	EXPECTED(200, status, "Queried for type=comment")
 	
 
 	sprintf(request.url, "/api/comments?type=ADMIN&page=1");
-	status = comment_controller(&request, stringToReturn, size);
+	status = comment_controller(&request, &stringToReturn, size);
 	EXPECTED(200, status, "Queried for type=admin")
 	
 
 	sprintf(request.url, "/api/comments?type=MARKER&page=1");
-	status = comment_controller(&request, stringToReturn, size);
+	status = comment_controller(&request, &stringToReturn, size);
 	EXPECTED(200, status, "Queried for type=marker and page=1")
 
 
 	/* Test invalid GETs */
 	sprintf(request.url, "/api/comments?type=bad");
-	status = comment_controller(&request, stringToReturn, size);
+	status = comment_controller(&request, &stringToReturn, size);
 	EXPECTED(422, status, "Queried with bad type")
 	
 
 	sprintf(request.url, "api/comments?page=-1");
-	status = comment_controller(&request, stringToReturn, size);
+	status = comment_controller(&request, &stringToReturn, size);
 	EXPECTED(422, status, "Queried with negative page value")
 	
 
 	sprintf(request.url, "api/comments?page=derp");
-	status = comment_controller(&request, stringToReturn, size);
+	status = comment_controller(&request, &stringToReturn, size);
 	EXPECTED(422, status, "Queried with alphabetical page instead of number")
 			
 	free(stringToReturn);

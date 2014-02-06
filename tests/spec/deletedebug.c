@@ -43,25 +43,25 @@ int main(){
 	
 	/* Valids */
 	sprintf(request.url, "/api/debug?origin=%s&hash=%s", "admin", testReport.authorize);
-	status = report_controller(&request, stringToReturn, 1000);
+	status = report_controller(&request, &stringToReturn, 1000);
 	EXPECTED(204, status, "Request failed to return no content")
 
 	/* Invalids */
 
 	sprintf(request.url, "/api/debug?origin=%s&hash=%s", "admin", testReport.authorize);
-	status = report_controller(&request, stringToReturn, 1000);
+	status = report_controller(&request, &stringToReturn, 1000);
 	EXPECTED(404, status, "Request failed to return not found status")
 
 	sprintf(request.url, "/api/debug");
-	status = report_controller(&request, stringToReturn, 1000);
+	status = report_controller(&request, &stringToReturn, 1000);
 	EXPECTED(400, status, "Request failed to err when no params present")	
 
 	sprintf(request.url, "/api/debug?origin=%s", testReport.origin);
-	status = report_controller(&request, stringToReturn, 1000);
+	status = report_controller(&request, &stringToReturn, 1000);
 	EXPECTED(400, status, "Request failed to err when given only origin")
 
 	sprintf(request.url, "/api/debug?hash=%s", testReport.authorize);
-	status = report_controller(&request, stringToReturn, 1000);
+	status = report_controller(&request, &stringToReturn, 1000);
 	EXPECTED(400, status, "Request failed to err when given only hash")
 
 

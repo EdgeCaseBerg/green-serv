@@ -50,9 +50,9 @@
 		#define NAN_ID_KEY "ID must be a numeric identifier"
 	#endif
 
-	int comment_controller(const struct http_request * request, char * stringToReturn, int strLength);
+	int comment_controller(const struct http_request * request, char ** stringToReturn, int strLength);
 
-	int comments_get(char * buffer, int buffSize, const struct http_request * request);
+	int comments_get(char ** buffer, int buffSize, const struct http_request * request);
 
 	int comment_post(char * buffer, int buffSize, const struct http_request * request);
 

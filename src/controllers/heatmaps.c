@@ -4,8 +4,24 @@ static inline int min(const int a, const int b){
 	return a < b ? a : b;
 }
 
+static inline void  swapCharPtr( char ** ptr1, char ** ptr2){
+	char *temp = *ptr1;
+    *ptr1 = *ptr2;
+    *ptr2 = temp;
+}
 
-int heatmap_controller(const struct http_request * request, char * stringToReturn, int strLength){
+#ifndef NETWORK_LOGGING
+   #define NETWORK_LOGGING 0
+#endif
+#if(NETWORK_LOGGING != 2 && NETWORK_LOGGING != 1) 
+    #undef NETWORK_LOGGING
+    #define NETWORK_LOGGING 0
+#endif
+#define NETWORK_LOG_LEVEL_2_NUM(s,d) if(NETWORK_LOGGING == 2) fprintf(stderr, "%s %d\n",(s), (d) );
+#define NETWORK_LOG_LEVEL_2(s) if(NETWORK_LOGGING == 2) fprintf(stderr, "%s\n", (s) );
+#define NETWORK_LOG_LEVEL_1(s) if(NETWORK_LOGGING >= 1) fprintf(stderr, "%s\n", (s) );
+
+int heatmap_controller(const struct http_request * request, char ** stringToReturn, int strLength){
 	int status;
 	char * buffer; 
 	int buffSize;
@@ -23,7 +39,7 @@ int heatmap_controller(const struct http_request * request, char * stringToRetur
 
 
 	status = 503;
-	buffSize = HEATMAP_RESULTS_PER_PAGE*(sizeof(struct gs_heatmap)*4+1)+(2*MAX_URL_LENGTH);
+	buffSize = 500;//HEATMAP_RESULTS_PER_PAGE*(sizeof(struct gs_heatmap)*4+1)+(2*MAX_URL_LENGTH);
 	bzero(tempBuf, sizeof tempBuf);
 	page = 1;
 	precision = 8;
@@ -207,7 +223,7 @@ int heatmap_controller(const struct http_request * request, char * stringToRetur
 					status = 422;
 					goto mh_badlon;			
 				}
-			status = heatmap_get(buffer, buffSize,page, latDegrees, latOffset, lonDegrees, lonOffset, precision, raw);
+			status = heatmap_get(&buffer, buffSize,page, latDegrees, latOffset, lonDegrees, lonOffset, precision, raw);
 			if(status == -1){
 				free(buffer); 
 				FREE_NON_NULL_DEGREES_AND_OFFSETS
@@ -234,8 +250,8 @@ int heatmap_controller(const struct http_request * request, char * stringToRetur
 			goto mh_unsupportedMethod;
 	}
 
+	swapCharPtr(stringToReturn,&buffer);
 	
-	snprintf(stringToReturn, strLength, "%s", buffer);
 	free(buffer); 
 	FREE_NON_NULL_DEGREES_AND_OFFSETS
 	sm_delete(sm);
@@ -253,7 +269,7 @@ int heatmap_controller(const struct http_request * request, char * stringToRetur
 
 }
 
-int heatmap_get(char * buffer, int buffSize,int page, Decimal * latDegrees, Decimal * latOffset, Decimal * lonDegrees, Decimal * lonOffset, int precision, int raw){
+int heatmap_get(char ** buffer, int buffSize,int page, Decimal * latDegrees, Decimal * latOffset, Decimal * lonDegrees, Decimal * lonOffset, int precision, int raw){
 	MYSQL * conn;
 	struct gs_heatmap * heatmaps;
 	int numHeatmaps;
@@ -261,16 +277,25 @@ int heatmap_get(char * buffer, int buffSize,int page, Decimal * latDegrees, Deci
 	long max;
 	char nextStr[MAX_URL_LENGTH];
 	char prevStr[MAX_URL_LENGTH];
-	char tempBuf[buffSize];
+	char * tempBuf;
+	char * swapBuff;
 	Decimal lowerLat;
 	Decimal upperLat;
 	Decimal lowerLon;
 	Decimal upperLon;
-
+	int resize;
 	char json[512]; /*Some large enough number to hold all the info*/
 	int i;
+
+	tempBuf = malloc(sizeof(char)* buffSize);
+	if(tempBuf == NULL){
+		return -1;
+	}
+	memset(tempBuf,0,buffSize);
+
 	heatmaps = malloc(HEATMAP_RESULTS_PER_PAGE * sizeof(struct gs_heatmap));
 	if(heatmaps == NULL){
+		free(tempBuf);
 		return -1; /* Return flag to send self nomem */
 	}
 	memset(heatmaps,0,HEATMAP_RESULTS_PER_PAGE * sizeof(struct gs_heatmap));
@@ -290,7 +315,6 @@ int heatmap_get(char * buffer, int buffSize,int page, Decimal * latDegrees, Deci
 
 	bzero(nextStr, sizeof nextStr);
 	bzero(prevStr, sizeof prevStr);
-	bzero(tempBuf,sizeof tempBuf);
 	numHeatmaps = 0;
 
 	if(latDegrees == NULL && lonDegrees == NULL){
@@ -324,26 +348,55 @@ int heatmap_get(char * buffer, int buffSize,int page, Decimal * latDegrees, Deci
 		snprintf(nextStr,MAX_URL_LENGTH, "null");
 	}
 
+
 	if(page > 1)
 		snprintf(prevStr,MAX_URL_LENGTH,"%sheatmap?page=%d&raw=%s",BASE_API_URL,page-1, raw == TRUE ? "true" : "false");
 	else
 		snprintf(prevStr,MAX_URL_LENGTH,"null");
 
+	resize = 1;
 	for(i=0; i < min(numHeatmaps,HEATMAP_RESULTS_RETURNED); ++i){
 		bzero(json,sizeof json);
 		if(!raw)
 			heatmaps[i].intensity = (heatmaps[i].intensity/(double)max)*100;
 		gs_heatmapNToJSON(heatmaps[i], json, sizeof json);
+		if(buffSize*resize < (int)(strlen(tempBuf)+strlen(json))){
+			/* Resize */
+			resize = resize*2;
+			swapBuff = malloc(sizeof(char)*buffSize*resize);
+			if(swapBuff == NULL){
+				NETWORK_LOG_LEVEL_1("Failed to allocate memory for swap buffer");
+				NETWORK_LOG_LEVEL_2_NUM("Failed to allocate swap buffer of bytesize", buffSize*resize);
+				resize = resize/2;
+			}else{
+				memset(swapBuff,0,sizeof(char)*buffSize*resize);
+				strcpy(swapBuff, tempBuf);
+				swapCharPtr(&swapBuff,&tempBuf);
+				free(swapBuff); /* free up the old memory */
+			}
+		}
 		if(i==0)
 			snprintf(tempBuf,buffSize,"%s",json);
 		else{
-			strncat(tempBuf,",",buffSize);
-			strncat(tempBuf,json,buffSize);
+			strncat(tempBuf,",",buffSize*resize);
+			strncat(tempBuf,json,buffSize*resize);
 		}			
 	}
-	snprintf(buffer,buffSize, HEATMAP_PAGE_STR, 200, tempBuf, min(numHeatmaps,HEATMAP_RESULTS_RETURNED), page, nextStr,prevStr);
 	
+	if(resize != 1){
+		swapBuff = malloc(sizeof(char)*buffSize*resize+strlen(HEATMAP_PAGE_STR));
+		if(swapBuff == NULL){
+			NETWORK_LOG_LEVEL_1("Failed to allocate memory for swap buffer");
+			NETWORK_LOG_LEVEL_2_NUM("Failed to allocate swap buffer of bytesize", (int)(buffSize*resize+strlen(HEATMAP_PAGE_STR)));
+		}else{
+			swapCharPtr(&swapBuff,buffer);
+			free(swapBuff);
+		}
+	}
+
+	snprintf(*buffer,buffSize*resize, HEATMAP_PAGE_STR, 200, tempBuf, min(numHeatmaps,HEATMAP_RESULTS_RETURNED), page, nextStr,prevStr);
 	free(heatmaps);
+	free(tempBuf);
 	mysql_close(conn);
 	mysql_thread_end();
 

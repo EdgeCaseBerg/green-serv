@@ -61,13 +61,13 @@
 		#define BAD_REPORT_TYPE_ERR "Report types must be one of the following: " REPORT_TYPES
 	#endif
 
-	int report_controller(const struct http_request * request, char * stringToReturn, int strLength);
+	int report_controller(const struct http_request * request, char ** stringToReturn, int strLength);
 
 	int report_delete(char * buffer, int buffSize, char * origin, char * hash);
 
 	int report_post(char * buffer, int buffSize, const struct http_request * request);
 
-	int report_get(char * buffer,int buffSize, char * hash, char * since, int page);
+	int report_get(char ** buffer,int buffSize, char * hash, char * since, int page);
 
 	#define REPORT_PAGE_STR	"{" \
 								"\"status_code\" : %d ,"\

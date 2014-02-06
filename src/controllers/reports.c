@@ -4,6 +4,24 @@ static inline int min(const int a, const int b){
 	return a < b ? a : b;
 }
 
+static inline void  swapCharPtr( char ** ptr1, char ** ptr2){
+	char *temp = *ptr1;
+    *ptr1 = *ptr2;
+    *ptr2 = temp;
+}
+
+#ifndef NETWORK_LOGGING
+   #define NETWORK_LOGGING 0
+#endif
+#if(NETWORK_LOGGING != 2 && NETWORK_LOGGING != 1) 
+    #undef NETWORK_LOGGING
+    #define NETWORK_LOGGING 0
+#endif
+#define NETWORK_LOG_LEVEL_2_NUM(s,d) if(NETWORK_LOGGING == 2) fprintf(stderr, "%s %d\n",(s), (d) );
+#define NETWORK_LOG_LEVEL_2(s) if(NETWORK_LOGGING == 2) fprintf(stderr, "%s\n", (s) );
+#define NETWORK_LOG_LEVEL_1(s) if(NETWORK_LOGGING >= 1) fprintf(stderr, "%s\n", (s) );
+
+
 /* Very small limited substring match against an uppercased constant
 */
 static inline int strcasestr(char * needle, char * haystack){
@@ -25,7 +43,7 @@ static inline int strcasestr(char * needle, char * haystack){
 }
 
 
-int report_controller(const struct http_request * request, char * stringToReturn, int strLength){
+int report_controller(const struct http_request * request, char ** stringToReturn, int strLength){
 	int status;
 	int buffSize;
 	int numParams;
@@ -138,7 +156,7 @@ int report_controller(const struct http_request * request, char * stringToReturn
 			status = report_post(buffer, buffSize, request);
 			break;
 		case GET:
-			status = report_get(buffer, buffSize, hash, since, page);
+			status = report_get(&buffer, buffSize, hash, since, page);
 			break;
 		case DELETE:
 			status = report_delete( buffer, buffSize, origin, hash);
@@ -150,8 +168,7 @@ int report_controller(const struct http_request * request, char * stringToReturn
 			goto rc_unsupportedMethod;
 	}
 
-	
-	snprintf(stringToReturn, strLength, "%s", buffer);
+	swapCharPtr(&buffer, stringToReturn);
 	free(buffer); 
 	return status;
 
@@ -344,7 +361,7 @@ int report_post(char * buffer, int buffSize, const struct http_request * request
 		return 500;
 }
 
-int report_get(char * buffer,int buffSize, char * hash, char * since, int page){
+int report_get(char ** buffer,int buffSize, char * hash, char * since, int page){
 	MYSQL *conn;
 	struct gs_report report;
 	struct gs_report * reports;
@@ -352,10 +369,11 @@ int report_get(char * buffer,int buffSize, char * hash, char * since, int page){
 	int nextPage;
 	char nextStr[MAX_URL_LENGTH];
 	char prevStr[MAX_URL_LENGTH];
-	char reports_buffer[buffSize];
+	char * reports_buffer;
+	char * swapBuff;
 	long numReports;
 	char json[1024];
-	int i;
+	int i,resize;
 	
 	nextPage = 1;
 	numReports = 0;
@@ -377,13 +395,13 @@ int report_get(char * buffer,int buffSize, char * hash, char * since, int page){
 
 		if(report.id == GS_REPORT_INVALID_ID){
 			/* Couldn't find.  */
-			snprintf(buffer, buffSize, ERROR_STR_FORMAT, 404, REPORT_NOT_FOUND);
+			snprintf(*buffer, buffSize, ERROR_STR_FORMAT, 404, REPORT_NOT_FOUND);
 			mysql_close(conn);
 			mysql_thread_end();
 			return 404;
 		}
 		gs_reportNToJSON(report, json, sizeof json);
-		snprintf(buffer, buffSize, "{\"status_code\" : 200,\"report\" : %s}",json);
+		snprintf(*buffer, buffSize, "{\"status_code\" : 200,\"report\" : %s}",json);
 	}else{
 		/* Paginated GET */
 		reports = malloc(reportBuffSize);
@@ -413,19 +431,54 @@ int report_get(char * buffer,int buffSize, char * hash, char * since, int page){
 		else
 			snprintf(prevStr,MAX_URL_LENGTH,"null");
 
-		bzero(reports_buffer,sizeof reports_buffer);
+
+		reports_buffer = malloc(buffSize);
+		if(reports_buffer == NULL){
+			NETWORK_LOG_LEVEL_1("Failed to allocated reports_buffer");
+			NETWORK_LOG_LEVEL_2_NUM("Memory exhausted while trying to allocate block size of ", buffSize);
+			free(reports);
+			return -1;
+		}
+		memset(reports_buffer,0,buffSize);
+		resize = 1;
 		for(i=0; i < min(numReports,RESULTS_RETURNED); ++i){
 			bzero(json,sizeof json);
 			gs_reportNToJSON(reports[i] ,json, sizeof json);
+			if( buffSize*resize < (int)(strlen(reports_buffer) + strlen(json))){
+				resize = resize*2;
+				swapBuff = malloc(sizeof(char)*buffSize*resize);
+				if(swapBuff == NULL){
+					NETWORK_LOG_LEVEL_1("Could not allocate memory for JSON response");
+					NETWORK_LOG_LEVEL_2_NUM("Failed to allocate memory for JSON response needing size", buffSize*resize);
+					resize = resize/2;
+				}else{
+					strcpy(swapBuff, reports_buffer);
+					swapCharPtr(&swapBuff, &reports_buffer);
+					free(swapBuff);
+				}
+			}
 			if(i==0)
-				snprintf(reports_buffer,buffSize,"%s",json);
+				snprintf(reports_buffer,buffSize*resize,"%s",json);
 			else{
-				strncat(reports_buffer,",",buffSize);
-				strncat(reports_buffer,json,buffSize);
+				strncat(reports_buffer,",",buffSize*resize);
+				strncat(reports_buffer,json,buffSize*resize);
 			}			
 		}
 
-		snprintf(buffer,buffSize, REPORT_PAGE_STR, 200, reports_buffer, min(numReports,RESULTS_RETURNED), page, nextStr,prevStr);
+		if(resize != 1){
+			swapBuff = malloc(strlen(REPORT_PAGE_STR)+(sizeof(char)*buffSize*resize));
+			if(swapBuff == NULL){
+				NETWORK_LOG_LEVEL_1("Failed to allocate memory for reports. Sending truncated JSON possibly.");
+				NETWORK_LOG_LEVEL_2_NUM("Failed to allocate memory for reports of size", (int) (strlen(REPORT_PAGE_STR)+(sizeof(char)*buffSize*resize)));
+			}else{
+				swapCharPtr(buffer,&swapBuff);
+				free(swapBuff);
+				buffSize = strlen(REPORT_PAGE_STR)+(sizeof(char)*buffSize*resize);
+			}
+		}
+
+		snprintf(*buffer,buffSize, REPORT_PAGE_STR, 200, reports_buffer, min(numReports,RESULTS_RETURNED), page, nextStr,prevStr);
+		free(reports_buffer);
 		free(reports);
 	}
 
