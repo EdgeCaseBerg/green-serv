@@ -311,7 +311,7 @@ int marker_controller(const struct http_request * request, char ** stringToRetur
 			strLength = numParams*2;
 		}
 	}
-	snprintf((*stringToReturn), strLength-1, "%s", buffer);
+	swapCharPtr(stringToReturn, &buffer);
 	free(buffer); 
 	FREE_NON_NULL_DEGREES_AND_OFFSETS
 	sm_delete(sm);	
