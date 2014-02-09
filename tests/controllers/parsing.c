@@ -135,4 +135,3 @@ User-Agent: GoGreen/1.0 CFNetwork/672.0.8 Darwin/13.0.0";
 	close(STDERR_FILENO);
 	return 0;
 }
-#undef JSON_LENGTH
