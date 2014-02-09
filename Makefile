@@ -223,3 +223,6 @@ pins-post-spec: tests/spec/postpins.c
 
 debug-post-spec: tests/spec/postdebug.c
 	$(CC) $(gflags) $(mysqlflags) tests/spec/postdebug.c obj/*.o -o tests/bin/post-debug-spec.out $(mysqllibs) -lcrypto		
+
+parsing-test:
+	$(CC) $(gflags) tests/controllers/parsing.c -o tests/bin/parsing-test.out 
