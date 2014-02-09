@@ -8,7 +8,7 @@
 	#endif
 	#define DATABASE_LOGGING 0
 #endif
-#define LOGDB if(DATABASE_LOGGING == 1) fprintf(stderr, "%s\n", query);
+#define LOGDB if(DATABASE_LOGGING == 1) fprintf(stderr, "DB: %s\n", query);
 #define LOGDBTRANS(status) if(DATABASE_LOGGING == 1) fprintf(stderr, "Transaction has been %s\n", status);
 
 /* _shared_campaign_id is declared in config.h and is a global
@@ -93,14 +93,14 @@ void db_insertScope(struct gs_scope * gss, MYSQL * conn){
 	sprintf(query, GS_SCOPE_INSERT, gss->description );
 	LOGDB
 	if(0 != mysql_query(conn, query) ){
-		fprintf(stderr, "%s\n", mysql_error(conn));
+		fprintf(stderr, "DB Insert: %s\n", mysql_error(conn));
 		gss->id = GS_SCOPE_INVALID_ID;
 		return;
 	}
 
 	affected = mysql_insert_id(conn);
 	if( affected == 0){
-		fprintf(stderr, "%s\n", mysql_error(conn));
+		fprintf(stderr, "DB Affected: %s\n", mysql_error(conn));
 		return;
 	}
 
@@ -115,7 +115,7 @@ void db_insertScope(struct gs_scope * gss, MYSQL * conn){
 	LOGDB
 	if(0 != mysql_query(conn, query) ){
 		gss->id = GS_SCOPE_INVALID_ID;
-		fprintf(stderr, "%s\n", mysql_error(conn));
+		fprintf(stderr, "DB Retrieve: %s\n", mysql_error(conn));
 		return;
 	}
 
@@ -157,8 +157,7 @@ int db_getComments(int page, long scopeId, struct gs_comment * gsc, MYSQL * conn
 
 	LOGDB
 	if(0 != mysql_query(conn, query) ){
-		fprintf(stderr, "%s\n", query);
-		fprintf(stderr, "%s\n", mysql_error(conn));
+		fprintf(stderr, "DB Retrieve: %s\n", mysql_error(conn));
 		return 0;
 	}
 
@@ -195,8 +194,7 @@ int db_getCommentsByType(int page, long scopeId, struct gs_comment * gsc, char *
 	sprintf(query, GS_COMMENT_GET_BY_TYPE, scopeId, cType,limit);
 	LOGDB
 	if(0 != mysql_query(conn, query) ){
-		fprintf(stderr, "%s\n", query);
-		fprintf(stderr, "%s\n", mysql_error(conn));
+		fprintf(stderr, "DB Retrieve: %s\n", mysql_error(conn));
 		return 0;
 	}
 
@@ -230,7 +228,7 @@ void db_getCommentById(long id, struct gs_comment * gsc, MYSQL * conn){
 	sprintf(query, GS_COMMENT_GET_BY_ID, id);
 	LOGDB
 	if(0 != mysql_query(conn, query) ){
-		fprintf(stderr, "%s\n", mysql_error(conn));
+		fprintf(stderr, "DB Retrieve: %s\n", mysql_error(conn));
 		return;
 	}
 
@@ -269,13 +267,13 @@ void db_insertComment(struct gs_comment * gsc, MYSQL * conn){
 	sprintf(query, GS_COMMENT_INSERT, gsc->content, gsc->scopeId, gsc->pinId,gsc->cType);
 	LOGDB
 	if(0 != mysql_query(conn, query) ){
-		fprintf(stderr, "%s\n", mysql_error(conn));
+		fprintf(stderr, "DB Insert: %s\n", mysql_error(conn));
 		return;
 	}
 
 	affected = mysql_insert_id(conn);
 	if( affected == 0){
-		fprintf(stderr, "%s\n", mysql_error(conn));
+		fprintf(stderr, "DB Affected: %s\n", mysql_error(conn));
 		return;
 	}
 
@@ -290,7 +288,7 @@ void db_insertComment(struct gs_comment * gsc, MYSQL * conn){
 	gs_comment_ZeroStruct(gsc);
 	LOGDB
 	if(0 != mysql_query(conn, query) ){
-		fprintf(stderr, "%s\n", mysql_error(conn));
+		fprintf(stderr, "DB Retrieve: %s\n", mysql_error(conn));
 		return;
 	}
 
@@ -329,7 +327,7 @@ int db_getMarkers(int page, long scopeId, struct gs_marker * gsm, MYSQL * conn){
 	sprintf(query, GS_MARKER_GET_ALL, scopeId, limit);
 	LOGDB
 	if(0 != mysql_query(conn, query) ){
-		fprintf(stderr, "%s\n", mysql_error(conn));
+		fprintf(stderr, "DB Marker: %s\n", mysql_error(conn));
 		return 0;
 	}
 
@@ -370,13 +368,13 @@ void db_insertMarker(struct gs_marker * gsm, MYSQL * conn){
 	sprintf(query, GS_MARKER_INSERT, gsm->commentId, gsm->scopeId, gsm->latitude,  gsm->longitude,  gsm->addressed);
 	LOGDB
 	if(0 != mysql_query(conn, query) ){
-		fprintf(stderr, "%s\n", mysql_error(conn));
+		fprintf(stderr, "DB Insert: %s\n", mysql_error(conn));
 		return;
 	}
 
 	affected = mysql_insert_id(conn);
 	if( affected == 0){
-		fprintf(stderr, "%s\n", mysql_error(conn));
+		fprintf(stderr, "DB Affected: %s\n", mysql_error(conn));
 		return;
 	}
 
@@ -391,7 +389,7 @@ void db_insertMarker(struct gs_marker * gsm, MYSQL * conn){
 	gs_marker_ZeroStruct(gsm);
 
 	if(0 != mysql_query(conn, query) ){
-		fprintf(stderr, "%s\n", mysql_error(conn));
+		fprintf(stderr, "DB Retrieve: %s\n", mysql_error(conn));
 		return;
 	}
 
@@ -430,7 +428,7 @@ void db_getMarkerById(long id, struct gs_marker * gsm, MYSQL * conn){
 	sprintf(query, GS_MARKER_GET_BY_ID, id);
 	LOGDB
 	if(0 != mysql_query(conn, query) ){
-		fprintf(stderr, "%s\n", mysql_error(conn));
+		fprintf(stderr, "DB Retrieve: %s\n", mysql_error(conn));
 		return;
 	}
 
@@ -475,7 +473,7 @@ void db_insertHeatmap(struct gs_heatmap * gsh, MYSQL * conn){
 	sprintf(query, GS_HEATMAP_FIND_MATCH, gsh->scopeId, gsh->latitude, gsh->longitude);
 	LOGDB
 	if(0 != mysql_query(conn, query) ){
-		fprintf(stderr, "%s\n", mysql_error(conn));
+		fprintf(stderr, "DB Insert: %s\n", mysql_error(conn));
 		return;
 	}
 
@@ -498,7 +496,7 @@ void db_insertHeatmap(struct gs_heatmap * gsh, MYSQL * conn){
 
 	LOGDB
 	if(0 != mysql_query(conn, query) ){
-		fprintf(stderr, "%s\n", mysql_error(conn));
+		fprintf(stderr, "DB Update: %s\n", mysql_error(conn));
 		return;
 	}
 
@@ -516,7 +514,7 @@ void db_insertHeatmap(struct gs_heatmap * gsh, MYSQL * conn){
 		*/
 		affected = mysql_insert_id(conn);
 		if( affected == 0){
-			fprintf(stderr, "%s\n", mysql_error(conn));
+			fprintf(stderr, "DB Affected: %s\n", mysql_error(conn));
 			return;
 		}
 
@@ -532,7 +530,7 @@ void db_insertHeatmap(struct gs_heatmap * gsh, MYSQL * conn){
 	gs_heatmap_ZeroStruct(gsh);
 	LOGDB
 	if(0 != mysql_query(conn, query) ){
-		fprintf(stderr, "%s\n", mysql_error(conn));
+		fprintf(stderr, "DB Retrieve: %s\n", mysql_error(conn));
 		return;
 	}
 
@@ -586,7 +584,7 @@ int db_getHeatmap(int page, long scopeId, long precision, long * max, Decimal lo
 
 	LOGDB
 	if(0 != mysql_query(conn, query) ){
-		fprintf(stderr, "%s\n", mysql_error(conn));
+		fprintf(stderr, "DB Retrieve: %s\n", mysql_error(conn));
 		return 0;
 	}
 
@@ -629,13 +627,13 @@ void db_insertReport(struct gs_report * gsr, MYSQL * conn){
 	sprintf(query, GS_REPORT_INSERT, gsr->content, gsr->scopeId, gsr->origin, gsr->authorize, gsr->trace, gsr->rType);
 	LOGDB
 	if(0 != mysql_query(conn, query) ){
-		fprintf(stderr, "%s\n", mysql_error(conn));
+		fprintf(stderr, "DB Insert: %s\n", mysql_error(conn));
 		return;
 	}
 
 	affected = mysql_insert_id(conn);
 	if( affected == 0){
-		fprintf(stderr, "%s\n", mysql_error(conn));
+		fprintf(stderr, "DB Affected: %s\n", mysql_error(conn));
 		return;
 	}
 
@@ -650,7 +648,7 @@ void db_insertReport(struct gs_report * gsr, MYSQL * conn){
 	gs_report_ZeroStruct(gsr);
 	LOGDB
 	if(0 != mysql_query(conn, query) ){
-		fprintf(stderr, "%s\n", mysql_error(conn));
+		fprintf(stderr, "DB Retrieve: %s\n", mysql_error(conn));
 		return;
 	}
 
@@ -688,7 +686,7 @@ void db_getReportByAuth(char * auth, struct gs_report * gsr, MYSQL * conn){
 	sprintf(query, GS_REPORT_GET_BY_AUTH, auth);
 	LOGDB
 	if(0 != mysql_query(conn, query) ){
-		fprintf(stderr, "%s\n", mysql_error(conn));
+		fprintf(stderr, "DB Retrieve: %s\n", mysql_error(conn));
 		return;
 	}
 
@@ -718,7 +716,7 @@ int db_deleteReport(struct gs_report * gsr, MYSQL * conn){
 	sprintf(query, GS_REPORT_DELETE, gsr->origin,gsr->authorize);
 	LOGDB
 	if(0 != mysql_query(conn, query) ){
-		fprintf(stderr, "%s\n", mysql_error(conn));
+		fprintf(stderr, "DB Delete: %s\n", mysql_error(conn));
 		return 0;
 	}
 
@@ -732,7 +730,7 @@ int db_deleteComment( long id, MYSQL * conn){
 	sprintf(query, GS_COMMENT_DELETE, id);
 	LOGDB
 	if(0 != mysql_query(conn, query) ){
-		fprintf(stderr, "%s\n", mysql_error(conn));
+		fprintf(stderr, "DB Delete: %s\n", mysql_error(conn));
 		return 0;
 	}
 
@@ -747,7 +745,7 @@ int db_addressMarker(long id, int addressed, MYSQL * conn){
 	sprintf(query, GS_MARKER_ADDRESS, addressed,id);
 	LOGDB
 	if(0 != mysql_query(conn, query) ){
-		fprintf(stderr, "%s\n", mysql_error(conn));
+		fprintf(stderr, "DB Update: %s\n", mysql_error(conn));
 		return 0;
 	}
 
@@ -761,7 +759,7 @@ int db_deleteMarker(long id, MYSQL * conn){
 	sprintf(query, GS_MARKER_DELETE, id);
 	LOGDB
 	if(0 != mysql_query(conn, query) ){
-		fprintf(stderr, "%s\n", mysql_error(conn));
+		fprintf(stderr, "DB Delete: %s\n", mysql_error(conn));
 		return 0;
 	}
 
@@ -785,7 +783,7 @@ int db_getReports(int page,char * since, long scopeId,  struct gs_report * gsr, 
 
 	LOGDB
 	if(0 != mysql_query(conn, query) ){
-		fprintf(stderr, "%s\n", mysql_error(conn));
+		fprintf(stderr, "DB Retrieve: %s\n", mysql_error(conn));
 		return 0;
 	}
 
@@ -830,7 +828,7 @@ int db_getMarkerComments(int page, long scopeId, struct gs_marker * gsm, struct 
 
 	LOGDB
 	if(0 != mysql_query(conn, query) ){
-		fprintf(stderr, "%s\n", mysql_error(conn));
+		fprintf(stderr, "DB Retrieve: %s\n", mysql_error(conn));
 		return 0;
 	}
 
@@ -896,7 +894,7 @@ static int db_getMarkerCommentsCoordinate(int page, long scopeId, struct gs_mark
 	sprintf(query, queryString, scopeId, lower, upper ,limit);
 	LOGDB
 	if(0 != mysql_query(conn, query) ){
-		fprintf(stderr, "%s\n", mysql_error(conn));
+		fprintf(stderr, "DB Retrieve: %s\n", mysql_error(conn));
 		return 0;
 	}
 
@@ -977,7 +975,7 @@ int db_getMarkerCommentsFullFilter(int page, long scopeId, struct gs_marker * gs
 	sprintf(query, GS_MARKER_COMMENT_GET_BY_BOTH, scopeId, latLower, latUpper, lonLower, lonUpper ,limit);
 	LOGDB
 	if(0 != mysql_query(conn, query) ){
-		fprintf(stderr, "%s\n", mysql_error(conn));
+		fprintf(stderr, "DB Retrieve: %s\n", mysql_error(conn));
 		return 0;
 	}
 
