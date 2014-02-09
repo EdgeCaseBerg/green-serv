@@ -23,6 +23,11 @@
 #define NETWORK_LOG_LEVEL_2(s) if(NETWORK_LOGGING == 2) fprintf(stderr, "%s\n", (s) );
 #define NETWORK_LOG_LEVEL_1(s) if(NETWORK_LOGGING >= 1) fprintf(stderr, "%s\n", (s) );
 
+static inline void  swapCharPtr( char ** ptr1, char ** ptr2){
+    char *temp = *ptr1;
+    *ptr1 = *ptr2;
+    *ptr2 = temp;
+}
 
 static int strnstr(char * needle, char * haystack, int haystackLen){
     int i;
@@ -147,15 +152,16 @@ void* doNetWork(struct threadData* td) {
                         */
                         if( contentLength > 0 ){
                             j = strnstr("\r\n\r\n", raw_message, BUFSIZ);
-                            tempBuff = realloc(raw_message, BUFSIZ + 1+ j + 4 + (contentLength < 0 ? 0 : contentLength) );
-                            if(!tempBuff){
+                            tempBuff = malloc(BUFSIZ + 1+ j + 4 + (contentLength < 0 ? 0 : contentLength) );
+                            if(tempBuff == NULL){
                                 free(raw_message);
                                 NETWORK_LOG_LEVEL_1("Could not reallocate memory during request data acquisition");
                                 goto internal_err;
                             }else{
-                                raw_message = tempBuff;
-                                /* set the memory realloced to 0 */
-                                memset(raw_message+BUFSIZ, 0, 1+ j + 4 + (contentLength < 0 ? 0 : contentLength));
+                                memset(tempBuff, 0, BUFSIZ + 1+ j + 4 + (contentLength < 0 ? 0 : contentLength));
+                                strcpy(tempBuff, raw_message);
+                                swapCharPtr(&tempBuff, &raw_message);
+                                free(tempBuff);
                             }
                         }
                     }
