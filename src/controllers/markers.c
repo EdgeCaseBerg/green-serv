@@ -364,6 +364,9 @@ int marker_address(char * buffer, int buffSize, long id, const struct http_reque
 	int addressed;
 	char * charP; 
 	char * boolVal;
+	struct gs_marker marker;
+
+	gs_marker_ZeroStruct(&marker);
 
 	affected = addressed =  0;
 
@@ -404,6 +407,15 @@ int marker_address(char * buffer, int buffSize, long id, const struct http_reque
 		return -1;
 	}	
 
+	db_getMarkerById(id, &marker , conn);
+
+	if(marker.id == GS_MARKER_INVALID_ID){
+		mysql_close(conn);
+		mysql_thread_end();
+		snprintf(buffer, buffSize, "{\"status_code\" : 404,\"message\" : \"Could not find marker with given id\"}");
+		return 404;
+	}
+
 	/* Mark addressed */	
 	affected = db_addressMarker(id, addressed, conn);	
 
@@ -411,10 +423,9 @@ int marker_address(char * buffer, int buffSize, long id, const struct http_reque
 	mysql_thread_end();
 
 	if(affected > 0){
-		snprintf(buffer, buffSize, "\"status_code\" : 200,\"message\":\"successful update\"");
+		snprintf(buffer, buffSize, "{\"status_code\" : 200,\"message\":\"successful update\"}");
 	}else{
-		snprintf(buffer,buffSize,"{\"status_code\" : 404,\"message\" : \"Could not find marker with given id\"}");
-		return 404;
+		snprintf(buffer,buffSize,"{\"status_code\" : 200,\"message\" : \"successful: no change\"}");
 	}
 
 	return 200;
