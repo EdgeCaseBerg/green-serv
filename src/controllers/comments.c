@@ -136,12 +136,13 @@ int comments_get(char ** buffer, int buffSize ,const struct http_request * reque
 				/* Verify that it is a correct type */
 				if(strncasecmp(cType, CTYPE_1,COMMENTS_CTYPE_SIZE) != 0)
 					if(strncasecmp(cType, CTYPE_2,COMMENTS_CTYPE_SIZE) != 0)
-						if(strncasecmp(cType, CTYPE_3,COMMENTS_CTYPE_SIZE) != 0){
-							sm_delete(sm);
-							free(commentPage);
-							free(commentBuffer);
-							snprintf(*buffer, buffSize, ERROR_STR_FORMAT, 422, BAD_TYPE_ERR);
-							return 422;
+						if(strncasecmp(cType, CTYPE_3,COMMENTS_CTYPE_SIZE) != 0)
+							if(strncasecmp(cType, CTYPE_4, COMMENTS_CTYPE_SIZE) != 0){
+								sm_delete(sm);
+								free(commentPage);
+								free(commentBuffer);
+								snprintf(*buffer, buffSize, ERROR_STR_FORMAT, 422, BAD_TYPE_ERR);
+								return 422;
 						}
 
 			}

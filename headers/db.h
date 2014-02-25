@@ -43,7 +43,7 @@
 	#define GS_COMMENT_GET_ALL "SELECT comments.id, pin_id, content, comments.scope_id, comments.created_time,comment_type, addressed FROM comments INNER JOIN markers ON comment_id = comments.id WHERE comments.scope_id = %ld ORDER BY created_time DESC LIMIT %d, " STRINGIFY(RESULTS_PER_PAGE) ";"
 	#define GS_COMMENT_GET_BY_ID "SELECT comments.id, pin_id, content, comments.scope_id, comments.created_time,comment_type, addressed FROM comments LEFT JOIN markers ON comment_id = comments.id WHERE comments.id = %ld;"
 	#define GS_COMMENT_INSERT "INSERT INTO comments (content, scope_id, pin_id,comment_type) VALUES (\"%s\", %ld, %ld,\"%s\");" 
-	#define GS_COMMENT_GET_BY_TYPE "SELECT comments.id, pin_id, content, comments.scope_id, comments.created_time,comment_type,addressed FROM comments INNER JOIN markers ON comment_id = comments.id WHERE comments.scope_id = %ld AND comment_type = UPPER(\"%s\") ORDER BY created_time DESC LIMIT %d, " STRINGIFY(RESULTS_PER_PAGE) ";"
+	#define GS_COMMENT_GET_BY_TYPE "SELECT comments.id, pin_id, content, comments.scope_id, comments.created_time,comment_type,addressed FROM comments LEFT JOIN markers ON comment_id = comments.id WHERE comments.scope_id = %ld AND comment_type = UPPER(\"%s\") ORDER BY created_time DESC LIMIT %d, " STRINGIFY(RESULTS_PER_PAGE) ";"
 	#define GS_COMMENT_DELETE "DELETE FROM comments WHERE id=%ld"
 
 	#define GS_MARKER_GET_ALL "SELECT id, comment_id, scope_id, created_time, latitude, longitude, addressed FROM markers WHERE scope_id = %ld ORDER BY created_time DESC LIMIT %d, " STRINGIFY(RESULTS_PER_PAGE) ";"
