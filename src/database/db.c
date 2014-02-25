@@ -172,6 +172,7 @@ int db_getComments(int page, long scopeId, struct gs_comment * gsc, MYSQL * conn
 		gs_comment_setScopeId( atol(row[3]), &gsc[i]);
 		gs_comment_setCreatedTime( row[4], &gsc[i]);
 		gs_comment_setCommentType(row[5], &gsc[i]);
+		gs_comment_setAddressed(row[6] == NULL ? 0 : atol(row[6]), &gsc[i]);
 		i++;
 	}
 	mysql_free_result(result);  
@@ -210,6 +211,7 @@ int db_getCommentsByType(int page, long scopeId, struct gs_comment * gsc, char *
 		gs_comment_setScopeId( atol(row[3]), &gsc[i]);
 		gs_comment_setCreatedTime( row[4], &gsc[i]);
 		gs_comment_setCommentType( row[5], &gsc[i]);
+		gs_comment_setAddressed(row[6] == NULL ? 0 : atol(row[6]), &gsc[i]);
 		i++;
 	}
 	mysql_free_result(result);  
@@ -246,6 +248,7 @@ void db_getCommentById(long id, struct gs_comment * gsc, MYSQL * conn){
 	gs_comment_setScopeId( atol(row[3]), gsc);
 	gs_comment_setCreatedTime( row[4], gsc);
 	gs_comment_setCommentType(row[5], gsc);
+	gs_comment_setAddressed(row[6] == NULL ? 0 : atol(row[6]), gsc);
 
 	mysql_free_result(result);  
 }
@@ -295,6 +298,7 @@ void db_insertComment(struct gs_comment * gsc, MYSQL * conn){
 	result = mysql_use_result(conn);
 	row = mysql_fetch_row(result);
 	if(row == NULL){
+		fprintf(stderr, "DB Fetch no results\n" );
 		mysql_free_result(result);
 		return;    
 	}

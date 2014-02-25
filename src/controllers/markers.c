@@ -583,7 +583,7 @@ int marker_post(char * buffer, int buffSize, const struct http_request * request
 		mysql_close(conn);
 		mysql_thread_end();
 		sm_delete(sm);
-		return -1;
+		return 422;
 }
 
 
