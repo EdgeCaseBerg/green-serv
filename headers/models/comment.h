@@ -15,6 +15,7 @@
 		char cType[GS_COMMENT_TYPE_LENGTH+1];
 		long scopeId;
 		char createdTime[GS_COMMENT_CREATED_TIME_LENGTH+1];  /* YYYY-MM-DD HH:MM:SS + \0 = 20*/
+		int addressed; /* pulled from marker */
 	};
 
 	/* Any functions specifically working with just gs_comment: */
@@ -25,6 +26,7 @@
 	void gs_comment_setCreatedTime(char * createdTime, struct gs_comment * gsc); /* Contemplate long for epoch time? */
 	void gs_comment_setPinId(long id, struct gs_comment * gsc);
 	void gs_comment_setCommentType(char * cType, struct gs_comment * gsc);
+	void gs_comment_setAddressed(int addressed, struct gs_comment * gsc);
 	
 
 	/* Empties a comment structure of data and sets flag values */

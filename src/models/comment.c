@@ -39,3 +39,7 @@ void gs_comment_ZeroStruct(struct gs_comment * gsc){
 	bzero(gsc->cType, GS_COMMENT_TYPE_LENGTH+1);
 	bzero(gsc->createdTime, GS_COMMENT_CREATED_TIME_LENGTH+1);
 }
+
+void gs_comment_setAddressed(int addressed, struct gs_comment * gsc){
+	gsc->addressed = addressed;
+}
