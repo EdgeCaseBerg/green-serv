@@ -7,8 +7,8 @@ CC=cc
 
 #a few handy defines to make our compilation lines not so long:
 gflags = -I./headers -std=gnu99 -pedantic -Wall -Wextra -Werror -g
-mysqlflags = -I/usr/include/mysql -DBIG_JOINS=1 -fno-strict-aliasing
-mysqllibs  = -L/usr/lib/x86_64-linux-gnu -lmysqlclient_r -lpthread -lz -lm -lrt -ldl 
+mysqlflags = -I/opt/mysql/server-5.6/include -fPIC -g -fabi-version=2 -fno-omit-frame-pointer -fno-strict-aliasing -DMY_PTHREAD_FASTMUTEX=1
+mysqllibs  = -L/opt/mysql/server-5.6/lib -lmysqlclient_r -lpthread -lm -lrt -ldl
 valgrind = valgrind --tool=memcheck --leak-check=yes --show-reachable=yes --num-callers=20 --track-fds=yes
 unittests = test-decimal test-comment test-scope test-marker test-report test-heatmap test-heartbeat test-router test-network
 unittestobj = obj/comment.o  obj/db.o  obj/decimal.o  obj/heatmap.o  obj/json.o obj/strmap.o obj/marker.o  obj/report.o  obj/scope.o  obj/sha256.o
@@ -24,7 +24,7 @@ a.out: gs.o main.c
 all: gs.o
 
 gs.o: green-serv.c json.o db.o network.o
-	$(CC) $(gflags) -c green-serv.c -o obj/gs.o  	
+	$(CC) $(mysqlflags) $(gflags) -c green-serv.c -o obj/gs.o  	
 
 db.o: src/database/db.c scope.o comment.o marker.o heatmap.o report.o
 	$(CC) $(mysqlflags) $(gflags) -c src/database/db.c -o obj/db.o  	
@@ -57,19 +57,19 @@ heartbeatC.o: src/controllers/heartbeat.c mlist.o
 	$(CC) $(gflags) -c src/controllers/heartbeat.c -o obj/heartbeatC.o
 
 commentC.o: src/controllers/comments.c strmap.o comment.o router.o
-	$(CC) $(gflags) -c src/controllers/comments.c -o obj/commentC.o
+	$(CC) $(mysqlflags) $(gflags)  -c src/controllers/comments.c -o obj/commentC.o
 
 markerC.o: src/controllers/markers.c router.o strmap.o marker.o
-	$(CC) $(gflags) -c src/controllers/markers.c -o obj/markerC.o
+	$(CC) $(mysqlflags) $(gflags) -c src/controllers/markers.c -o obj/markerC.o
 
 heatmapC.o: src/controllers/heatmaps.c router.o strmap.o heatmap.o mlist.o
-	$(CC) $(gflags) -c src/controllers/heatmaps.c -o obj/heatmapC.o
+	$(CC) $(mysqlflags) $(gflags) -c src/controllers/heatmaps.c -o obj/heatmapC.o
 
 reportsC.o: src/controllers/reports.c router.o strmap.o report.o sha256.o
-	$(CC) $(gflags) -c src/controllers/reports.c -o obj/reportsC.o
+	$(CC) $(mysqlflags) $(gflags) -c src/controllers/reports.c -o obj/reportsC.o
 
 network.o: src/network/net.c router.o heartbeatC.o commentC.o markerC.o heatmapC.o reportsC.o
-	$(CC) $(gflags) -c src/network/net.c -o obj/network.o 
+	$(CC) $(mysqlflags) $(gflags) -c src/network/net.c -o obj/network.o 
 
 router.o: src/network/router.c strmap.o
 	$(CC) $(gflags) -c src/network/router.c -o obj/router.o
