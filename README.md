@@ -77,6 +77,9 @@ you'd like.
         */
         #define NETWORK_LOGGING 2
 
+        /* Enable Ethan's hack around his mysql setup being foo-bared*/
+        #define __MYSQL_INCLUDE_DIFFERENCE__ 1
+
         /*This is a global variable declaration.
          *The main driving file will define this variable. Calling
          *parties may use this variable as a read-only variable.

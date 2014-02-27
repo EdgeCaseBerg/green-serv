@@ -1,7 +1,13 @@
 #ifndef __DB_H__
 	#define __DB_H__
+
+	#include "config.h"
 	
-	#include <mysql.h>
+	#ifdef __MYSQL_INCLUDE_DIFFERENCE__
+		#include <mysql.h>
+	#else
+		#include <mysql/mysql.h>
+	#endif
 
 	#include "flags.h"
 	#include <stdio.h>
@@ -11,8 +17,7 @@
 	#include "models/marker.h"
 	#include "models/heatmap.h"
 	#include "models/report.h"
-	#include "helpers/decimal.h"
-	#include "config.h"
+	#include "helpers/decimal.h"	
 	#include <string.h>
 	
 	/* How many of an entity per page
