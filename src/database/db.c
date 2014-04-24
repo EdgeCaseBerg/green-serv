@@ -8,9 +8,8 @@
 	#endif
 	#define DATABASE_LOGGING 0
 #endif
-#define LOGDB if(DATABASE_LOGGING == 1) fprintf(stderr, "DB: %s\n", query);
-#define LOGDBTRANS(status) if(DATABASE_LOGGING == 1) fprintf(stderr, "Transaction has been %s\n", status);
-
+#define LOGDB if(DATABASE_LOGGING == 1) fprintf(stderr, "%ld:DB: %s\n", syscall(SYS_gettid), query);
+#define LOGDBTRANS(status) if(DATABASE_LOGGING == 1) fprintf(stderr, "%ld:Transaction has been %s\n", syscall(SYS_gettid) ,status);
 /* _shared_campaign_id is declared in config.h and is a global
  * readonly variable to be used for scoping purposes
 */

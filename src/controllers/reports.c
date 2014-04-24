@@ -17,9 +17,9 @@ static inline void  swapCharPtr( char ** ptr1, char ** ptr2){
     #undef NETWORK_LOGGING
     #define NETWORK_LOGGING 0
 #endif
-#define NETWORK_LOG_LEVEL_2_NUM(s,d) if(NETWORK_LOGGING == 2) fprintf(stderr, "%s %d\n",(s), (d) );
-#define NETWORK_LOG_LEVEL_2(s) if(NETWORK_LOGGING == 2) fprintf(stderr, "%s\n", (s) );
-#define NETWORK_LOG_LEVEL_1(s) if(NETWORK_LOGGING >= 1) fprintf(stderr, "%s\n", (s) );
+#define NETWORK_LOG_LEVEL_2_NUM(s,d) if(NETWORK_LOGGING == 2) fprintf(stderr, "%ld:%s %d\n",syscall(SYS_gettid) , (s), (d) );
+#define NETWORK_LOG_LEVEL_2(s) if(NETWORK_LOGGING == 2) fprintf(stderr, "%ld:%s\n", syscall(SYS_gettid),  (s) );
+#define NETWORK_LOG_LEVEL_1(s) if(NETWORK_LOGGING >= 1) fprintf(stderr, "%ld:%s\n", syscall(SYS_gettid),  (s) );
 
 
 /* Very small limited substring match against an uppercased constant

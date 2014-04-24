@@ -8,7 +8,9 @@
 	#else
 		#include <mysql/mysql.h>
 	#endif
-
+	
+	#include <sys/syscall.h>
+	#include <unistd.h>
 	#include "flags.h"
 	#include <stdio.h>
 	#include <stdlib.h>
