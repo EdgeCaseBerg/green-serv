@@ -14,7 +14,7 @@
 	    int clientfd;
 	};
 
-	
+	#include <sys/syscall.h>
 	#include <unistd.h>
 	#include <signal.h>
 	#include <stdio.h>
