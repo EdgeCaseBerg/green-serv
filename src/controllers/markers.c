@@ -45,7 +45,7 @@ int marker_controller(const struct http_request * request, char ** stringToRetur
 	status = 500;
 	convertSuccess = NULL;
 	bufferRealloc = NULL;
-	buffSize = 256;
+	buffSize = 512;
 	bzero(tempBuf, sizeof tempBuf);
 	page = 1;
 
