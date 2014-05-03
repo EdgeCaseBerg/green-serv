@@ -260,7 +260,7 @@ void* doNetWork(struct threadData* td) {
         do{
             bytesSent += send(td->clientfd,(td->msg)+bytesSent,strlen(td->msg),0);  
             NETWORK_LOG_LEVEL_1("Sending Response:");
-            NETWORK_LOG_LEVEL_1(td->msg);
+            NETWORK_LOG_LEVEL_1( ( td->msg )+bytesSent  ); 
             NETWORK_LOG_LEVEL_2_NUM("Bytes sent to client: ", bytesSent);
             NETWORK_LOG_LEVEL_2(strerror(errno));
         } while(bytesSent < (int)strlen(td->msg) -1 );
