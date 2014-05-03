@@ -73,6 +73,7 @@ void* doNetWork(struct threadData* td) {
     char * tempBuff;
     char * raw_message;
     char contentLengthBuff[100];
+    bytesSent = 0;
 
     response = malloc(sizeof(char)*STARTING_RESPONSE_SIZE);
     if(response == NULL){
@@ -256,11 +257,13 @@ void* doNetWork(struct threadData* td) {
 
     bad_client_id: 
     if(td->clientfd != -1){
-        bytesSent = send(td->clientfd,td->msg,strlen(td->msg),0);  
-        NETWORK_LOG_LEVEL_1("Sending Response:");
-        NETWORK_LOG_LEVEL_1(td->msg);
-        NETWORK_LOG_LEVEL_2_NUM("Bytes sent to client: ", bytesSent);
-        NETWORK_LOG_LEVEL_2(strerror(errno));
+        do{
+            bytesSent += send(td->clientfd,td->msg,strlen(td->msg),0);  
+            NETWORK_LOG_LEVEL_1("Sending Response:");
+            NETWORK_LOG_LEVEL_1(td->msg);
+            NETWORK_LOG_LEVEL_2_NUM("Bytes sent to client: ", bytesSent);
+            NETWORK_LOG_LEVEL_2(strerror(errno));
+        } while(bytesSent < (int)strlen(td->msg) -1 );
         close(td->clientfd);
     }else{
         NETWORK_LOG_LEVEL_2("File Descriptor invalid. If shutting down there is no problem.");
