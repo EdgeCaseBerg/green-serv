@@ -376,15 +376,15 @@ int heatmap_get(char ** buffer, int buffSize,int page, Decimal * latDegrees, Dec
 			}
 		}
 		if(i==0)
-			snprintf(tempBuf,buffSize,"%s",json);
+			snprintf(tempBuf,buffSize*resize,"%s",json);
 		else{
 			strncat(tempBuf,",",buffSize*resize);
 			strncat(tempBuf,json,buffSize*resize);
 		}			
 	}
 	
-	if(resize != 1){
-		swapBuff = malloc(sizeof(char)*buffSize*resize+strlen(HEATMAP_PAGE_STR));
+	/* if(resize != 1){ */
+		swapBuff = malloc(sizeof(char)*(buffSize*resize)+strlen(HEATMAP_PAGE_STR)+512);
 		if(swapBuff == NULL){
 			NETWORK_LOG_LEVEL_1("Failed to allocate memory for swap buffer");
 			NETWORK_LOG_LEVEL_2_NUM("Failed to allocate swap buffer of bytesize", (int)(buffSize*resize+strlen(HEATMAP_PAGE_STR)));
@@ -392,9 +392,9 @@ int heatmap_get(char ** buffer, int buffSize,int page, Decimal * latDegrees, Dec
 			swapCharPtr(&swapBuff,buffer);
 			free(swapBuff);
 		}
-	}
+	/* } */
 
-	snprintf(*buffer,buffSize*resize, HEATMAP_PAGE_STR, 200, tempBuf, min(numHeatmaps,HEATMAP_RESULTS_RETURNED), page, nextStr,prevStr);
+	snprintf(*buffer,(buffSize*resize) + 512, HEATMAP_PAGE_STR, 200, tempBuf, min(numHeatmaps,HEATMAP_RESULTS_RETURNED), page, nextStr,prevStr);
 	free(heatmaps);
 	free(tempBuf);
 	mysql_close(conn);
