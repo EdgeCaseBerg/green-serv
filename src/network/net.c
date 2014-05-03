@@ -59,6 +59,7 @@ void* doNetWork(struct threadData* td) {
     /*Response Variables*/
     struct http_request request;
     int bytesSent;
+    int sendResponse;
     int controller;
     int status;
     char * response;
@@ -74,6 +75,7 @@ void* doNetWork(struct threadData* td) {
     char * raw_message;
     char contentLengthBuff[100];
     bytesSent = 0;
+    sendResponse =0;
 
     response = malloc(sizeof(char)*STARTING_RESPONSE_SIZE);
     if(response == NULL){
@@ -253,16 +255,23 @@ void* doNetWork(struct threadData* td) {
     }
     memset(td->msg,0,strlen(response)+256);
     createResponse(response,td->msg,status);
-    td->msg[strlen(td->msg)] = '\0';
+    td->msg[strlen(td->msg)] = '\0';\
+
+
 
     bad_client_id: 
     if(td->clientfd != -1){
         do{
-            bytesSent += send(td->clientfd,(td->msg)+bytesSent,strlen(td->msg)-bytesSent,0);  
+            sendResponse = send(td->clientfd,(td->msg)+bytesSent,strlen(td->msg)-bytesSent,0);  
+            if(sendResponse == -1){
+                NETWORK_LOG_LEVEL_2(strerror(errno));    
+            }else{
+                bytesSent += sendResponse;
+            }
             NETWORK_LOG_LEVEL_1("Sending Response:");
             NETWORK_LOG_LEVEL_1( ( td->msg )+bytesSent  ); 
             NETWORK_LOG_LEVEL_2_NUM("Bytes sent to client: ", bytesSent);
-            NETWORK_LOG_LEVEL_2(strerror(errno));
+            
         } while(bytesSent < (int)strlen(td->msg) -1 );
         close(td->clientfd);
     }else{
