@@ -31,7 +31,7 @@
 	/* Gets it's own results because it's more likely we'll want more
 	 * heatmap data than something like comments
 	*/
-	#define HEATMAP_RESULTS_PER_PAGE 150
+	#define HEATMAP_RESULTS_PER_PAGE 300
 	#define HEATMAP_RESULTS_RETURNED (HEATMAP_RESULTS_PER_PAGE-1)
 	#define TOSTR(x) #x
 	#define STRINGIFY(x) TOSTR(x)
