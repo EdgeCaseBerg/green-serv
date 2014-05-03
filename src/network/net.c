@@ -258,7 +258,7 @@ void* doNetWork(struct threadData* td) {
     bad_client_id: 
     if(td->clientfd != -1){
         do{
-            bytesSent += send(td->clientfd,td->msg,strlen(td->msg),0);  
+            bytesSent += send(td->clientfd,(td->msg)+bytesSent,strlen(td->msg),0);  
             NETWORK_LOG_LEVEL_1("Sending Response:");
             NETWORK_LOG_LEVEL_1(td->msg);
             NETWORK_LOG_LEVEL_2_NUM("Bytes sent to client: ", bytesSent);
