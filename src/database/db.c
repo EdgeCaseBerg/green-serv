@@ -1,15 +1,5 @@
 #include "db.h"
-#ifndef DATABASE_LOGGING
-	#define DATABASE_LOGGING 0
-#endif
-#if(DATABASE_LOGGING != 1)
-	#ifdef DATABASE_LOGGING
-		#undef DATABASE_LOGGING
-	#endif
-	#define DATABASE_LOGGING 0
-#endif
-#define LOGDB if(DATABASE_LOGGING == 1) fprintf(stderr, "%ld:DB: %s\n", syscall(SYS_gettid), query);
-#define LOGDBTRANS(status) if(DATABASE_LOGGING == 1) fprintf(stderr, "%ld:Transaction has been %s\n", syscall(SYS_gettid) ,status);
+
 /* _shared_campaign_id is declared in config.h and is a global
  * readonly variable to be used for scoping purposes
 */
