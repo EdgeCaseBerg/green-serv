@@ -27,24 +27,20 @@ void endIfDev(){
 }
 
 void defineIt(char * defineName, char * defineBody){
-	printf("#define %s %s\n", defineName, defineBody);
+	printf("#define %s\n", defineName, defineBody);
 }
 
 void unDefIt(char * macroname){
 	printf("#undef %s\n", macroname);
 }
 
-#define BUFFERSIZE 2048
+#define BUFFERSIZE 512
 int main(int argc, char const *argv[]){
 	char * confFilePath = ".gs.conf";
 	FILE * confFile;
 	char * theBuffer;
-	char keyBuffer[BUFFERSIZE];
-	char valBuffer[BUFFERSIZE];
 	ssize_t bytesRead;
-
-	bzero(keyBuffer, sizeof keyBuffer);
-	bzero(valBuffer, sizeof valBuffer);
+	int i;
 
 	theBuffer = malloc(BUFFERSIZE);
 	if(theBuffer == NULL)
@@ -59,15 +55,35 @@ int main(int argc, char const *argv[]){
 		
 
 	if(confFile == NULL)
-		goto err;
+		goto freeAndErr;
+
+	startIfNDef("__CONFIG_H__");
+	defineIt("__CONFIG_H__", "");
+
 
 	/* Read out some data to process */
+	while(fgets(theBuffer, BUFFERSIZE, confFile)){
+		printf("#define ");
+		for(i = 0; i < strlen(theBuffer); i++ ){
+			if(theBuffer[i] == '"'){
+				printf("\"");
+			}else{
+				printf("%c", theBuffer[i]);
+			}
+		}
+	}
+
+	endIfDev();
+
+	free(theBuffer);
 	
 	fclose(confFile);
 	return 0;
 
 	closeAndErr:
 		fclose(confFile);
+	freeAndErr:
+		free(theBuffer);
 	err:
 		fprintf(stderr, "%s\n", "There was a problem reading the configuration file.");
 		return 1;
