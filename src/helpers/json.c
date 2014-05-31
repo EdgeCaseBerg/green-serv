@@ -296,8 +296,6 @@ int gs_markerNToJSON(const struct gs_marker gsm, char * jsonOutput, int jsonOutp
     bzero(longitude, sizeof longitude);
     formatDecimal(gsm.latitude,latitude);
     formatDecimal(gsm.longitude,longitude);
-
-    printf(DecimalFormat "---%s\n", gsm.latitude ,latitude);
     
     jsonIdWritten = snprintf(jsonId, sizeof jsonId, "{\"id\" : %ld, ", gsm.id);
     jsonCommIdWritten = snprintf(jsonCommId, sizeof jsonCommId, "\"commentId\" : %ld, ", gsm.commentId);

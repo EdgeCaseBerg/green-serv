@@ -92,7 +92,10 @@ you'd like.
         #else
             extern int _shared_campaign_id;
         #endif
-	
+	    
+        /* This must be included in config.h to compile */
+        #include "logging.h"
+
 	#endif
 
 

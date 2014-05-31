@@ -13,18 +13,6 @@
 #include <unistd.h>
 #include <string.h>
 
-#ifndef BOOT_LOGGING
-    #define BOOT_LOGGING 0
-#endif
-#if(BOOT_LOGGING != 1)
-    #ifdef BOOT_LOGGING
-        #undef BOOT_LOGGING
-    #endif
-    #define BOOT_LOGGING 0
-#endif
-/*pre must be a string declared like "sting" not a variable*/
-#define BOOT_LOG_STR(pre,s) if(BOOT_LOGGING == 1) fprintf(stderr, pre "%ld:%s\n", syscall(SYS_gettid), (s));
-
 /* Check for flags. */
 void parseArgs(int argc, const char * argv[], struct gs_scope * campaign, MYSQL * conn){
 	int i;

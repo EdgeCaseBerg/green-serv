@@ -1,28 +1,5 @@
 #include "network/net.h"
 
-#ifndef BOOT_LOGGING
-    #define BOOT_LOGGING 0
-#endif
-#if(BOOT_LOGGING != 1)
-    #ifdef BOOT_LOGGING
-        #undef BOOT_LOGGING
-    #endif
-    #define BOOT_LOGGING 0
-#endif
-/*pre must be a string declared like "sting" not a variable*/
-#define BOOT_LOG_STR(pre,s) if(BOOT_LOGGING == 1) fprintf(stderr, pre "%ld:%s\n", syscall(SYS_gettid) , (s));
-
-#ifndef NETWORK_LOGGING
-   #define NETWORK_LOGGING 0
-#endif
-#if(NETWORK_LOGGING != 2 && NETWORK_LOGGING != 1) 
-    #undef NETWORK_LOGGING
-    #define NETWORK_LOGGING 0
-#endif
-#define NETWORK_LOG_LEVEL_2_NUM(s,d) if(NETWORK_LOGGING == 2) fprintf(stderr, "%ld:%s %d\n",syscall(SYS_gettid) , (s), (d) );
-#define NETWORK_LOG_LEVEL_2(s) if(NETWORK_LOGGING == 2) fprintf(stderr, "%ld:%s\n", syscall(SYS_gettid),  (s) );
-#define NETWORK_LOG_LEVEL_1(s) if(NETWORK_LOGGING >= 1) fprintf(stderr, "%ld:%s\n", syscall(SYS_gettid),  (s) );
-
 static inline void  swapCharPtr( char ** ptr1, char ** ptr2){
     char *temp = *ptr1;
     *ptr1 = *ptr2;
