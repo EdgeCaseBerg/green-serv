@@ -20,7 +20,9 @@ a.out: gs.o main.c
 
 install:
 	mkdir -p /var/run/green-serv/80
-	for portdir in `ls -d /var/run/green-serv/*/`; do cp green-serv $portdir; done
+	for portdir in `ls -d /var/run/green-serv/*/`; do \
+		cp green-serv $$portdir;\
+	done
 	chmod +x green-serv.d
 	cp green-serv.d /etc/init.d/green-serv
 
