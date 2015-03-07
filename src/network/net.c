@@ -466,10 +466,18 @@ void remove_pid_file(){
  * used in config.h will be.
 */
 int determine_port(){
+    char portFileBuffer[256];
+    /* This will work on select linuxes only,
+     * we're not trying to support everyone here
+    */
+    readlink("/proc/self/exe", portFileBuffer, 256);
+    strcpy(portFileBuffer, dirname(portFileBuffer));
+    strcat(portFileBuffer, "/" PORT_FILE);
+
     FILE *fp;
     int port;
     port = PORT;
-    fp=fopen(PORT_FILE,"r");
+    fp=fopen(portFileBuffer,"r");
     if (fp) {
         fscanf(fp, "%i", &port);
         fclose(fp);
