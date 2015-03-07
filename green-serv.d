@@ -7,17 +7,22 @@
 # description: green-serv
 #
 
-# Be sure this priority comes after mysql is up and running
 # To install: 
 #   chmod +x, mv to /etc/init.d/green-serv, then chkconfig --add green-serv
 
 RETVAL=0
 prog="green-serv"
-PID_FILE=/var/run/green-serv/GREENSERV_PID.pid
-CMD=/var/run/green-serv/green-serv
+PORT="80"
+if [ $# -eq 2 ]; then
+	PORT=$2
+fi
+PID_FILE=/var/run/green-serv/$PORT/GREENSERV_PID.pid
+PORT_FILE=/var/run/green-serv/$PORT/GREENSERV.port
+CMD=/var/run/green-serv/$PORT/green-serv
 
 start() {
 	echo -n $"Staring $prog:"
+	echo $PORT > $PORT_FILE
 	nohup $CMD &
 	echo
 }
@@ -35,17 +40,17 @@ fi
 
 case "$1" in
 	start)
-		start
+		start 80
 		;;
 	stop)
-		stop
+		stop 80
 		;;
 	restart)
-		stop
-		start
+		stop 80
+		start 80
 		;;
 	*)
-		echo $"Usage: $0 {start|stop|restart}"
+		echo $"Usage: $0 {start [port]|stop [port]|restart}"
 		RETVAL=1
 esac
 exit $RETVAL
