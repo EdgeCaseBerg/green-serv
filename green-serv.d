@@ -40,14 +40,14 @@ fi
 
 case "$1" in
 	start)
-		start 80
+		start
 		;;
 	stop)
-		stop 80
+		stop
 		;;
 	restart)
-		stop 80
-		start 80
+		stop
+		start
 		;;
 	*)
 		echo $"Usage: $0 {start [port]|stop [port]|restart}"

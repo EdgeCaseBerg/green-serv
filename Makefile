@@ -20,15 +20,16 @@ a.out: gs.o main.c
 
 install:
 	mkdir -p /var/run/green-serv/80
-	cp green-serv /var/run/green-serv/80/
+	for portdir in `ls -d /var/run/green-serv/*/`;
+		cp green-serv $portdir
 	chmod +x green-serv.d
 	cp green-serv.d /etc/init.d/green-serv
 
 start:
-	sudo service green-serv start 80
+	service green-serv start 80
 
 stop:
-	sudo service green-serv stop 80
+	service green-serv stop 80
 
 #This builds everything neccesary for the program
 all: gs.o
