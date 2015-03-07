@@ -426,22 +426,38 @@ void stop_server(int signum){
 }
 
 void create_pid_file(){
+    char pidFileBuffer[256];
+    /* This will work on select linuxes only,
+     * we're not trying to support everyone here
+    */
+    readlink("/proc/self/exe", pidFileBuffer, 256);
+    strcpy(pidFileBuffer, dirname(pidFileBuffer));
+    strcat(pidFileBuffer, "/" PID_FILE);
+    
     FILE *fp;
-    fp=fopen(PID_FILE, "w");
+    fp=fopen(pidFileBuffer, "w");
     if (fp) {
         fprintf(fp, "%d", getpid());
         fclose(fp);    
-        BOOT_LOG_STR("Created pid file: ", PID_FILE);
+        BOOT_LOG_STR("Created pid file: ", pidFileBuffer);
     } else {
         BOOT_LOG_STR("Failed to create process id file: ", "Failed to open file");
     }
 }
 
 void remove_pid_file(){
-    if (remove(PID_FILE) != 0) {
-        BOOT_LOG_STR("Failed to remove pid file: ", PID_FILE);
+    char pidFileBuffer[256];
+    /* This will work on select linuxes only,
+     * we're not trying to support everyone here
+    */
+    readlink("/proc/self/exe", pidFileBuffer, 256);
+    strcpy(pidFileBuffer, dirname(pidFileBuffer));
+    strcat(pidFileBuffer, "/" PID_FILE);
+
+    if (remove(pidFileBuffer) != 0) {
+        BOOT_LOG_STR("Failed to remove pid file: ", pidFileBuffer);
     } else {
-        BOOT_LOG_STR("Pid file removed: ", PID_FILE);
+        BOOT_LOG_STR("Pid file removed: ", pidFileBuffer);
     }
 }
 

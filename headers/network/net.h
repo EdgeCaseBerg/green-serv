@@ -34,6 +34,7 @@
 	#include "controllers/heatmaps.h"
 	#include "controllers/reports.h"
 	#include <sys/wait.h>
+	#include <libgen.h>
 	
 
 	/*Create an HTTP Json response
