@@ -18,7 +18,7 @@ controllertests = test-hb-controller
 install: a.out
 
 a.out: gs.o main.c
-	$(CC)  main.c obj/*.o  -o a.out $(mysqllibs) -g -lcrypto -lpthread
+	$(CC)  main.c obj/*.o  -o green-serv $(mysqllibs) -g -lcrypto -lpthread
 
 #This builds everything neccesary for the program
 all: gs.o
