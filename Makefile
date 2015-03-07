@@ -15,10 +15,14 @@ unittestobj = obj/comment.o  obj/db.o  obj/decimal.o  obj/heatmap.o  obj/json.o 
 controllertests = test-hb-controller
 
 #This will actually create the program.
-install: a.out
-
 a.out: gs.o main.c
 	$(CC)  main.c obj/*.o  -o green-serv $(mysqllibs) -g -lcrypto -lpthread
+
+install:
+	mkdir -p /var/run/green-serv
+	cp green-serv /var/run/green-serv
+	chmod +x green-serv.d
+	cp green-serv.d /etc/init.d/green-serv
 
 #This builds everything neccesary for the program
 all: gs.o
