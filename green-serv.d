@@ -1,6 +1,5 @@
 #!/bin/sh
 #
-# /etc/init.d/example
 # Subsystem file for green-serv
 #
 # chkconfig: 036 95 05
