@@ -11,6 +11,7 @@
 	#include "controllers/macros.h"
 	#include "db.h"
 	#include "helpers/json.h"
+	#include "logging.h"
 	
 	#include <stdio.h>
 	#include <stdlib.h>

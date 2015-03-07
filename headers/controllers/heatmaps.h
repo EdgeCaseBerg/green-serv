@@ -8,6 +8,7 @@
 	#include "helpers/json.h"
 	#include "helpers/mlist.h"
 	#include "controllers/macros.h"
+	#include "logging.h"
 	
 	#include <stdio.h>
 	#include <stdlib.h>

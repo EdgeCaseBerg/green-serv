@@ -20,6 +20,7 @@
 	#include "models/heatmap.h"
 	#include "models/report.h"
 	#include "helpers/decimal.h"	
+	#include "logging.h"
 	#include <string.h>
 	
 	/* How many of an entity per page
