@@ -230,3 +230,7 @@ debug-post-spec: tests/spec/postdebug.c
 
 parsing-test:
 	$(CC) $(gflags) tests/controllers/parsing.c -o tests/bin/parsing-test.out 
+
+make create-config:
+	$(CC) configure/create.c -o create.out
+	./create.out configure/.gs.conf
