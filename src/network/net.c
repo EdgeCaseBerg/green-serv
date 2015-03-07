@@ -425,6 +425,26 @@ void stop_server(int signum){
         stop =1;
 }
 
+void create_pid_file(){
+    FILE *fp;
+    fp=fopen(PID_FILE, "w");
+    if (fp) {
+        fprintf(fp, "%d", getpid());
+        fclose(fp);    
+        BOOT_LOG_STR("Created pid file: ", PID_FILE);
+    } else {
+        BOOT_LOG_STR("Failed to create process id file: ", "Failed to open file");
+    }
+}
+
+void remove_pid_file(){
+    if (remove(PID_FILE) != 0) {
+        BOOT_LOG_STR("Failed to remove pid file: ", PID_FILE);
+    } else {
+        BOOT_LOG_STR("Pid file removed: ", PID_FILE);
+    }
+}
+
 
 int run_network(void*(*func)(void*)){
     struct sockaddr_in sockserv,sockclient;
@@ -458,6 +478,10 @@ int run_network(void*(*func)(void*)){
     BOOT_LOG_STR("Socket Bind: ", strerror(errno));
     listen(socketfd,NUMTHREADS);
     BOOT_LOG_STR("Socket Listen: ", strerror(errno));
+
+    BOOT_LOG_NUM("Server listening on port: ", PORT);
+    BOOT_LOG_NUM("Green Serv Process ID: ", getpid());
+    create_pid_file();
 
     clientsocklen = sizeof socketfd;
 
@@ -534,6 +558,7 @@ int run_network(void*(*func)(void*)){
     pthread_attr_destroy(&attr);
     #endif
     close(socketfd);
+    remove_pid_file();
     BOOT_LOG_STR("Exiting Server...", "");
     wait(NULL);
     return 0;

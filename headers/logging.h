@@ -35,6 +35,7 @@
 	#endif
 	/*pre must be a string declared like "sting" not a variable*/
 	#define BOOT_LOG_STR(pre,s) if(BOOT_LOGGING == 1) fprintf(stderr, pre "%ld:%s\n", syscall(SYS_gettid) , (s));
+	#define BOOT_LOG_NUM(pre,d) if(BOOT_LOGGING == 1) fprintf(stderr, pre "%d\n", (d));
 
 
 #endif
