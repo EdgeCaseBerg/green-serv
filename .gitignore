@@ -12,6 +12,8 @@ error.log
 headers/config.h
 config.sql
 configure/.gs.conf
+*.pid
+*.port
 
 #Ignore vim swap files
 *.swp

@@ -45,6 +45,9 @@ you'd like.
         #define CAMPAIGN_ID 0L
         #define CAMPAIGN_DESC "8CharMax"
         #define BASE_API_URL "http://localhost:10110/api/"
+        #define PID_FILE "GREENSERV_PID.pid"
+        #define PORT_FILE "GREENSERV.port"
+        
         /*Define json safe output return function 
         * If you compile with the RETURN_ON_JSON_RISK constant defined
         * then you will return early from the safe json output functions

@@ -445,6 +445,21 @@ void remove_pid_file(){
     }
 }
 
+/* Check for a port file 
+ * If a port file exists then that port will be used, otherwise the one 
+ * used in config.h will be.
+*/
+int determine_port(){
+    FILE *fp;
+    int port;
+    port = PORT;
+    fp=fopen(PORT_FILE,"r");
+    if (fp) {
+        fscanf(fp, "%i", &port);
+        fclose(fp);
+    } 
+    return port;
+}
 
 int run_network(void*(*func)(void*)){
     struct sockaddr_in sockserv,sockclient;
@@ -463,23 +478,23 @@ int run_network(void*(*func)(void*)){
     int retval;
     int sec;
     int usec;
+    int port;
 
     clientfd = socketfd  = 0; 
     
     bzero(&sockserv,sizeof(sockserv));
     sec = 0;
     usec = 10;
-
-
+    port = determine_port();
 
     socketfd = createSocket();
     BOOT_LOG_STR("Socket Creation: ", strerror(errno));
-    setupSockAndBind(socketfd, &sockserv, PORT); 
+    setupSockAndBind(socketfd, &sockserv, port); 
     BOOT_LOG_STR("Socket Bind: ", strerror(errno));
     listen(socketfd,NUMTHREADS);
     BOOT_LOG_STR("Socket Listen: ", strerror(errno));
 
-    BOOT_LOG_NUM("Server listening on port: ", PORT);
+    BOOT_LOG_NUM("Server listening on port: ", port);
     BOOT_LOG_NUM("Green Serv Process ID: ", getpid());
     create_pid_file();
 
