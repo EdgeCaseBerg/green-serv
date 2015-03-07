@@ -1,5 +1,6 @@
 #Ignore compiled binary
 *.out
+green-serv
 
 #Ignore object files
 *.o
