@@ -19,11 +19,12 @@ fi
 PID_FILE=/var/run/green-serv/$PORT/GREENSERV_PID.pid
 PORT_FILE=/var/run/green-serv/$PORT/GREENSERV.port
 CMD=/var/run/green-serv/$PORT/green-serv
+LOGFILE=/var/log/green-serv.log
 
 start() {
 	echo -n $"Staring $prog:"
 	echo $PORT > $PORT_FILE
-	nohup $CMD &
+	nohup $CMD >> $LOGFILE 2>&1 &
 	echo
 }
 
