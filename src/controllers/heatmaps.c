@@ -332,14 +332,14 @@ int heatmap_get(char ** buffer, int buffSize,int page, Decimal * latDegrees, Dec
 	if( numHeatmaps > HEATMAP_RESULTS_RETURNED ){
 		nextPage = page+1;
 		/*Need to tack on url parameters if present*/
-		snprintf(nextStr,MAX_URL_LENGTH, "%sheatmap?page=%d&raw=%s", BASE_API_URL, nextPage, raw == TRUE ? "true" : "false");
+		snprintf(nextStr,MAX_URL_LENGTH, "%sheatmap?page=%d&raw=%s&precision=%i", BASE_API_URL, nextPage, raw == TRUE ? "true" : "false", precision);
 	} else {
 		snprintf(nextStr,MAX_URL_LENGTH, "null");
 	}
 
 
 	if(page > 1)
-		snprintf(prevStr,MAX_URL_LENGTH,"%sheatmap?page=%d&raw=%s",BASE_API_URL,page-1, raw == TRUE ? "true" : "false");
+		snprintf(prevStr,MAX_URL_LENGTH,"%sheatmap?page=%d&raw=%s&precision=%i",BASE_API_URL,page-1, raw == TRUE ? "true" : "false", precision);
 	else
 		snprintf(prevStr,MAX_URL_LENGTH,"null");
 
