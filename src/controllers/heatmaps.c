@@ -268,6 +268,7 @@ int heatmap_get(char ** buffer, int buffSize,int page, Decimal * latDegrees, Dec
 	char prevStr[MAX_URL_LENGTH];
 	char * tempBuf;
 	char * swapBuff;
+	char * decimalBuff;
 	Decimal lowerLat;
 	Decimal upperLat;
 	Decimal lowerLon;
@@ -282,9 +283,17 @@ int heatmap_get(char ** buffer, int buffSize,int page, Decimal * latDegrees, Dec
 	}
 	memset(tempBuf,0,buffSize);
 
+	decimalBuff = malloc(sizeof(char)* (DecimalWidth +1));
+	if(decimalBuff == NULL){
+		free(tempBuf);
+		return -1;
+	}
+	memset(decimalBuff,0,sizeof(char) * (DecimalWidth+1));
+
 	heatmaps = malloc(HEATMAP_RESULTS_PER_PAGE * sizeof(struct gs_heatmap));
 	if(heatmaps == NULL){
 		free(tempBuf);
+		free(decimalBuff);
 		return -1; /* Return flag to send self nomem */
 	}
 	memset(heatmaps,0,HEATMAP_RESULTS_PER_PAGE * sizeof(struct gs_heatmap));
@@ -297,6 +306,8 @@ int heatmap_get(char ** buffer, int buffSize,int page, Decimal * latDegrees, Dec
 	conn = _getMySQLConnection();
 	if(!conn){
 		free(heatmaps);
+		free(decimalBuff);
+		free(tempBuf);
 		mysql_thread_end();
 		fprintf(stderr, "%s\n", "Could not connect to mySQL on worker thread");
 		return -1;
@@ -333,15 +344,56 @@ int heatmap_get(char ** buffer, int buffSize,int page, Decimal * latDegrees, Dec
 		nextPage = page+1;
 		/*Need to tack on url parameters if present*/
 		snprintf(nextStr,MAX_URL_LENGTH, "%sheatmap?page=%d&raw=%s&precision=%i", BASE_API_URL, nextPage, raw == TRUE ? "true" : "false", precision);
+		if (lonOffset != NULL) {
+			formatDecimal(*lonOffset, decimalBuff);
+			strncat(nextStr,"&lonOffset=",MAX_URL_LENGTH);
+			strncat(nextStr,decimalBuff,MAX_URL_LENGTH);
+		}
+		if (latOffset != NULL) {
+			formatDecimal(*latOffset, decimalBuff);
+			strncat(nextStr,"&latOffset=",MAX_URL_LENGTH);
+			strncat(nextStr,decimalBuff,MAX_URL_LENGTH);
+		}
+		if (lonDegrees != NULL) {
+			formatDecimal(*lonDegrees, decimalBuff);
+			strncat(nextStr,"&lonDegrees=",MAX_URL_LENGTH);
+			strncat(nextStr,decimalBuff,MAX_URL_LENGTH);
+		}
+		if (latDegrees != NULL) {
+			formatDecimal(*latDegrees, decimalBuff);
+			strncat(nextStr,"&latDegrees=",MAX_URL_LENGTH);
+			strncat(nextStr,decimalBuff,MAX_URL_LENGTH);
+		}
 	} else {
 		snprintf(nextStr,MAX_URL_LENGTH, "null");
 	}
 
 
-	if(page > 1)
-		snprintf(prevStr,MAX_URL_LENGTH,"%sheatmap?page=%d&raw=%s&precision=%i",BASE_API_URL,page-1, raw == TRUE ? "true" : "false", precision);
-	else
+	if(page > 1){
+		snprintf(prevStr,MAX_URL_LENGTH,"%sheatmap?page=%d&raw=%s&precision=%if",BASE_API_URL,page-1, raw == TRUE ? "true" : "false", precision);
+		if (lonOffset != NULL) {
+			formatDecimal(*lonOffset, decimalBuff);
+			strncat(prevStr,"&lonOffset=",MAX_URL_LENGTH);
+			strncat(prevStr,decimalBuff,MAX_URL_LENGTH);
+		}
+		if (latOffset != NULL) {
+			formatDecimal(*latOffset, decimalBuff);
+			strncat(prevStr,"&latOffset=",MAX_URL_LENGTH);
+			strncat(prevStr,decimalBuff,MAX_URL_LENGTH);
+		}
+		if (lonDegrees != NULL) {
+			formatDecimal(*lonDegrees, decimalBuff);
+			strncat(prevStr,"&lonDegrees=",MAX_URL_LENGTH);
+			strncat(prevStr,decimalBuff,MAX_URL_LENGTH);
+		}
+		if (latDegrees != NULL) {
+			formatDecimal(*latDegrees, decimalBuff);
+			strncat(prevStr,"&latDegrees=",MAX_URL_LENGTH);
+			strncat(prevStr,decimalBuff,MAX_URL_LENGTH);
+		}
+	} else {
 		snprintf(prevStr,MAX_URL_LENGTH,"null");
+	}
 
 	resize = 1;
 	for(i=0; i < min(numHeatmaps,HEATMAP_RESULTS_RETURNED); ++i){
@@ -386,6 +438,7 @@ int heatmap_get(char ** buffer, int buffSize,int page, Decimal * latDegrees, Dec
 	snprintf(*buffer,(buffSize*resize) + 512, HEATMAP_PAGE_STR, 200, tempBuf, min(numHeatmaps,HEATMAP_RESULTS_RETURNED), page, nextStr,prevStr);
 	free(heatmaps);
 	free(tempBuf);
+	free(decimalBuff);
 	mysql_close(conn);
 	mysql_thread_end();
 
