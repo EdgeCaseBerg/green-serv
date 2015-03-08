@@ -427,11 +427,14 @@ void stop_server(int signum){
 
 void create_pid_file(){
     char pidFileBuffer[256];
+    char tempBuff[256];
+    bzero(pidFileBuffer, sizeof pidFileBuffer);
+    bzero(tempBuff, sizeof tempBuff);
     /* This will work on select linuxes only,
      * we're not trying to support everyone here
     */
     readlink("/proc/self/exe", pidFileBuffer, 256);
-    strcpy(pidFileBuffer, dirname(pidFileBuffer));
+    strcpy(tempBuff, dirname(pidFileBuffer));
     strcat(pidFileBuffer, "/" PID_FILE);
     
     FILE *fp;
@@ -447,11 +450,14 @@ void create_pid_file(){
 
 void remove_pid_file(){
     char pidFileBuffer[256];
+    char tempBuff[256];
+    bzero(pidFileBuffer, sizeof pidFileBuffer);
+    bzero(tempBuff, sizeof tempBuff);
     /* This will work on select linuxes only,
      * we're not trying to support everyone here
     */
     readlink("/proc/self/exe", pidFileBuffer, 256);
-    strcpy(pidFileBuffer, dirname(pidFileBuffer));
+    strcpy(tempBuff, dirname(pidFileBuffer));
     strcat(pidFileBuffer, "/" PID_FILE);
 
     if (remove(pidFileBuffer) != 0) {
@@ -467,11 +473,14 @@ void remove_pid_file(){
 */
 int determine_port(){
     char portFileBuffer[256];
+    char tempBuff[256];
+    bzero(portFileBuffer, sizeof portFileBuffer);
+    bzero(tempBuff, sizeof tempBuff);
     /* This will work on select linuxes only,
      * we're not trying to support everyone here
     */
     readlink("/proc/self/exe", portFileBuffer, 256);
-    strcpy(portFileBuffer, dirname(portFileBuffer));
+    strcpy(tempBuff, dirname(portFileBuffer));
     strcat(portFileBuffer, "/" PORT_FILE);
 
     FILE *fp;
