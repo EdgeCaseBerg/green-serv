@@ -24,7 +24,7 @@ int comment_controller(const struct http_request * request, char ** stringToRetu
 	
 	status = 503;
 	//(RESULTS_PER_PAGE * sizeof(struct gs_comment))*4+1+(2*MAX_URL_LENGTH);
-	buffSize = strLength;
+	buffSize = strLength*2;
 	buffer = malloc(sizeof(char)*buffSize);
 	memset(buffer,0,buffSize);
 

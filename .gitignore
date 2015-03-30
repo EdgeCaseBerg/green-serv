@@ -18,3 +18,6 @@ configure/.gs.conf
 
 #Ignore vim swap files
 *.swp
+
+#Ignore database dumps
+*.sql
